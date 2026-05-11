@@ -1,8 +1,8 @@
 {
   "name": "@cosider/server",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "version": "1.0.0",
+  "description": "Realtime Collaborative Project Management Service",
+  "author": "Croffle Dev.",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -56,6 +56,8 @@
     "yjs": "^13.6.30"
   },
   "devDependencies": {
+    "@cosider/eslint-config": "workspace:*",
+    "@cosider/typescript-config": "workspace:*",
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
@@ -76,11 +78,6 @@
     "cross-env": "^10.1.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.3.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-prettier": "^5.5.5",
-    "eslint-plugin-promise": "^7.3.0",
-    "eslint-plugin-unicorn": "^64.0.0",
     "globals": "^17.6.0",
     "jest": "^30.4.2",
     "prettier": "^3.8.3",
