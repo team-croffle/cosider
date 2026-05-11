@@ -18,6 +18,9 @@ coverage
 # Turbo
 .turbo
 
+# Turbo build cache
+*.tsbuildinfo
+
 # Vercel
 .vercel
 
