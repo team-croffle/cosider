@@ -6,6 +6,11 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*", "test/**/*"],
+  "include": [
+    "src/**/*",
+    "test/**/*",
+    "../../packages/shared/src/auth/login-request.dto.ts",
+    "../../packages/shared/src/auth/login-response.dto.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

@@ -1165,6 +1165,18 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@cosider/shared@workspace:packages/shared":
+  version: 0.0.0-use.local
+  resolution: "@cosider/shared@workspace:packages/shared"
+  dependencies:
+    "@cosider/eslint-config": "workspace:*"
+    "@cosider/typescript-config": "workspace:*"
+    class-transformer: "npm:^0.5.1"
+    class-validator: "npm:^0.14.1"
+    typescript: "npm:^5.9.2"
+  languageName: unknown
+  linkType: soft
+
 "@cosider/typescript-config@workspace:*, @cosider/typescript-config@workspace:packages/typescript-config":
   version: 0.0.0-use.local
   resolution: "@cosider/typescript-config@workspace:packages/typescript-config"
@@ -5231,6 +5243,17 @@ __metadata:
   version: 0.5.1
   resolution: "class-transformer@npm:0.5.1"
   checksum: 10c0/19809914e51c6db42c036166839906420bb60367df14e15f49c45c8c1231bf25ae661ebe94736ee29cc688b77101ef851a8acca299375cc52fc141b64acde18a
+  languageName: node
+  linkType: hard
+
+"class-validator@npm:^0.14.1":
+  version: 0.14.4
+  resolution: "class-validator@npm:0.14.4"
+  dependencies:
+    "@types/validator": "npm:^13.15.3"
+    libphonenumber-js: "npm:^1.11.1"
+    validator: "npm:^13.15.22"
+  checksum: 10c0/1d415261aad7bdd72528db76e814195ca627a9d33f159752554dbbf71b8360359d3061a8edd16ac951a9a4fb86e0495cdf8badf82ec44e2dcc187ab496f37c5a
   languageName: node
   linkType: hard
 
