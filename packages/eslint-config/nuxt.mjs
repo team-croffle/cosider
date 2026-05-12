@@ -7,6 +7,9 @@ import pluginUnicorn from 'eslint-plugin-unicorn';
 
 const promisePlugin = /** @type {any} */ (pluginPromise);
 
+/**
+ * @type {import('eslint').Linter.Config[]}
+ */
 export const nuxtConfig = [
   {
     plugins: {
