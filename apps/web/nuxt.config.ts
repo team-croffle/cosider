@@ -7,6 +7,10 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
+  colorMode: {
+    preference: 'dark', // 기본값 다크모드
+    fallback: 'dark',
+  },
 
   routeRules: {
     '/': { prerender: true },
