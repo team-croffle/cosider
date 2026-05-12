@@ -11,6 +11,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@cosider/shared": "workspace:*",
     "@hocuspocus/provider": "^4.0.0",
     "@iconify-json/lucide": "^1.2.106",
     "@iconify-json/simple-icons": "^1.2.81",

@@ -71,3 +71,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 !.yarn/versions
 !.yarn/sdks
 .yarn/cache
+
+# Turbo
+.turbo

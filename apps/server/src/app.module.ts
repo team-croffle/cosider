@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
-import { loggerConfig } from './common/configs/logger.config';
 
-import { AuthModule } from './common/modules/auth/auth.module';
+import { loggerConfig } from './common/configs/logger.config';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
