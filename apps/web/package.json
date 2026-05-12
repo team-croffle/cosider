@@ -1,0 +1,36 @@
+{
+  "name": "@cosider/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "eslint .",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@hocuspocus/provider": "^4.0.0",
+    "@iconify-json/lucide": "^1.2.106",
+    "@iconify-json/simple-icons": "^1.2.81",
+    "@nuxt/ui": "^4.7.1",
+    "@tiptap/extension-collaboration-cursor": "2.26.2",
+    "@tiptap/starter-kit": "^3.23.1",
+    "@tiptap/vue-3": "^3.23.1",
+    "gridstack": "^12.6.0",
+    "nuxt": "^4.4.5",
+    "prettier-plugin-tailwindcss": "^0.8.0",
+    "tailwindcss": "^4.3.0",
+    "tldraw": "^5.0.0",
+    "yjs": "^13.6.30"
+  },
+  "devDependencies": {
+    "@cosider/eslint-config": "workspace:*",
+    "@nuxt/eslint": "^1.15.2",
+    "eslint": "^10.3.0",
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.2.8"
+  },
+  "packageManager": "yarn@4.14.1"
+}
