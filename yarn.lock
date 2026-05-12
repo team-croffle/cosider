@@ -1277,6 +1277,7 @@ __metadata:
   dependencies:
     "@aws-sdk/client-s3": "npm:^3.1045.0"
     "@cosider/eslint-config": "workspace:*"
+    "@cosider/shared": "workspace:*"
     "@cosider/typescript-config": "workspace:*"
     "@eslint/eslintrc": "npm:^3.2.0"
     "@eslint/js": "npm:^9.18.0"
@@ -1341,7 +1342,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"@cosider/shared@workspace:packages/shared":
+"@cosider/shared@workspace:*, @cosider/shared@workspace:packages/shared":
   version: 0.0.0-use.local
   resolution: "@cosider/shared@workspace:packages/shared"
   dependencies:

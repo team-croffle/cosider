@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1045.0",
+    "@cosider/shared": "workspace:*",
     "@hocuspocus/extension-database": "^4.0.0",
     "@hocuspocus/extension-redis": "^4.0.0",
     "@hocuspocus/server": "^4.0.0",
