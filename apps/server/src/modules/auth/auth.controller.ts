@@ -17,10 +17,24 @@ export class AuthController {
     type: LoginResponseDto,
     description: '로그인 성공',
   })
-  @ApiResponse({ status: 401, description: '인증 실패' })
+  @ApiResponse({
+    status: 400,
+    description: 'Email 형식이 잘못되었거나, 비밀번호가 너무 짧음',
+  })
+  @ApiResponse({
+    status: 401,
+    description: '가입되지 않은 이메일 또는 잘못된 PW',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '토큰 탈취 및 사용 불가능한 계정 상태',
+  })
+  @ApiResponse({
+    status: 500,
+    description: '서버 오류',
+  })
   signIn(@Body() loginDto: LoginRequestDto): LoginResponseDto {
     console.log(loginDto);
-
     return {
       accessToken: 'token',
       refreshToken: 'refreshToken',
