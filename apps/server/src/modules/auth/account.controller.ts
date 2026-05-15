@@ -1,11 +1,13 @@
 import {
+  DeactiveReqeustDto,
+  DeactiveResponseDto,
   SignupRequestDto,
   SignupResponseDto,
   VerifyEmailRequestDto,
   VerifyEmailResponseDto,
 } from '@cosider/shared';
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AccountService } from './account.service';
 
@@ -68,6 +70,20 @@ export class AccountController {
     console.log(verifyEmail);
     return {
       message: '이메일 인증이 완료되었습니다.',
+    };
+  }
+
+  @ApiBearerAuth()
+  @Post('deactivate')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Deactivate account', description: 'Soft delete account' })
+  @ApiResponse({ status: 200, type: DeactiveResponseDto, description: '계정이 삭제됨.' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({ status: 409, description: '사용자의 명으로 남은 프로젝트가 존재함.' })
+  deactivate(@Body() deactive: DeactiveReqeustDto): DeactiveResponseDto {
+    console.log(deactive);
+    return {
+      message: '계정 삭제가 완료 되었습니다.',
     };
   }
 }

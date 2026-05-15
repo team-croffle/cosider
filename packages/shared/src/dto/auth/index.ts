@@ -1,3 +1,5 @@
+export * from './deactive-request.dto';
+export * from './deactive-response.dto';
 export * from './login-request.dto';
 export * from './login-response.dto';
 export * from './signup-request.dto';
