@@ -1,4 +1,9 @@
-import { SignupRequestDto, SignupResponseDto } from '@cosider/shared';
+import {
+  SignupRequestDto,
+  SignupResponseDto,
+  VerifyEmailRequestDto,
+  VerifyEmailResponseDto,
+} from '@cosider/shared';
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
@@ -35,7 +40,34 @@ export class AccountController {
   signup(@Body() signupDto: SignupRequestDto): SignupResponseDto {
     console.log(signupDto);
     return {
-      message: '이메일 인증 완료',
+      message: '가입이 완료되었습니다',
+    };
+  }
+
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify Email', description: 'Verify email to use signup.' })
+  @ApiResponse({
+    status: 200,
+    type: VerifyEmailResponseDto,
+    description: '이메일 인증 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이메일 인증 실패.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '인증 미완료 상태로 재가입 시도 (2분 미경과)',
+  })
+  @ApiResponse({
+    status: 410,
+    description: '인증코드 만료 (5분 초과)',
+  })
+  verifyEmail(@Body() verifyEmail: VerifyEmailRequestDto): VerifyEmailResponseDto {
+    console.log(verifyEmail);
+    return {
+      message: '이메일 인증이 완료되었습니다.',
     };
   }
 }
