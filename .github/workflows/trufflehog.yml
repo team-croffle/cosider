@@ -13,9 +13,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: trufflesecurity/trufflehog@main
+      - uses: trufflesecurity/trufflehog@v3.82.13
+        if: github.event_name == 'pull_request'
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
-          head: HEAD
-          extra_args: --only-verified # 검증된 시크릿만 리포트
+          base: ${{ github.event.pull_request.base.sha }}
+          head: ${{ github.event.pull_request.head.sha }}
+          extra_args: --only-verified
+
+      - uses: trufflesecurity/trufflehog@v3.82.13
+        if: github.event_name == 'push'
+        with:
+          path: ./
+          base: ${{ github.event.before }}
+          head: ${{ github.sha }}
+          extra_args: --only-verified
