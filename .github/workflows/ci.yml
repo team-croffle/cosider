@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: 'yarn'
+
+      - run: yarn install --frozen-lockfile
+
+      - name: Build (affected only)
+        run: yarn turbo build --filter=...[origin/${{ github.base_ref }}...HEAD]
+
+      - name: Test (affected only)
+        run: yarn turbo test --filter=...[origin/${{ github.base_ref }}...HEAD]
