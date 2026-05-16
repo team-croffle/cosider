@@ -1,0 +1,17 @@
+reviewers:
+  - bluenyang
+
+files:
+  'apps/server/**':
+    reviewers:
+      - bluenyang
+      - sejung2
+  'apps/web/**':
+    reviewers:
+      - bluenyang
+      - ChaJiTae
+  'packages/**':
+    reviewers:
+      - bluenyang
+      - sejung2
+      - ChaJiTae
