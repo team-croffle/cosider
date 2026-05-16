@@ -114,12 +114,27 @@ export class AccountController {
     summary: '계정 복구',
     description: '이메일 인증을 통해 탈퇴된 계정을 복구합니다.',
   })
-  @ApiResponse({ status: 200, type: RestoreResponseDto, description: '계정 복구 성공' })
-  @ApiResponse({ status: 400, description: '인증 코드 불일치' })
-  @ApiResponse({ status: 403, description: '복구 가능 기간 초과 (탈퇴 후 1개월)' })
-  @ApiResponse({ status: 404, description: '탈퇴된 계정을 찾을 수 없음' })
-  @ApiResponse({ status: 410, description: '인증 코드 만료' })
-  @ApiResponse({ status: 500, description: '서버 오류' })
+  @ApiResponse({
+    status: 200,
+    type: RestoreResponseDto,
+    description: '계정 복구 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '인증 코드 불일치',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '복구 가능 기간 (탈퇴 후 1개월) 초과 ',
+  })
+  @ApiResponse({
+    status: 404,
+    description: '탈퇴된 계정을 찾을 수 없음',
+  })
+  @ApiResponse({
+    status: 410,
+    description: '인증 코드 만료',
+  })
   restore(@Body() restoreDto: RestoreRequestDto): RestoreResponseDto {
     console.log(restoreDto);
     return {
