@@ -1,7 +1,7 @@
 name: PR Management
 on:
   pull_request:
-    types: [opened, synchronize, ready_for_review, reopened]
+    types: [opened, ready_for_review]
 
 jobs:
   labeler:
@@ -19,6 +19,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - uses: kentaro-m/auto-assign-action@v2.0.2
+      - uses: shufo/auto-assign-reviewer-by-files@v1.2.1
         with:
-          configuration-path: .github/auto-assign.yaml
+          config: .github/auto-assign.yaml
+          token: ${{ secrets.GITHUB_TOKEN }}
