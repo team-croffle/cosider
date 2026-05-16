@@ -1,5 +1,5 @@
-import { LoginRequestDto, LoginResponseDto } from '@cosider/shared';
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { LoginRequestDto, LoginResponseDto, LogoutResponseDto } from '@cosider/shared';
+import { Body, Controller, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
@@ -11,7 +11,10 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login', description: 'Access/Refresh Token 발급' })
+  @ApiOperation({
+    summary: 'Login',
+    description: 'Access/Refresh Token 발급',
+  })
   @ApiResponse({
     status: 200,
     type: LoginResponseDto,
@@ -41,4 +44,23 @@ export class AuthController {
       expiresIn: 1000,
     };
   }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Logout',
+    description: '쿠키 만료 및 refreshToken 삭제',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '로그아웃 성공',
+  })
+  logout(@Req() req: Request): LogoutResponseDto {
+    console.log(req);
+    return {
+      message: '로그아웃이 완료되었습니다',
+    };
+  }
+
+  // OAuth 로그인 및 회원가입 관련: 방식 어떻게?
 }
