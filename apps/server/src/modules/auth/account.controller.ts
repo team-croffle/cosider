@@ -27,10 +27,15 @@ export class AccountController {
   @ApiResponse({
     status: 201,
     type: SignupResponseDto,
-    description: '가입 성공',
+    description:
+      '가입 성공 or 이메일 인증 미완료 상태에서 2분 경과 후 재가입 시도 시 기존 데이터 삭제 후 재가입 허용',
   })
   @ApiResponse({
     description: '이메일 인증 수행 안함',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이메일 형식 오류 또는 비밀번호 형식 오류',
   })
   @ApiResponse({
     status: 403,
@@ -57,10 +62,6 @@ export class AccountController {
     status: 200,
     type: VerifyEmailResponseDto,
     description: '이메일 인증 성공',
-  })
-  @ApiResponse({
-    status: 201,
-    description: '이메일 인증 미완료 상태로 재가입 시도 (2분 경과 / 재가입 허용)',
   })
   @ApiResponse({
     status: 400,

@@ -3,6 +3,7 @@ export * from './deactive-response.dto';
 export * from './login-request.dto';
 export * from './login-response.dto';
 export * from './logout-response.dto';
+export * from './oauth-response.dto';
 export * from './restore-request.dto';
 export * from './restore-response.dto';
 export * from './signup-request.dto';
