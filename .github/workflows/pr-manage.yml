@@ -19,6 +19,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
       - uses: shufo/auto-assign-reviewer-by-files@v1.2.1
         with:
           config: .github/auto-assign.yaml

@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
 
       - uses: trufflesecurity/trufflehog@v3.82.13
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && github.event.before != '0000000000000000000000000000000000000000'
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha }}
@@ -22,7 +22,7 @@ jobs:
           extra_args: --only-verified
 
       - uses: trufflesecurity/trufflehog@v3.82.13
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
         with:
           path: ./
           base: ${{ github.event.before }}
