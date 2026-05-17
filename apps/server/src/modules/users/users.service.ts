@@ -1,12 +1,10 @@
 import { Injectable } from '@nestjs/common';
 
-import { UserProfileResponseDto, CheckHandleExistsResponseDto, EJobRole } from '@cosider/shared';
+import { CheckHandleExistsResponseDto, EJobRole, UserProfileResponseDto } from '@cosider/shared';
 
 @Injectable()
 export class UsersService {
-  getProfile(
-    handle: string,
-  ): UserProfileResponseDto {
+  getProfile(handle: string): UserProfileResponseDto {
     // mock data
     return {
       handle,
@@ -17,14 +15,9 @@ export class UsersService {
     };
   }
 
-  checkHandleExists(
-    handle: string,
-  ): CheckHandleExistsResponseDto {
+  checkHandleExists(handle: string): CheckHandleExistsResponseDto {
     // mock data
-    const unavailableHandles = [
-      'admin',
-      'root',
-    ];
+    const unavailableHandles = ['admin', 'root'];
 
     return {
       is_available: !unavailableHandles.includes(handle),
