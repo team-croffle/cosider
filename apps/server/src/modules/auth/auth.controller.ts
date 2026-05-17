@@ -1,22 +1,28 @@
 import {
-  LoginRequestDto,
   LoginResponseDto,
-  LogoutResponseDto,
   OAuthResponseDto,
+  SignupRequestDto,
+  SignupResponseDto,
+  VerifyEmailRequestDto,
+  VerifyEmailResponseDto,
 } from '@cosider/shared';
 import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service';
-// import { OAuthGuard } from './guards/oauth.guard';
+// import { OAuthGuard } from '../guards/oauth.guard';
+// import { SigninGuard} from '../guards/signin.guard;
+// import { LogoutGuard} from '../guards/logout.guard;
+// import { RefreshGuard } from '../guards/refresh.guard';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('login')
+  @Post('signin')
   @HttpCode(HttpStatus.OK)
+  // @UseGuards(SigninGuard)
   @ApiOperation({
     summary: 'Login',
     description: 'Access/Refresh Token 발급',
@@ -42,8 +48,8 @@ export class AuthController {
     status: 500,
     description: '서버 오류',
   })
-  signIn(@Body() loginDto: LoginRequestDto): LoginResponseDto {
-    console.log(loginDto);
+  signin(@Req() req: Request): LoginResponseDto {
+    console.log(req);
     return {
       accessToken: 'token',
       expiresIn: 1000,
@@ -52,21 +58,83 @@ export class AuthController {
 
   @Post('logout')
   @HttpCode(HttpStatus.OK)
+  // @UseGuards(LogoutGuard)
   @ApiOperation({
     summary: 'Logout',
     description: '쿠키 만료 및 refreshToken 삭제',
   })
   @ApiResponse({
-    status: 200,
+    status: 204,
     description: '로그아웃 성공',
   })
-  logout(@Req() req: Request): LogoutResponseDto {
+  //Promise<void>
+  logout(@Req() req: Request): void {
     console.log(req);
+  }
+
+  @Post('signup')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Signup',
+    description: '계정 생성 및 이메일 인증 코드 발송',
+  })
+  @ApiResponse({
+    status: 201,
+    type: SignupResponseDto,
+    description:
+      '가입 성공 or 이메일 인증 미완료 상태에서 2분 경과 후 재가입 시도 시 기존 데이터 삭제 후 재가입 허용',
+  })
+  @ApiResponse({
+    description: '이메일 인증 수행 안함',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이메일 형식 오류 또는 비밀번호 형식 오류',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '이메일 인증 미완료 상태로 재가입 시도 (2분 미경과)',
+  })
+  @ApiResponse({
+    status: 409,
+    description: '이미 사용중인 이메일(중복 이메일)',
+  })
+  signup(@Body() signupDto: SignupRequestDto): SignupResponseDto {
+    console.log(signupDto);
     return {
-      message: '로그아웃이 완료되었습니다',
+      message: '가입이 완료되었습니다',
     };
   }
 
+  @Post('verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify Email',
+    description: '인증코드 검증',
+  })
+  @ApiResponse({
+    status: 200,
+    type: VerifyEmailResponseDto,
+    description: '이메일 인증 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '이메일 인증 실패.',
+  })
+  @ApiResponse({
+    status: 403,
+    description: '인증 미완료 상태로 재가입 시도 (2분 미경과)',
+  })
+  @ApiResponse({
+    status: 410,
+    description: '인증코드 만료 (5분 초과)',
+  })
+  verifyEmail(@Body() verifyEmail: VerifyEmailRequestDto): VerifyEmailResponseDto {
+    console.log(verifyEmail);
+    return {
+      message: '이메일 인증이 완료되었습니다.',
+    };
+  }
   // provider 추후에 수정해야함.
   @Get('oauth/:provider')
   // @UseGuards(OAuthGuard)
@@ -85,7 +153,8 @@ export class AuthController {
   @ApiResponse({ status: 200, type: OAuthResponseDto, description: '로그인 성공' })
   @ApiResponse({ status: 201, type: OAuthResponseDto, description: '회원가입 성공' })
   @ApiResponse({ status: 400, description: 'OAuth 인증 실패' })
-  oauthCallback(@Req() _req: Request): OAuthResponseDto {
+  oauthCallback(@Req() req: Request): OAuthResponseDto {
+    console.log(req);
     return {
       accessToken: 'token',
       expiresIn: 1000,
@@ -95,6 +164,7 @@ export class AuthController {
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
+  // @UseGuards(RefreshGuard)
   @ApiOperation({
     summary: 'refresh Token',
     description: 'Refresh Token으로 Access Token을 재발급. (RTR)',
@@ -102,7 +172,8 @@ export class AuthController {
   @ApiResponse({ status: 200, type: LoginResponseDto, description: '토큰 재발급 성공' })
   @ApiResponse({ status: 401, description: 'Refresh Token 없음/만료' })
   @ApiResponse({ status: 403, description: '토큰 탈취 감지, 모든 세션 만료' })
-  refresh(@Req() _req: Request): LoginResponseDto {
+  refresh(@Req() req: Request): LoginResponseDto {
+    console.log(req);
     return {
       accessToken: 'token',
       expiresIn: 1000,
