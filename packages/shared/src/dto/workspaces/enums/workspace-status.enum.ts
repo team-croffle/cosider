@@ -1,0 +1,7 @@
+export enum EWorkspaceStatus {
+  ACTIVE = 'ACTIVE',
+  DEACTIVE = 'DEACTIVE',
+  DELETE_PENDING = 'DELETE_PENDING',
+  DELETED = 'DELETED',
+  RESTORING = 'RESTORING',
+}
