@@ -4,6 +4,7 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { loggerConfig } from './common/configs/logger.config';
 import { AuthModule } from './modules/auth/auth.module';
+import { WorkspacesModule } from './modules/workspaces/workspaces.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     LoggerModule.forRoot(loggerConfig),
     AuthModule,
+    WorkspacesModule,
   ],
 })
 export class AppModule {}
