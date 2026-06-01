@@ -10,11 +10,11 @@
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
-    "class-validator": "^0.14.1"
+    "class-validator": "^0.15.1"
   },
   "devDependencies": {
-    "@cosider/eslint-config": "workspace:*",
-    "@cosider/typescript-config": "workspace:*",
+    "@cosider/eslint-config": "workspace:^",
+    "@cosider/typescript-config": "workspace:^",
     "typescript": "^6.0.3"
   }
 }
