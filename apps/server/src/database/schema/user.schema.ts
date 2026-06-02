@@ -39,7 +39,7 @@ export const userCredentials = pgTable('user_credentials', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   provider: userCredentialProviderEnum('provider').notNull(),
   providerId: varchar('provider_id', { length: 255 }).unique().notNull(),
   credential: text('credential').notNull(),
@@ -51,7 +51,7 @@ export const userBackupCode = pgTable('user_backup_code', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   backupCode: text('backup_code').notNull(),
   usedAt: timestamp('used_at', { withTimezone: true }),
 });
@@ -67,7 +67,7 @@ export const userProfiles = pgTable('user_profiles', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
-  userId: uuid('user_id').references(() => users.id),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   handle: varchar('handle', { length: 30 }).unique().notNull(),
   nickname: varchar('nickname', { length: 100 }),
   profileImageUrl: text('profile_image_url'),
