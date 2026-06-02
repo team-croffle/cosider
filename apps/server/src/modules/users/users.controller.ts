@@ -3,8 +3,9 @@ import {
   DeactivateResponseDto,
   RestoreRequestDto,
   RestoreResponseDto,
+  UserProfileResponseDto,
 } from '@cosider/shared';
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
@@ -75,5 +76,20 @@ export class UsersController {
     return {
       message: '계정이 복구되었습니다.',
     };
+  }
+
+  @Get(':handle')
+  @ApiOperation({
+    summary: "Get Other User's Profile",
+    description: '다른 유저의 공개 프로필 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    type: UserProfileResponseDto,
+  })
+  getProfile(
+    @Param('handle') handle: string,
+  ): UserProfileResponseDto {
+    return this.usersService.getProfile(handle);
   }
 }
