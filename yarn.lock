@@ -1168,6 +1168,7 @@ __metadata:
     typescript: "npm:^6.0.3"
     typescript-eslint: "npm:^8.60.0"
     uuid: "npm:^14.0.0"
+    uuidv7: "npm:^1.2.1"
     yjs: "npm:^13.6.31"
   languageName: unknown
   linkType: soft
@@ -19796,6 +19797,15 @@ __metadata:
   bin:
     uuid: dist-node/bin/uuid
   checksum: 10c0/a57ae7794c45005c1a9208989196c5baf79a7679c30f43c1bee9033a2c4d113a2cea216fa6fcc9663b08b0d55635df1a7c6eb7e7f3d21c3e50688c698fa39a50
+  languageName: node
+  linkType: hard
+
+"uuidv7@npm:^1.2.1":
+  version: 1.2.1
+  resolution: "uuidv7@npm:1.2.1"
+  bin:
+    uuidv7: cli.js
+  checksum: 10c0/adaf3387f10435efccf5ab6bb23344228c5737f98137619dc53521d2325522536218449175a0f2b1b13c4ffb846448cbcc4fb667bebf0457392a0b7bb35004a8
   languageName: node
   linkType: hard
 
