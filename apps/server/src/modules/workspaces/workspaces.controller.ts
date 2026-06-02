@@ -1,11 +1,10 @@
 import {
   CreateWorkspaceRequestDto,
-  CreateWorkspaceResponseDto,
   DeleteWorkspaceResponseDto,
-  GetWorkspaceDetailResponseDto,
   GetWorkspaceListResponseDto,
   UpdateWorkspaceRequestDto,
-  UpdateWorkspaceResponseDto,
+  WorkspaceDetailResponseDto,
+  WorkspaceResponseDto,
 } from '@cosider/shared';
 import {
   Body,
@@ -30,7 +29,7 @@ export class WorkspacesController {
   @HttpCode(HttpStatus.CREATED)
   createWorkspace(
     @Body() dto: CreateWorkspaceRequestDto /*@CurrentUser() userId: string*/,
-  ): Promise<CreateWorkspaceResponseDto> {
+  ): Promise<WorkspaceResponseDto> {
     return this.workspacesService.createWorkspace(dto);
   }
 
@@ -42,7 +41,7 @@ export class WorkspacesController {
   @Get(':workspace_slug')
   getWorkspaceDetail(
     @Param('workspace_slug') workspaceSlug: string /*@CurrentUser() userId: string,*/,
-  ): Promise<GetWorkspaceDetailResponseDto> {
+  ): Promise<WorkspaceDetailResponseDto> {
     return this.workspacesService.getWorkspaceDetail(workspaceSlug);
   }
 
@@ -51,7 +50,7 @@ export class WorkspacesController {
     @Param('workspace_slug') workspaceSlug: string,
     @Body() dto: UpdateWorkspaceRequestDto,
     // @CurrentUser() userId: string,
-  ): Promise<UpdateWorkspaceResponseDto> {
+  ): Promise<WorkspaceResponseDto> {
     return this.workspacesService.updateWorkspace(workspaceSlug, dto);
   }
 
