@@ -4,8 +4,9 @@ import {
   RestoreRequestDto,
   RestoreResponseDto,
   UserProfileResponseDto,
+  CheckHandleExistsResponseDto,
 } from '@cosider/shared';
-import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Get, Param, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 
 import { UsersService } from './users.service';
@@ -91,5 +92,25 @@ export class UsersController {
     @Param('handle') handle: string,
   ): UserProfileResponseDto {
     return this.usersService.getProfile(handle);
+  }
+
+  @ApiOperation({
+  summary: 'Check Handle Exists',
+  description: '핸들 사용 가능 여부 조회',
+  })
+  @ApiResponse({
+    status: 200,
+    type: CheckHandleExistsResponseDto,
+    description: '조회 성공',
+  })
+  @ApiResponse({
+    status: 400,
+    description: '조회 실패',
+  })
+  @Get('exists/handle')
+  checkHandleExists(
+    @Query('handle') handle: string,
+  ): CheckHandleExistsResponseDto {
+    return this.usersService.checkHandleExists(handle);
   }
 }
