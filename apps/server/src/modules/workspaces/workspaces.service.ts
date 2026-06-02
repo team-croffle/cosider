@@ -1,13 +1,12 @@
 import {
   CreateWorkspaceRequestDto,
-  CreateWorkspaceResponseDto,
   DeleteWorkspaceResponseDto,
   EWorkspaceStatus,
   EWorkspaceUserRole,
-  GetWorkspaceDetailResponseDto,
   GetWorkspaceListResponseDto,
   UpdateWorkspaceRequestDto,
-  UpdateWorkspaceResponseDto,
+  WorkspaceDetailResponseDto,
+  WorkspaceResponseDto,
 } from '@cosider/shared';
 import { Injectable } from '@nestjs/common';
 
@@ -20,12 +19,12 @@ const DUMMY_WORKSPACE = {
   description: '테스트 워크스페이스입니다.',
   logo_url: 'https://example.com/logo.png',
   role: EWorkspaceUserRole.OWNER,
-  create_at: new Date().toISOString(),
+  created_at: new Date().toISOString(),
 };
 
 @Injectable()
 export class WorkspacesService {
-  async createWorkspace(dto: CreateWorkspaceRequestDto): Promise<CreateWorkspaceResponseDto> {
+  async createWorkspace(dto: CreateWorkspaceRequestDto): Promise<WorkspaceResponseDto> {
     // TODO: DB insert 로직으로 교체
     // TODO: workspaces 테이블 insert 후 workspace_members에 생성자 OWNER로 자동 등록
     return {
@@ -44,7 +43,7 @@ export class WorkspacesService {
     };
   }
 
-  async getWorkspaceDetail(workspaceSlug: string): Promise<GetWorkspaceDetailResponseDto> {
+  async getWorkspaceDetail(workspaceSlug: string): Promise<WorkspaceDetailResponseDto> {
     // TODO: slug 기준 workspace 조회 후 projects 조회로 교체
     return {
       ...DUMMY_WORKSPACE,
@@ -56,7 +55,7 @@ export class WorkspacesService {
   async updateWorkspace(
     workspaceSlug: string,
     dto: UpdateWorkspaceRequestDto,
-  ): Promise<UpdateWorkspaceResponseDto> {
+  ): Promise<WorkspaceResponseDto> {
     // TODO: slug 기준 workspace 업데이트 교체
     return {
       ...DUMMY_WORKSPACE,
