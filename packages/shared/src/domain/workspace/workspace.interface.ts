@@ -1,4 +1,4 @@
-import { EWorkspaceStatus } from './workspace.enum';
+import { EWorkspaceStatus, EWorkspaceUserRole } from './workspace.enum';
 
 export interface IWorkspace {
   id: string;
@@ -6,9 +6,29 @@ export interface IWorkspace {
   slug: string;
   name: string;
   status: EWorkspaceStatus;
-  description: string;
-  logoUrl: string;
+  description: string | null;
+  logoUrl: string | null;
   createdAt: string;
-  scheduledDeleteAt: string;
-  deletedAt: string;
+  scheduledDeleteAt: string | null;
+  deletedAt: string | null;
+}
+
+export interface IWorkspaceMember {
+  id: string;
+  userId: string;
+  workspaceId: string;
+  role: EWorkspaceUserRole;
+  joinedAt: string;
+}
+
+export interface IWorkspaceInvitation {
+  id: string;
+  workspaceId: string;
+  inviterId: string;
+  target: string;
+  token: string;
+  role: EWorkspaceUserRole;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
 }
