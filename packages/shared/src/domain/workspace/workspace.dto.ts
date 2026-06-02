@@ -1,19 +1,16 @@
 import { EWorkspaceUserRole } from './workspace.enum';
 import { IWorkspace } from './workspace.interface';
 
-export type ICreateWorkspaceRequest = Pick<
-  IWorkspace,
-  'name' | 'slug' | 'description' | 'logo_url'
->;
+export type ICreateWorkspaceRequest = Pick<IWorkspace, 'name' | 'slug' | 'description' | 'logoUrl'>;
 export type IUpdateWorkspaceRequest = Pick<IWorkspace, 'name' | 'description' | 'slug'>;
 export type IWorkspaceDeleteAcceptedResponse = Pick<
   IWorkspace,
-  'slug' | 'status' | 'deleted_at' | 'scheduled_delete_at'
+  'slug' | 'status' | 'deletedAt' | 'scheduledDeleteAt'
 >;
 
 export interface IWorkspaceResponse extends Omit<
   IWorkspace,
-  'id' | 'owner_id' | 'scheduled_delete_at' | 'deleted_at'
+  'id' | 'ownerId' | 'scheduledDeleteAt' | 'deletedAt'
 > {
   role: EWorkspaceUserRole;
 }

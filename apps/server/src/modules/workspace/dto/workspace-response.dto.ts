@@ -10,8 +10,8 @@ export class WorkspaceResponse implements IWorkspaceResponse {
   name!: string;
   status!: EWorkspaceStatus;
   description!: string;
-  logo_url!: string;
-  created_at!: string;
+  logoUrl!: string;
+  createdAt!: string;
   role!: EWorkspaceUserRole;
 }
 
@@ -20,8 +20,8 @@ export class WorkspaceDetailResponse implements IWorkspaceDetailResponse {
   name!: string;
   status!: EWorkspaceStatus;
   description!: string;
-  logo_url!: string;
-  created_at!: string;
+  logoUrl!: string;
+  createdAt!: string;
   role!: EWorkspaceUserRole;
   owner!: Record<string, unknown>;
 

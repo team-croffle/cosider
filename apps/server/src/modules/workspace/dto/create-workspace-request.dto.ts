@@ -16,5 +16,5 @@ export class CreateWorkspaceRequest implements ICreateWorkspaceRequest {
 
   @IsUrl()
   @IsNotEmpty()
-  logo_url!: string;
+  logoUrl!: string;
 }
