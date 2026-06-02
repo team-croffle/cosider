@@ -1,5 +1,6 @@
 import { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
-import { pgEnum, pgTable, text, timestamp, unique, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { index } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { users } from './user.schema';
@@ -50,12 +51,7 @@ export const workspace_members = pgTable(
     role: workspaceMemberRoleEnum('role').notNull().default(EWorkspaceUserRole.MEMBER),
     joinedAt: timestamp('joined_at').defaultNow().notNull(),
   },
-  (table) => ({
-    workspaceMemberUnique: unique('workspace_member_unique_idx').on(
-      table.workspaceId,
-      table.userId,
-    ),
-  }),
+  (table) => [index('workspace_member_unique_idx').on(table.workspaceId, table.userId)],
 );
 
 // ############### WORKSPACE INVITATIONS ###############
