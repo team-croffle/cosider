@@ -1,12 +1,4 @@
 import {
-  CreateWorkspaceRequestDto,
-  DeleteWorkspaceResponseDto,
-  GetWorkspaceListResponseDto,
-  UpdateWorkspaceRequestDto,
-  WorkspaceDetailResponseDto,
-  WorkspaceResponseDto,
-} from '@cosider/shared';
-import {
   Body,
   Controller,
   Delete,
@@ -18,7 +10,14 @@ import {
   Post,
 } from '@nestjs/common';
 
-import { WorkspacesService } from './workspaces.service';
+import {
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+  WorkspaceDeleteAcceptedResponse,
+  WorkspaceDetailResponse,
+  WorkspaceResponse,
+} from './dto';
+import { WorkspacesService } from './workspace.service';
 
 @Controller('api/v1/workspaces')
 // @UseGuards(JwtAuthGuard)
@@ -27,44 +26,44 @@ export class WorkspacesController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  createWorkspace(
-    @Body() dto: CreateWorkspaceRequestDto /*@CurrentUser() userId: string*/,
-  ): Promise<WorkspaceResponseDto> {
+  async createWorkspace(
+    @Body() dto: CreateWorkspaceRequest /*@CurrentUser() userId: string*/,
+  ): Promise<WorkspaceResponse> {
     return this.workspacesService.createWorkspace(dto);
   }
 
   @Get()
-  getWorkspaceList(/*@CurrentUser() userId: string*/): Promise<GetWorkspaceListResponseDto> {
+  async getWorkspaceList(/*@CurrentUser() userId: string*/): Promise<WorkspaceResponse[]> {
     return this.workspacesService.getWorkspaceList();
   }
 
   @Get(':workspace_slug')
-  getWorkspaceDetail(
+  async getWorkspaceDetail(
     @Param('workspace_slug') workspaceSlug: string /*@CurrentUser() userId: string,*/,
-  ): Promise<WorkspaceDetailResponseDto> {
+  ): Promise<WorkspaceDetailResponse> {
     return this.workspacesService.getWorkspaceDetail(workspaceSlug);
   }
 
   @Patch(':workspace_slug')
-  updateWorkspace(
+  async updateWorkspace(
     @Param('workspace_slug') workspaceSlug: string,
-    @Body() dto: UpdateWorkspaceRequestDto,
+    @Body() dto: UpdateWorkspaceRequest,
     // @CurrentUser() userId: string,
-  ): Promise<WorkspaceResponseDto> {
+  ): Promise<WorkspaceResponse> {
     return this.workspacesService.updateWorkspace(workspaceSlug, dto);
   }
 
   @Delete(':workspace_slug')
   @HttpCode(HttpStatus.ACCEPTED)
-  deleteWorkspace(
+  async deleteWorkspace(
     @Param('workspace_slug') workspaceSlug: string,
     // @CurrentUser() userId: string,
-  ): Promise<DeleteWorkspaceResponseDto> {
+  ): Promise<WorkspaceDeleteAcceptedResponse> {
     return this.workspacesService.deleteWorkspace(workspaceSlug);
   }
 
   @Post(':workspace_slug/restore')
-  restoreWorkspace(
+  async restoreWorkspace(
     @Param('workspace_slug') workspaceSlug: string,
     // @CurrentUser() userId: string,
   ): Promise<void> {

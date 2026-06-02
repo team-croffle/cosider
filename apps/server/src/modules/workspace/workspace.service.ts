@@ -1,14 +1,13 @@
-import {
-  CreateWorkspaceRequestDto,
-  DeleteWorkspaceResponseDto,
-  EWorkspaceStatus,
-  EWorkspaceUserRole,
-  GetWorkspaceListResponseDto,
-  UpdateWorkspaceRequestDto,
-  WorkspaceDetailResponseDto,
-  WorkspaceResponseDto,
-} from '@cosider/shared';
+import { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
 import { Injectable } from '@nestjs/common';
+
+import {
+  CreateWorkspaceRequest,
+  UpdateWorkspaceRequest,
+  WorkspaceDeleteAcceptedResponse,
+  WorkspaceDetailResponse,
+  WorkspaceResponse,
+} from './dto';
 
 // TODO: Drizzle 세팅 완료 후 실제 DB 쿼리로 교체
 const DUMMY_WORKSPACE = {
@@ -24,62 +23,63 @@ const DUMMY_WORKSPACE = {
 
 @Injectable()
 export class WorkspacesService {
-  async createWorkspace(dto: CreateWorkspaceRequestDto): Promise<WorkspaceResponseDto> {
+  async createWorkspace(dto: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
     // TODO: DB insert 로직으로 교체
     // TODO: workspaces 테이블 insert 후 workspace_members에 생성자 OWNER로 자동 등록
-    return {
+    return await Promise.resolve({
       ...DUMMY_WORKSPACE,
       slug: dto.slug,
       name: dto.name,
       description: dto.description,
       logo_url: dto.logo_url,
-    };
+    });
   }
 
-  async getWorkspaceList(): Promise<GetWorkspaceListResponseDto> {
+  async getWorkspaceList(): Promise<WorkspaceResponse[]> {
     // TODO: 로그인 유저 기준 workspace_members 조회로 교체
-    return {
-      list: [DUMMY_WORKSPACE],
-    };
+    return Promise.resolve([DUMMY_WORKSPACE]);
   }
 
-  async getWorkspaceDetail(workspaceSlug: string): Promise<WorkspaceDetailResponseDto> {
+  async getWorkspaceDetail(workspaceSlug: string): Promise<WorkspaceDetailResponse> {
     // TODO: slug 기준 workspace 조회 후 projects 조회로 교체
-    return {
+    return await Promise.resolve({
       ...DUMMY_WORKSPACE,
       slug: workspaceSlug,
+      owner: {},
+      members: [],
       projects: [],
-    };
+    });
   }
 
   async updateWorkspace(
     workspaceSlug: string,
-    dto: UpdateWorkspaceRequestDto,
-  ): Promise<WorkspaceResponseDto> {
+    dto: UpdateWorkspaceRequest,
+  ): Promise<WorkspaceResponse> {
     // TODO: slug 기준 workspace 업데이트 교체
-    return {
+    return await Promise.resolve({
       ...DUMMY_WORKSPACE,
       slug: dto.slug,
       name: dto.name,
       description: dto.description,
-    };
+    });
   }
 
-  async deleteWorkspace(workspaceSlug: string): Promise<DeleteWorkspaceResponseDto> {
+  async deleteWorkspace(workspaceSlug: string): Promise<WorkspaceDeleteAcceptedResponse> {
     // TODO: status를 DELETE_PENDING으로 변경 후 scheduled_delete_at 설정으로 교체
     // TODO: FRID-32(1개월) vs ERD(24시간) 정책 불일치, 확인 후 수정 필요
     const now = new Date();
     const scheduledDeleteAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24시간 후
 
-    return {
-      workspace_slug: workspaceSlug,
+    return await Promise.resolve({
+      slug: workspaceSlug,
       status: EWorkspaceStatus.DELETE_PENDING,
       deleted_at: now.toISOString(),
       scheduled_delete_at: scheduledDeleteAt.toISOString(),
-    };
+    });
   }
 
   async restoreWorkspace(_workspaceSlug: string): Promise<void> {
     // TODO: status를 ACTIVE로 변경 후 scheduled_delete_at, deleted_at NULL로 교체
+    return await Promise.resolve();
   }
 }

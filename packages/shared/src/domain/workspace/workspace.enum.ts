@@ -5,3 +5,10 @@ export enum EWorkspaceStatus {
   DELETED = 'DELETED',
   RESTORING = 'RESTORING',
 }
+
+export enum EWorkspaceUserRole {
+  OWNER = 'OWNER',
+  ADMIN = 'ADMIN',
+  MEMBER = 'MEMBER',
+  VIEWER = 'VIEWER',
+}

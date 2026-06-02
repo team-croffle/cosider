@@ -4,7 +4,7 @@ import { LoggerModule } from 'nestjs-pino';
 
 import { loggerConfig } from './common/configs/logger.config';
 import { AuthModule } from './modules/auth/auth.module';
-import { WorkspacesModule } from './modules/workspaces/workspaces.module';
+import { WorkspacesModule } from './modules/workspace/workspace.module';
 
 @Module({
   imports: [
