@@ -88,6 +88,10 @@ export class UsersController {
     status: 200,
     type: UserProfileResponseDto,
   })
+  @ApiResponse({
+    status: 404,
+    description: 'handle 조회 실패',
+  })
   getProfile(
     @Param('handle') handle: string,
   ): UserProfileResponseDto {
