@@ -1,3 +1,18 @@
+export enum EUserStatus {
+  PENDING = 'PENDING',
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
+  BANNED = 'BANNED',
+  PENDING_LEAVE = 'PENDING_LEAVE',
+  LEAVED = 'LEAVED',
+}
+
+export enum EUserCredentialProvider {
+  LOCAL = 'LOCAL',
+  GOOGLE = 'GOOGLE',
+  GITHUB = 'GITHUB',
+}
+
 export enum EJobRole {
   FE_DEV = 'FE_DEV',
   BE_DEV = 'BE_DEV',
