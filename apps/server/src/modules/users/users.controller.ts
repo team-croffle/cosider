@@ -1,3 +1,5 @@
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+
 import {
   CheckHandleExistsResponseDto,
   DeactivateReqeustDto,
@@ -5,9 +7,7 @@ import {
   RestoreRequestDto,
   RestoreResponseDto,
   UserProfileResponseDto,
-} from '@cosider/shared';
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
-
+} from './dto';
 import { UsersService } from './users.service';
 // import { DeactivateGuard } from '../guards/deactivate.guard'
 
