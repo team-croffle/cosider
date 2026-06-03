@@ -35,5 +35,8 @@
     "*.{json,yaml,md,vue,html}": [
       "prettier --write"
     ]
+  },
+  "dependencies": {
+    "argon2": "^0.44.0"
   }
 }
