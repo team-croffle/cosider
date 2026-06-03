@@ -21,12 +21,10 @@ export class AuthService {
   async signup(dto: SignupRequestDto): Promise<void> {
     const { email, password, passwordConfirm } = dto;
 
-    //password Confirm
     if (password !== passwordConfirm) {
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
     }
 
-    //password Validation
     this.validatePassword(password);
 
     //email Duplicate Check
