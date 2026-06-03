@@ -1,8 +1,10 @@
 import * as crypto from 'crypto';
 
-import { EUserStatus, SignupRequestDto, VerifyEmailRequestDto } from '@cosider/shared';
+import { EUserStatus } from '@cosider/shared';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
+
+import { EmailVerifyRequest, SignupRequest } from './dto';
 
 // import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
 
@@ -18,7 +20,7 @@ type MockUser = {
 export class AuthService {
   private users: MockUser[] = [];
   // #12-signup-email-users
-  async signup(dto: SignupRequestDto): Promise<void> {
+  async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm } = dto;
 
     if (password !== passwordConfirm) {
@@ -63,29 +65,23 @@ export class AuthService {
   //TODO
   //:이메일 인증용 JWT 검증
   //JWT payload 기반 사용자 활성화 처리
-  async verifyEmail(dto: VerifyEmailRequestDto): Promise<void> {
-    const { token } = dto;
-
+  async verifyEmail(_: EmailVerifyRequest): Promise<void> {
+    // const { token } = dto;
     //TODO: JwtService.verifyAsync(token)
-
     // payload 예시
     // {
     //   userId: string;
     //   email: string;
     // }
-
     //TODO: payload.userId 기준 사용자 조회
-
     // user check
     // if (!user) {
     //   throw new BadRequestException('존재하지 않는 사용자입니다.');
     // }
-
     // 이미 인증된 사용자 검증
     // if (user.status === EUserStatus.ACTIVE) {
     //   throw new BadRequestException('이미 인증된 사용자입니다.');
     // }
-
     // activate user
     // user.status = EUserStatus.ACTIVE;
   }
