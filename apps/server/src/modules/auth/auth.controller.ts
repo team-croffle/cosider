@@ -100,11 +100,8 @@ export class AuthController {
     status: 410,
     description: '인증코드 만료 (5분 초과)',
   })
-  verifyEmail(@Body() verifyEmail: VerifyEmailRequestDto): VerifyEmailResponseDto {
-    console.log(verifyEmail);
-    return {
-      message: '이메일 인증이 완료되었습니다.',
-    };
+  verifyEmail(@Body() dto: VerifyEmailRequestDto): Promise<VerifyEmailResponseDto> {
+    return this.authService.verifyEmail(dto);
   }
   // provider 추후에 수정해야함.
   @Get('oauth/:provider')
