@@ -13,7 +13,7 @@ import {
 import { CreateNewTaskRequestDto, TaskResponseDto, UpdateTaskRequestDto } from './dto';
 import { TasksService } from './tasks.service';
 
-@Controller('tasks')
+@Controller('api/v1/tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
