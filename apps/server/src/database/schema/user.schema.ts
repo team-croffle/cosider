@@ -1,4 +1,4 @@
-import { EUserCredentialProvider, EUserJobRole, EUserStatus } from '@cosider/shared';
+import { EJobRole, EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import {
   boolean,
   jsonb,
@@ -60,7 +60,7 @@ export const userBackupCode = pgTable('user_backup_code', {
 
 export const userJobRoleEnum = pgEnum(
   'user_job_role',
-  Object.values(EUserJobRole) as [string, ...string[]],
+  Object.values(EJobRole) as [string, ...string[]],
 );
 
 export const userProfiles = pgTable('user_profiles', {
