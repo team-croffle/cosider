@@ -1,4 +1,4 @@
-import { EPrioriry } from '../../common';
+import { EPriority } from '../../common';
 
 import {
   EDeploymentPlatform,
@@ -83,7 +83,7 @@ export interface ITestCase {
   requirementId: string | null;
   title: string;
   description: string | null;
-  priority: EPrioriry;
+  priority: EPriority;
   createdAt: string;
 }
 
