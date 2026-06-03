@@ -1,4 +1,4 @@
-import { EUserCredentialProvider, EUserJobRole, EUserStatus } from './user.enum';
+import { EJobRole, EUserCredentialProvider, EUserStatus } from './user.enum';
 
 export interface IUsers {
   id: string;
@@ -32,7 +32,7 @@ export interface IUserProfiles {
   email: string;
   nickname: string;
   profileImageUrl: string | null;
-  jobRole: EUserJobRole;
+  jobRole: EJobRole;
   techStacks: string[] | null;
   updatedAt: string | null;
   nicknameUpdatedAt: string | null;
