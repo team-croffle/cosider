@@ -1,12 +1,6 @@
 import * as crypto from 'crypto';
 
-import {
-  EUserStatus,
-  SignupRequestDto,
-  SignupResponseDto,
-  VerifyEmailRequestDto,
-  VerifyEmailResponseDto,
-} from '@cosider/shared';
+import { EUserStatus, SignupRequestDto, VerifyEmailRequestDto } from '@cosider/shared';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 
@@ -24,7 +18,7 @@ type MockUser = {
 export class AuthService {
   private users: MockUser[] = [];
   // #12-signup-email-users
-  async signup(dto: SignupRequestDto): Promise<SignupResponseDto> {
+  async signup(dto: SignupRequestDto): Promise<void> {
     const { email, password, passwordConfirm } = dto;
 
     //password Confirm
@@ -66,16 +60,12 @@ export class AuthService {
     // const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
     // Email Service 연동 후 인증 메일 발송
     // MockUser 저장 -> Drizzle users 테이블 저장
-
-    return {
-      message: '회원가입이 완료되었습니다. 이메일 인증을 진행해주세요.',
-    };
   }
 
   //TODO
   //:이메일 인증용 JWT 검증
   //JWT payload 기반 사용자 활성화 처리
-  async verifyEmail(dto: VerifyEmailRequestDto): Promise<VerifyEmailResponseDto> {
+  async verifyEmail(dto: VerifyEmailRequestDto): Promise<void> {
     const { token } = dto;
 
     //TODO: JwtService.verifyAsync(token)
@@ -100,14 +90,12 @@ export class AuthService {
 
     // activate user
     // user.status = EUserStatus.ACTIVE;
-
-    return {
-      message: '이메일 인증이 완료되었습니다.',
-    };
   }
+
   private async hashPassword(password: string): Promise<string> {
     return argon2.hash(password);
   }
+
   private validatePassword(password: string): void {
     const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d`!@#$%^&*]{8,20}$/;
     if (!regex.test(password)) {

@@ -2,9 +2,7 @@ import {
   LoginResponseDto,
   OAuthResponseDto,
   SignupRequestDto,
-  SignupResponseDto,
   VerifyEmailRequestDto,
-  VerifyEmailResponseDto,
 } from '@cosider/shared';
 import { Body, Controller, Get, Post, Req } from '@nestjs/common';
 
@@ -36,12 +34,12 @@ export class AuthController {
   }
 
   @Post('signup')
-  signup(@Body() dto: SignupRequestDto): Promise<SignupResponseDto> {
+  signup(@Body() dto: SignupRequestDto): Promise<void> {
     return this.authService.signup(dto);
   }
 
   @Post('verify')
-  verifyEmail(@Body() dto: VerifyEmailRequestDto): Promise<VerifyEmailResponseDto> {
+  verifyEmail(@Body() dto: VerifyEmailRequestDto): Promise<void> {
     return this.authService.verifyEmail(dto);
   }
 
