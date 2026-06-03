@@ -1,3 +1,3 @@
 export class VerifyEmailRequestDto {
-  token: string;
+  token!: string;
 }
