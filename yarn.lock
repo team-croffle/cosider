@@ -10425,7 +10425,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cross-env@npm:^10.1.0":
+"cross-env@npm:^10.0.0, cross-env@npm:^10.1.0":
   version: 10.1.0
   resolution: "cross-env@npm:10.1.0"
   dependencies:
@@ -15327,16 +15327,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-addon-api@npm:^8.3.0":
-  version: 8.8.0
-  resolution: "node-addon-api@npm:8.8.0"
-  dependencies:
-    node-gyp: "npm:latest"
-  checksum: 10c0/4fc508efce85b448eac0e6ca5e3df7f287db42ca6b7c83490c1b9e805f56f558f0d4411112b3b1cb27a573a5a1007eefd0ca91e7aa2afa5b9b513a146b1ae8f9
-  languageName: node
-  linkType: hard
-
-"node-addon-api@npm:^8.5.0":
+"node-addon-api@npm:^8.3.0, node-addon-api@npm:^8.5.0":
   version: 8.8.0
   resolution: "node-addon-api@npm:8.8.0"
   dependencies:
