@@ -7,3 +7,7 @@ export interface IEmailVerifyRequest {
   email: string;
   code: string;
 }
+
+export interface ISignupRequest extends IAuthorizeDto {
+  passwordConfirm: string;
+}
