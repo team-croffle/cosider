@@ -1,7 +1,10 @@
+import { IRefreshToken } from '@cosider/shared';
 import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { users } from './user.schema';
+
+type RefreshTokenSchema = Record<keyof IRefreshToken, unknown>;
 
 export const refreshTokens = pgTable('refresh_tokens', {
   id: uuid('id')
@@ -12,4 +15,4 @@ export const refreshTokens = pgTable('refresh_tokens', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
-});
+} satisfies RefreshTokenSchema);

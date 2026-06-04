@@ -1,4 +1,12 @@
-import { EJobRole, EUserCredentialProvider, EUserStatus } from '@cosider/shared';
+import {
+  EJobRole,
+  EUserCredentialProvider,
+  EUserStatus,
+  IUser,
+  IUserBackupCode,
+  IUserCredential,
+  IUserProfile,
+} from '@cosider/shared';
 import {
   boolean,
   jsonb,
@@ -12,6 +20,8 @@ import {
 import { uuidv7 } from 'uuidv7';
 
 // ############### USERS ###############
+type UserSchemaKeys = Record<keyof IUser, unknown>;
+
 export const userStatusEnum = pgEnum(
   'user_status',
   Object.values(EUserStatus) as [string, ...string[]],
@@ -25,10 +35,11 @@ export const users = pgTable('users', {
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   twoFactorSecret: text('two_factor_secret'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-});
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+} satisfies UserSchemaKeys);
 
 // ############### USER CREDENTIALS ###############
+type UserCredentialSchema = Record<keyof IUserCredential, unknown>;
 
 export const userCredentialProviderEnum = pgEnum(
   'user_credential_provider',
@@ -44,19 +55,22 @@ export const userCredentials = pgTable('user_credentials', {
   providerId: varchar('provider_id', { length: 255 }).unique().notNull(),
   credential: text('credential').notNull(),
   lastLogin: timestamp('last_login', { withTimezone: true }).defaultNow(),
-});
+} satisfies UserCredentialSchema);
 
 // ############### USER BACKUP CODE ###############
-export const userBackupCode = pgTable('user_backup_code', {
+type UserBackupCodeSchema = Record<keyof IUserBackupCode, unknown>;
+
+export const userBackupCodes = pgTable('user_backup_codes', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  backupCode: text('backup_code').notNull(),
+  codeHash: text('code_hash').notNull(),
   usedAt: timestamp('used_at', { withTimezone: true }),
-});
+} satisfies UserBackupCodeSchema);
 
 // ############### USER PROFILES ###############
+type UserProfileSchema = Record<keyof IUserProfile, unknown>;
 
 export const userJobRoleEnum = pgEnum(
   'user_job_role',
@@ -68,6 +82,7 @@ export const userProfiles = pgTable('user_profiles', {
     .$defaultFn(() => uuidv7())
     .primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  email: varchar('email', { length: 254 }).notNull().unique(),
   handle: varchar('handle', { length: 30 }).unique().notNull(),
   nickname: varchar('nickname', { length: 100 }),
   profileImageUrl: text('profile_image_url'),
@@ -75,4 +90,4 @@ export const userProfiles = pgTable('user_profiles', {
   techStacks: jsonb('tech_stacks'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   nicknameUpdatedAt: timestamp('nickname_updated_at', { withTimezone: true }).defaultNow(),
-});
+} satisfies UserProfileSchema);
