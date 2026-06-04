@@ -69,7 +69,7 @@ export interface ISprint {
   projectId: string;
   name: string;
   description: string | null;
-  asigneeid: string | null;
+  asigneeId: string | null;
   asigneeNickname: string | null;
   status: ESprintStatus;
   startDate: string;
@@ -81,6 +81,7 @@ export interface ISprint {
 export interface ITestCase {
   id: string;
   requirementId: string | null;
+  projectId: string;
   title: string;
   description: string | null;
   priority: EPriority;
