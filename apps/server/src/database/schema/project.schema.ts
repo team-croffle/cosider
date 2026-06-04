@@ -162,8 +162,8 @@ export const sprints = pgTable('sprints', {
   projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
   description: text('description'),
-  asigneeId: uuid('asignee_id').references(() => projectMembers.userId, { onDelete: 'set null' }),
-  asigneeNickname: varchar('asignee_nickname', { length: 100 }),
+  assigneeId: uuid('asignee_id').references(() => projectMembers.userId, { onDelete: 'set null' }),
+  assigneeNickname: varchar('asignee_nickname', { length: 100 }),
   status: sprintStatusEnum('status').notNull().default(ESprintStatus.UPCOMING),
   startDate: timestamp('start_date', { withTimezone: true }).notNull(),
   endDate: timestamp('end_date', { withTimezone: true }).notNull(),
@@ -230,7 +230,8 @@ export const projectDeployments = pgTable('project_deployments', {
   status: deploymentStatusEnum('status').notNull(),
   deployerId: uuid('deployer_id').references(() => projectMembers.userId, { onDelete: 'set null' }),
   deployerNickname: varchar('deployer_nickname', { length: 100 }),
-  releaseNodeId: uuid('release_node_id'),
+  deploymentUrl: text('deployment_url'),
+  releaseNoteId: uuid('release_node_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 } satisfies DeploymentSchema);
 

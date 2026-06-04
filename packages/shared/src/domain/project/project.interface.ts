@@ -69,8 +69,8 @@ export interface ISprint {
   projectId: string;
   name: string;
   description: string | null;
-  asigneeId: string | null;
-  asigneeNickname: string | null;
+  assigneeId: string | null;
+  assigneeNickname: string | null;
   status: ESprintStatus;
   startDate: string;
   endDate: string;
@@ -106,7 +106,8 @@ export interface IProjectDeployment {
   status: EDeployStatus;
   deployerId: string | null;
   deployerNickname: string | null;
-  releaseNodeId: string | null;
+  deploymentUrl: string | null;
+  releaseNoteId: string | null;
   createdAt: string;
 }
 
