@@ -1,4 +1,4 @@
-import { IUserProfiles } from './user.interface';
+import { IUserProfile } from './user.interface';
 
 export interface ICheckHandleExistsResponse {
   isAvailable: boolean;
@@ -12,7 +12,7 @@ export interface IDeactivateResponse {
   message: string;
 }
 
-export interface IRestoreRequest extends Pick<IUserProfiles, 'email'> {
+export interface IRestoreRequest extends Pick<IUserProfile, 'email'> {
   code: string;
 }
 
@@ -21,6 +21,6 @@ export interface IRestoreResponse {
 }
 
 export type IUserProfileResponse = Pick<
-  IUserProfiles,
+  IUserProfile,
   'handle' | 'nickname' | 'profileImageUrl' | 'techStacks' | 'jobRole'
 >;

@@ -1,4 +1,4 @@
-export interface RefreshTokens {
+export interface IRefreshToken {
   id: string; //uuid
   userId: string; // uuid
   tokenValue: string; // uuid, cookieOnly
@@ -7,7 +7,7 @@ export interface RefreshTokens {
   revokedAt: string; // timestamptz
 }
 
-export interface TokenPairs {
+export interface ITokenPair {
   accessToken: string;
   refreshToken: string;
 }
