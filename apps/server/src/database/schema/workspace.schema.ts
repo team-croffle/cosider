@@ -1,11 +1,17 @@
-import { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
-import { pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
-import { index } from 'drizzle-orm/pg-core';
+import {
+  EWorkspaceStatus,
+  EWorkspaceUserRole,
+  IWorkspace,
+  IWorkspaceInvitation,
+  IWorkspaceMember,
+} from '@cosider/shared';
+import { index, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { users } from './user.schema';
 
 // ############### WORKSPACES ###############
+type WorkspaceSchemaKeys = Record<keyof IWorkspace, unknown>;
 
 export const workspaceStatusEnum = pgEnum(
   'workspace_status',
@@ -23,13 +29,14 @@ export const workspaces = pgTable('workspaces', {
   name: varchar('name', { length: 100 }).notNull(),
   status: workspaceStatusEnum('status').notNull().default(EWorkspaceStatus.ACTIVE),
   description: text('description'),
-  logo_url: text('logo_url'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
-  scheduled_delete_at: timestamp('scheduled_delete_at'),
-  deleted_at: timestamp('deleted_at'), // Soft Delete
-});
+  logoUrl: text('logo_url'),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  scheduledDeleteAt: timestamp('scheduled_delete_at', { withTimezone: true }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft Delete
+} satisfies WorkspaceSchemaKeys);
 
 // ############### WORKSPACE MEMBERS ###############
+type WorkspaceMemberSchema = Record<keyof IWorkspaceMember, unknown>;
 
 export const workspaceMemberRoleEnum = pgEnum(
   'workspace_member_role',
@@ -49,12 +56,13 @@ export const workspace_members = pgTable(
       .references(() => workspaces.id, { onDelete: 'cascade' })
       .notNull(),
     role: workspaceMemberRoleEnum('role').notNull().default(EWorkspaceUserRole.MEMBER),
-    joinedAt: timestamp('joined_at').defaultNow().notNull(),
-  },
+    joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
+  } satisfies WorkspaceMemberSchema,
   (table) => [index('workspace_member_unique_idx').on(table.workspaceId, table.userId)],
 );
 
 // ############### WORKSPACE INVITATIONS ###############
+type WorkspaceInvitationSchema = Record<keyof IWorkspaceInvitation, unknown>;
 
 export const workspaceInvitations = pgTable('workspace_invitations', {
   id: uuid('id')
@@ -68,4 +76,4 @@ export const workspaceInvitations = pgTable('workspace_invitations', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
-});
+} satisfies WorkspaceInvitationSchema);
