@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './document';
 export * from './guide';
 export * from './project';
 export * from './task';
