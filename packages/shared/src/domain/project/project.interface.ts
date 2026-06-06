@@ -121,13 +121,3 @@ export interface IProjectChecklist {
   linkedDocumentId: string | null;
   completedAt: string | null;
 }
-
-export interface IGitCommit {
-  id: string;
-  taskId: string;
-  commitHash: string;
-  message: string;
-  author: string;
-  url: string | null;
-  createdAt: Date;
-}
