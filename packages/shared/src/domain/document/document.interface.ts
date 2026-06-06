@@ -1,4 +1,4 @@
-import { EContentType, EDocumentType, ESourceType } from './document.enum';
+import { EContentType, EDocumentType, EMappedEntityType, ESourceType } from './document.enum';
 
 export interface Document {
   id: string;
@@ -20,4 +20,12 @@ export interface DocumentHistory {
   content: Buffer | null;
   versionTag: string | null;
   createdAt: Date;
+}
+
+export interface WhiteboardObject {
+  id: string;
+  whiteboardDocId: Pick<Document, 'id'>;
+  objectId: string;
+  mappedEntityType: EMappedEntityType;
+  mappedEntityId: string;
 }
