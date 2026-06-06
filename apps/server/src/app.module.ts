@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
 import { loggerConfig } from './common/configs/logger.config';
+import { DrizzleModule } from './database/drizzle.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TasksModule } from './modules/task/tasks.module';
 import { WorkspacesModule } from './modules/workspace/workspace.module';
@@ -11,9 +12,10 @@ import { WorkspacesModule } from './modules/workspace/workspace.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env', '../../.env'],
     }),
     LoggerModule.forRoot(loggerConfig),
+    DrizzleModule,
     AuthModule,
     WorkspacesModule,
     TasksModule,
