@@ -2,7 +2,7 @@ import { EPriority } from '../../common';
 
 import { ETaskStatus } from './task.enum';
 
-export interface Task {
+export interface ITask {
   id: string;
   projectId: string;
   taskNumber: number;
@@ -22,13 +22,13 @@ export interface Task {
   updatedAt: Date | null;
 }
 
-export interface TaskDependency {
+export interface ITaskDependency {
   id: string;
   taskId: string;
   predecessorTaskId: string;
 }
 
-export interface TaskAttachment {
+export interface ITaskAttachment {
   id: string;
   taskId: string;
   fileName: string;

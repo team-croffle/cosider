@@ -1,4 +1,4 @@
-export interface SdlcTemplate {
+export interface ISdlcTemplate {
   id: string;
   sdlcType: string;
   // TODO: 향후 수정
