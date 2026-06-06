@@ -1,8 +1,8 @@
-import { Task } from '../task';
+import { ITask } from '../task';
 
 import { ERequirementBlockType, ERequirementStatus } from './requirement.enum';
 
-export interface Requirement {
+export interface IRequirement {
   id: string;
   projectId: string;
   documentId: string;
@@ -12,7 +12,7 @@ export interface Requirement {
   status: ERequirementStatus;
 }
 
-export type RequirementTaskLink = {
-  requirementId: Pick<Requirement, 'id'>;
-  taskId: Pick<Task, 'id'>;
+export type IRequirementTaskLink = {
+  requirementId: Pick<IRequirement, 'id'>;
+  taskId: Pick<ITask, 'id'>;
 };
