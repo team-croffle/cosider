@@ -10,8 +10,8 @@ export interface IDocument {
   contentType: EContentType;
   sourceType: ESourceType;
   content: Buffer | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface IDocumentHistory {
@@ -19,7 +19,7 @@ export interface IDocumentHistory {
   documentId: Pick<IDocument, 'id'>;
   content: Buffer | null;
   versionTag: string | null;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface IWhiteboardObject {

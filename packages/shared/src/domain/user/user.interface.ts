@@ -5,8 +5,8 @@ export interface IUser {
   status: EUserStatus;
   twoFactorEnabled: boolean;
   twoFactorSecret: string | null;
-  createdAt: Date;
-  deletedAt: Date;
+  createdAt: string;
+  deletedAt: string;
 }
 
 export interface IUserCredential {
@@ -22,7 +22,7 @@ export interface IUserBackupCode {
   id: string;
   userId: string;
   codeHash: string;
-  usedAt: Date | null;
+  usedAt: string | null;
 }
 
 export interface IUserProfile {
@@ -34,6 +34,6 @@ export interface IUserProfile {
   profileImageUrl: string | null;
   jobRole: EJobRole;
   techStacks: string[] | null;
-  updatedAt: Date | null;
-  nicknameUpdatedAt: Date | null;
+  updatedAt: string | null;
+  nicknameUpdatedAt: string | null;
 }

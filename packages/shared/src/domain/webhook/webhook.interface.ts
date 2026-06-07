@@ -5,5 +5,5 @@ export interface IGitCommit {
   message: string;
   author: string;
   url: string | null;
-  createdAt: Date;
+  createdAt: string;
 }
