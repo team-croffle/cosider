@@ -1,8 +1,10 @@
+import { IUser } from '../user';
+
 import { EWorkspaceStatus, EWorkspaceUserRole } from './workspace.enum';
 
 export interface IWorkspace {
   id: string;
-  ownerId: string;
+  ownerId: IUser['id'];
   slug: string;
   name: string;
   status: EWorkspaceStatus;
@@ -15,16 +17,16 @@ export interface IWorkspace {
 
 export interface IWorkspaceMember {
   id: string;
-  userId: string;
-  workspaceId: string;
+  userId: IUser['id'];
+  workspaceId: IWorkspace['id'];
   role: EWorkspaceUserRole;
   joinedAt: string;
 }
 
 export interface IWorkspaceInvitation {
   id: string;
-  workspaceId: string;
-  inviterId: string;
+  workspaceId: IWorkspace['id'];
+  inviterId: IUser['id'];
   target: string;
   token: string;
   role: EWorkspaceUserRole;

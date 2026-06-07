@@ -1,4 +1,8 @@
 import { EPriority } from '../../common';
+import { IDocument } from '../document';
+import { IRequirement } from '../requirement';
+import { IUser, IUserProfile } from '../user';
+import { IWorkspace } from '../workspace';
 
 import {
   EDeploymentPlatform,
@@ -13,8 +17,8 @@ import {
 
 export interface IProject {
   id: string;
-  workspaceId: string;
-  ownerId: string;
+  workspaceId: IWorkspace['id'];
+  ownerId: IUser['id'];
   name: string;
   description: string | null;
   isPublic: boolean;
@@ -31,20 +35,20 @@ export interface IProject {
 
 export interface IProjectMember {
   id: string;
-  projectId: string;
-  userId: string;
+  projectId: IProject['id'];
+  userId: IUser['id'];
   role: EProjectMemberRole;
   joinedAt: string;
 }
 
 export interface IProjectTaskCounter {
-  projectId: string;
+  projectId: IProject['id'];
   lastTaskNumber: number;
 }
 
 export interface IProjectStage {
   id: string;
-  projectId: string;
+  projectId: IProject['id'];
   name: string;
   orderIndex: number;
   isRequired: boolean;
@@ -55,22 +59,22 @@ export interface IProjectStage {
 
 export interface IProjectStageHistory {
   id: string;
-  stageId: string;
+  stageId: IProjectStage['id'];
   action: EStageEditAction;
   status: EStageStatus;
-  actorId: string | null;
-  actorNickname: string;
+  actorId: IUser['id'] | null;
+  actorNickname: IUserProfile['nickname'];
   isBypassed: boolean;
   createdAt: string;
 }
 
 export interface ISprint {
   id: string;
-  projectId: string;
+  projectId: IProject['id'];
   name: string;
   description: string | null;
-  assigneeId: string | null;
-  assigneeNickname: string | null;
+  assigneeId: IUser['id'] | null;
+  assigneeNickname: IUserProfile['nickname'] | null;
   status: ESprintStatus;
   startDate: string;
   endDate: string;
@@ -80,8 +84,8 @@ export interface ISprint {
 
 export interface ITestCase {
   id: string;
-  requirementId: string | null;
-  projectId: string;
+  requirementId: IRequirement['id'] | null;
+  projectId: IProject['id'];
   title: string;
   description: string | null;
   priority: EPriority;
@@ -90,22 +94,22 @@ export interface ITestCase {
 
 export interface ITestRun {
   id: string;
-  testCaseId: string;
+  testCaseId: ITestCase['id'];
   status: ETestStatus;
-  testerId: string | null;
-  testerNickname: string;
+  testerId: IUser['id'] | null;
+  testerNickname: IUserProfile['nickname'];
   resultDetail: string;
   testedAt: string;
 }
 
 export interface IProjectDeployment {
   id: string;
-  projectId: string;
+  projectId: IProject['id'];
   version: string;
   platform: EDeploymentPlatform;
   status: EDeployStatus;
-  deployerId: string | null;
-  deployerNickname: string | null;
+  deployerId: IUser['id'] | null;
+  deployerNickname: IUserProfile['nickname'] | null;
   deploymentUrl: string | null;
   releaseNoteId: string | null;
   createdAt: string;
@@ -113,11 +117,11 @@ export interface IProjectDeployment {
 
 export interface IProjectChecklist {
   id: string;
-  projectId: string;
-  stageId: string;
+  projectId: IProject['id'];
+  stageId: IProjectStage['id'];
   taskName: string;
   isRequired: boolean;
   isCompleted: boolean;
-  linkedDocumentId: string | null;
+  linkedDocumentId: IDocument['id'] | null;
   completedAt: string | null;
 }

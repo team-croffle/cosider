@@ -39,7 +39,7 @@ export interface IApiResponseSchema {
 
 export interface IApiSpecification {
   id: string;
-  projectId: Pick<IProject, 'id'>;
+  projectId: IProject['id'];
   method: string;
   endpointPath: string;
   summary: string | null;
@@ -48,8 +48,8 @@ export interface IApiSpecification {
 }
 
 export interface IApiRequirementLink {
-  apiId: Pick<IApiSpecification, 'id'>;
-  requirementId: Pick<IRequirement, 'id'>;
+  apiId: IApiSpecification['id'];
+  requirementId: IRequirement['id'];
   syncStatus: EApiReqSyncStatus;
   lastSyncedAt: string;
 }

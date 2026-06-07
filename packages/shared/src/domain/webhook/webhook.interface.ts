@@ -1,6 +1,8 @@
+import { ITask } from '../task';
+
 export interface IGitCommit {
   id: string;
-  taskId: string;
+  taskId: ITask['id'];
   commitHash: string;
   message: string;
   author: string;

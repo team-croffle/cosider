@@ -1,6 +1,8 @@
+import { IUser } from '../user';
+
 export interface IUserDashboardLayout {
   id: string;
-  userId: string;
+  userId: IUser['id'];
   workspaceId: string;
   // JSONB
   layoutData: string;

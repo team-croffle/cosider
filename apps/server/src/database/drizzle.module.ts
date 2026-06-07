@@ -33,7 +33,7 @@ export type DrizzleDB = NodePgDatabase<typeof schema>;
         try {
           await pool.query('SELECT 1');
         } catch (error) {
-          console.error('!! Database connection failed on startup:', error);
+          console.error('Database connection failed on startup:', error);
           throw error;
         }
 

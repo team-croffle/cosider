@@ -1,36 +1,39 @@
 import { EPriority } from '../../common';
+import { IDocument } from '../document';
+import { IProject, ISprint } from '../project';
+import { IUser, IUserProfile } from '../user';
 
 import { ETaskStatus } from './task.enum';
 
 export interface ITask {
   id: string;
-  projectId: string;
+  projectId: IProject['id'];
   taskNumber: number;
-  assigneeId: string | null;
-  assigneeNickname: string | null;
-  reporterId: string | null;
-  reporterNickname: string | null;
-  linkedDocumentId: string | null;
-  sprintId: string | null;
+  assigneeId: IUser['id'] | null;
+  assigneeNickname: IUserProfile['nickname'] | null;
+  reporterId: IUser['id'] | null;
+  reporterNickname: IUserProfile['nickname'] | null;
+  linkedDocumentId: IDocument['id'] | null;
+  sprintId: ISprint['id'] | null;
   title: string;
   description: string | null;
   status: ETaskStatus;
   priority: EPriority;
-  startDate: Date | null;
-  dueDate: Date | null;
+  startDate: string | null;
+  dueDate: string | null;
   createdAt: string | null;
   updatedAt: string | null;
 }
 
 export interface ITaskDependency {
   id: string;
-  taskId: string;
-  predecessorTaskId: string;
+  taskId: ITask['id'];
+  predecessorTaskId: ITask['id'];
 }
 
 export interface ITaskAttachment {
   id: string;
-  taskId: string;
+  taskId: ITask['id'];
   fileName: string;
   fileUrl: string;
   size: number;

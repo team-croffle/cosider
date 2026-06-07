@@ -1,11 +1,13 @@
+import { IDocument } from '../document';
+import { IProject } from '../project';
 import { ITask } from '../task';
 
 import { ERequirementBlockType, ERequirementStatus } from './requirement.enum';
 
 export interface IRequirement {
   id: string;
-  projectId: string;
-  documentId: string;
+  projectId: IProject['id'];
+  documentId: IDocument['id'];
   type: ERequirementBlockType;
   contentText: string | null;
   contentHash: string | null;
@@ -13,6 +15,6 @@ export interface IRequirement {
 }
 
 export type IRequirementTaskLink = {
-  requirementId: Pick<IRequirement, 'id'>;
-  taskId: Pick<ITask, 'id'>;
+  requirementId: IRequirement['id'];
+  taskId: ITask['id'];
 };

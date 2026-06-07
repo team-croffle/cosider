@@ -1,10 +1,13 @@
+import { IProject } from '../project';
+import { IUser, IUserProfile } from '../user';
+
 import { EContentType, EDocumentType, EMappedEntityType, ESourceType } from './document.enum';
 
 export interface IDocument {
   id: string;
-  projectId: string;
-  authorId: string | null;
-  authorNickname: string | null;
+  projectId: IProject['id'];
+  authorId: IUser['id'] | null;
+  authorNickname: IUserProfile['nickname'] | null;
   title: string;
   documentType: EDocumentType;
   contentType: EContentType;
@@ -17,7 +20,7 @@ export interface IDocument {
 
 export interface IDocumentHistory {
   id: string;
-  documentId: Pick<IDocument, 'id'>;
+  documentId: IDocument['id'];
   content: Buffer;
   versionTag: string | null;
   createdAt: string;
@@ -25,7 +28,7 @@ export interface IDocumentHistory {
 
 export interface IWhiteboardObject {
   id: string;
-  whiteboardDocId: Pick<IDocument, 'id'>;
+  whiteboardDocId: IDocument['id'];
   objectId: string;
   mappedEntityType: EMappedEntityType;
   mappedEntityId: string;
