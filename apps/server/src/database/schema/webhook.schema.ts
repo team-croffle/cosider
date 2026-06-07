@@ -15,8 +15,8 @@ export const gitCommits = pgTable('git_commits', {
     .references(() => tasks.id, { onDelete: 'cascade' })
     .notNull(),
   commitHash: varchar('commit_hash', { length: 40 }).notNull(),
-  message: text('message'),
-  author: varchar('author', { length: 100 }),
-  url: text('url'),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  message: text('message').notNull(),
+  author: varchar('author', { length: 100 }).notNull(),
+  url: text('url').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies GitCommitSchema);

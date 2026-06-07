@@ -1,4 +1,10 @@
-import { ETaskStatus, ITask, ITaskAttachment, ITaskDependency } from '@cosider/shared';
+import {
+  ETaskStatus,
+  IRequirementTaskLink,
+  ITask,
+  ITaskAttachment,
+  ITaskDependency,
+} from '@cosider/shared';
 import {
   integer,
   pgEnum,
@@ -57,15 +63,20 @@ export const tasks = pgTable(
 
 // ############### REQUIREMENT TASK LINKS ###############
 // ER: 18. REQUIREMENT_TASK_LINKS
+type RequirementTaskLinkSchema = Record<keyof IRequirementTaskLink, unknown>;
 
-export const requirementTaskLinks = pgTable('requirement_task_links', {
-  requirementId: uuid('requirement_id')
-    .references(() => requirements.id, { onDelete: 'cascade' })
-    .notNull(),
-  taskId: uuid('task_id')
-    .references(() => tasks.id, { onDelete: 'cascade' })
-    .notNull(),
-});
+export const requirementTaskLinks = pgTable(
+  'requirement_task_links',
+  {
+    requirementId: uuid('requirement_id')
+      .references(() => requirements.id, { onDelete: 'cascade' })
+      .notNull(),
+    taskId: uuid('task_id')
+      .references(() => tasks.id, { onDelete: 'cascade' })
+      .notNull(),
+  } satisfies RequirementTaskLinkSchema,
+  (t) => [uniqueIndex('requirement_task_link_uidx').on(t.requirementId, t.taskId)],
+);
 
 // ############### TASK DEPENDENCIES ###############
 type TaskDependencySchema = Record<keyof ITaskDependency, unknown>;
@@ -83,7 +94,7 @@ export const taskDependencies = pgTable(
       .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
   } satisfies TaskDependencySchema,
-  (t) => [uniqueIndex('task_dependency_unique_uidx').on(t.taskId, t.predecessorTaskId)],
+  (t) => [uniqueIndex('task_dependency_uidx').on(t.taskId, t.predecessorTaskId)],
 );
 
 // ############### TASK ATTACHMENTS ###############

@@ -58,7 +58,7 @@ export const workspace_members = pgTable(
     role: workspaceMemberRoleEnum('role').notNull().default(EWorkspaceUserRole.MEMBER),
     joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
   } satisfies WorkspaceMemberSchema,
-  (table) => [uniqueIndex('workspace_member_unique_uidx').on(table.workspaceId, table.userId)],
+  (table) => [uniqueIndex('workspace_member_uidx').on(table.workspaceId, table.userId)],
 );
 
 // ############### WORKSPACE INVITATIONS ###############
