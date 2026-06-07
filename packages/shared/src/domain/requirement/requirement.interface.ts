@@ -9,6 +9,7 @@ export interface IRequirement {
   projectId: IProject['id'];
   documentId: IDocument['id'];
   type: ERequirementBlockType;
+  requirementCode: string;
   contentText: string | null;
   contentHash: string | null;
   status: ERequirementStatus;
