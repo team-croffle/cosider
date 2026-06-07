@@ -6,7 +6,7 @@ import { documents } from './document.schema';
 import { projects } from './project.schema';
 
 // ############### REQUIREMENTS ###############
-type RequirementSchema = Record<keyof (IRequirement & { requirementCode: string }), unknown>;
+type RequirementSchema = Record<keyof IRequirement, unknown>;
 
 export const requirementTypeEnum = pgEnum(
   'requirement_type',
