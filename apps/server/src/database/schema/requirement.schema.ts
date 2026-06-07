@@ -1,5 +1,5 @@
 import { ERequirementBlockType, ERequirementStatus, IRequirement } from '@cosider/shared';
-import { index, pgEnum, pgTable, text, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, text, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { documents } from './document.schema';
@@ -36,5 +36,5 @@ export const requirements = pgTable(
     contentHash: varchar('content_hash', { length: 64 }).notNull(),
     status: requirementStatusEnum('status').default(ERequirementStatus.DRAFT).notNull(),
   } satisfies RequirementSchema,
-  (t) => [index('project_requirement_code_idx').on(t.projectId, t.requirementCode)],
+  (t) => [uniqueIndex('project_requirement_code_uidx').on(t.projectId, t.requirementCode)],
 );

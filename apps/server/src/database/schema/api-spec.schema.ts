@@ -1,5 +1,5 @@
-import { IApiSpecification } from '@cosider/shared';
-import { index, jsonb, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { IApiRequirementLink, IApiSpecification } from '@cosider/shared';
+import { jsonb, pgTable, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { projects } from './project.schema';
@@ -23,17 +23,23 @@ export const apiSpecifications = pgTable(
     requestSchema: jsonb('request_schema'),
     responseSchema: jsonb('response_schema'),
   } satisfies ApiSpecificationSchema,
-  (t) => [index('project_method_endpoint_idx').on(t.projectId, t.method, t.endpointPath)],
+  (t) => [uniqueIndex('project_method_endpoint_uidx').on(t.projectId, t.method, t.endpointPath)],
 );
 
 // ############### API REQUIREMENT LINKS ###############
-export const apiRequirementLinks = pgTable('api_requirement_links', {
-  apiId: uuid('api_id')
-    .references(() => apiSpecifications.id, { onDelete: 'cascade' })
-    .notNull(),
-  requirementId: uuid('requirement_id')
-    .references(() => requirements.id, { onDelete: 'cascade' })
-    .notNull(),
-  syncStatus: varchar('sync_status', { length: 20 }).default('UPDATED'),
-  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).defaultNow(),
-});
+type ApiRequirementLinkSchema = Record<keyof IApiRequirementLink, unknown>;
+
+export const apiRequirementLinks = pgTable(
+  'api_requirement_links',
+  {
+    apiId: uuid('api_id')
+      .references(() => apiSpecifications.id, { onDelete: 'cascade' })
+      .notNull(),
+    requirementId: uuid('requirement_id')
+      .references(() => requirements.id, { onDelete: 'cascade' })
+      .notNull(),
+    syncStatus: varchar('sync_status', { length: 20 }).default('UPDATED'),
+    lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }).defaultNow(),
+  } satisfies ApiRequirementLinkSchema,
+  (t) => [uniqueIndex('api_requirement_link_uidx').on(t.apiId, t.requirementId)],
+);

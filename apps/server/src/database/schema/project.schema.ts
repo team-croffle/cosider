@@ -20,13 +20,13 @@ import {
 } from '@cosider/shared';
 import {
   boolean,
-  index,
   integer,
   jsonb,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -69,7 +69,7 @@ export const projects = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
   } satisfies ProjectSchema,
-  (t) => [index('workspace_project_key_idx').on(t.workspaceId, t.key)],
+  (t) => [uniqueIndex('workspace_project_key_uidx').on(t.workspaceId, t.key)],
 );
 
 // ############### PROJECT MEMBERS ###############
@@ -91,7 +91,7 @@ export const projectMembers = pgTable(
     role: projectMemberRoleEnum('role').notNull().default(EProjectMemberRole.VIEWER),
     joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow(),
   } satisfies ProjectMemberSchema,
-  (t) => [index('user_project_idx').on(t.userId, t.projectId)],
+  (t) => [uniqueIndex('user_project_uidx').on(t.userId, t.projectId)],
 );
 
 // ############### PROJECT TASK COUNTERS ###############
@@ -119,7 +119,7 @@ export const projectStages = pgTable('project_stages', {
     .primaryKey(),
   projectId: uuid('project_id').references(() => projects.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull(),
-  orderIndex: integer('order_index').notNull().default(0),
+  orderIndex: integer('order_uniqueIndex').notNull().default(0),
   isRequired: boolean('is_required').notNull().default(true),
   status: stageStatusEnum('status').notNull().default(EStageStatus.PLANNED),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

@@ -1,11 +1,11 @@
 import { ETaskStatus, ITask, ITaskAttachment, ITaskDependency } from '@cosider/shared';
 import {
-  index,
   integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core';
@@ -52,7 +52,7 @@ export const tasks = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   } satisfies TaskSchema,
-  (t) => [index('project_task_number_idx').on(t.projectId, t.taskNumber)],
+  (t) => [uniqueIndex('project_task_number_uidx').on(t.projectId, t.taskNumber)],
 );
 
 // ############### REQUIREMENT TASK LINKS ###############
@@ -83,7 +83,7 @@ export const taskDependencies = pgTable(
       .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
   } satisfies TaskDependencySchema,
-  (t) => [index('task_dependency_unique_idx').on(t.taskId, t.predecessorTaskId)],
+  (t) => [uniqueIndex('task_dependency_unique_uidx').on(t.taskId, t.predecessorTaskId)],
 );
 
 // ############### TASK ATTACHMENTS ###############

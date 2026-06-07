@@ -5,7 +5,7 @@ import {
   IWorkspaceInvitation,
   IWorkspaceMember,
 } from '@cosider/shared';
-import { index, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
+import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { users } from './user.schema';
@@ -58,7 +58,7 @@ export const workspace_members = pgTable(
     role: workspaceMemberRoleEnum('role').notNull().default(EWorkspaceUserRole.MEMBER),
     joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
   } satisfies WorkspaceMemberSchema,
-  (table) => [index('workspace_member_unique_idx').on(table.workspaceId, table.userId)],
+  (table) => [uniqueIndex('workspace_member_unique_uidx').on(table.workspaceId, table.userId)],
 );
 
 // ############### WORKSPACE INVITATIONS ###############

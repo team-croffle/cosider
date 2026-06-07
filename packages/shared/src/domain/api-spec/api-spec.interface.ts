@@ -1,6 +1,7 @@
 import { IProject } from '../project';
+import { IRequirement } from '../requirement';
 
-import { EMimeType, ESchemaDataType } from './api-spec.enum';
+import { EApiReqSyncStatus, EMimeType, ESchemaDataType } from './api-spec.enum';
 
 export interface ISchemaPropertyDetail {
   type: ESchemaDataType;
@@ -41,7 +42,14 @@ export interface IApiSpecification {
   projectId: Pick<IProject, 'id'>;
   method: string;
   endpointPath: string;
-  summary: string;
+  summary: string | null;
   requestSchema: IApiRequestSchema;
   responseSchema: Record<string, IApiResponseSchema> | null;
+}
+
+export interface IApiRequirementLink {
+  apiId: Pick<IApiSpecification, 'id'>;
+  requirementId: Pick<IRequirement, 'id'>;
+  syncStatus: EApiReqSyncStatus;
+  lastSyncedAt: string;
 }

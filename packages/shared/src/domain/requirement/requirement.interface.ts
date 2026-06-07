@@ -7,8 +7,8 @@ export interface IRequirement {
   projectId: string;
   documentId: string;
   type: ERequirementBlockType;
-  contentText: string;
-  contentHash: string;
+  contentText: string | null;
+  contentHash: string | null;
   status: ERequirementStatus;
 }
 

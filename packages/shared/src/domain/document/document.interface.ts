@@ -10,6 +10,7 @@ export interface IDocument {
   contentType: EContentType;
   sourceType: ESourceType;
   content: Buffer | null;
+  contentVector: Buffer | null;
   createdAt: string | null;
   updatedAt: string | null;
 }
@@ -17,7 +18,7 @@ export interface IDocument {
 export interface IDocumentHistory {
   id: string;
   documentId: Pick<IDocument, 'id'>;
-  content: Buffer | null;
+  content: Buffer;
   versionTag: string | null;
   createdAt: string;
 }
