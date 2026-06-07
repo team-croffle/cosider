@@ -7,6 +7,7 @@ import {
   IDocumentHistory,
   IWhiteboardObject,
 } from '@cosider/shared';
+import { sql } from 'drizzle-orm';
 import { customType, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
@@ -14,16 +15,9 @@ import { projects } from './project.schema';
 import { users } from './user.schema';
 
 // Bytea type definition for Drizzle
-const bytea = customType<{ data: Buffer; driverData: string }>({
+const bytea = customType<{ data: Buffer; driverData: Buffer }>({
   dataType() {
     return 'bytea';
-  },
-  toDriver(val: Buffer): string {
-    return '\\x' + val.toString('hex');
-  },
-  fromDriver(val: string): Buffer {
-    // pg returns bytea as hex string starting with \x
-    return Buffer.from(val.replace('\\x', ''), 'hex');
   },
 });
 
@@ -52,13 +46,14 @@ export const documents = pgTable('documents', {
   projectId: uuid('project_id')
     .references(() => projects.id, { onDelete: 'cascade' })
     .notNull(),
-  authorId: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+  authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
   authorNickname: varchar('author_nickname', { length: 100 }),
   title: varchar('title', { length: 200 }).notNull(),
   documentType: documentTypeEnum('document_type').notNull(),
   contentType: contentTypeEnum('content_type').notNull(),
   sourceType: sourceTypeEnum('source_type').notNull(),
   content: bytea('content'),
+  contentVector: bytea('content_vector').default(sql`'\\x'::bytea`),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 } satisfies DocumentSchema);
@@ -73,7 +68,7 @@ export const documentHistories = pgTable('document_histories', {
   documentId: uuid('document_id')
     .references(() => documents.id, { onDelete: 'cascade' })
     .notNull(),
-  content: bytea('content'),
+  content: bytea('content').notNull(),
   versionTag: varchar('version_tag', { length: 50 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies DocumentHistorySchema);
