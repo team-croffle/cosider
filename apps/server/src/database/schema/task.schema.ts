@@ -9,6 +9,7 @@ import {
   integer,
   pgEnum,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   uniqueIndex,
@@ -75,7 +76,7 @@ export const requirementTaskLinks = pgTable(
       .references(() => tasks.id, { onDelete: 'cascade' })
       .notNull(),
   } satisfies RequirementTaskLinkSchema,
-  (t) => [uniqueIndex('requirement_task_link_uidx').on(t.requirementId, t.taskId)],
+  (t) => [primaryKey({ columns: [t.requirementId, t.taskId] })],
 );
 
 // ############### TASK DEPENDENCIES ###############
