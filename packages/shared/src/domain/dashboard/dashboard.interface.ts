@@ -4,5 +4,5 @@ export interface IUserDashboardLayout {
   workspaceId: string;
   // JSONB
   layoutData: string;
-  updatedAt: Date;
+  updatedAt: string;
 }

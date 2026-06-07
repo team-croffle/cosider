@@ -7,5 +7,5 @@ export interface INotification {
   content: string;
   linkUrl: string | null;
   isRead: boolean;
-  createdAt: Date;
+  createdAt: string;
 }

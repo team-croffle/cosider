@@ -18,8 +18,8 @@ export interface ITask {
   priority: EPriority;
   startDate: Date | null;
   dueDate: Date | null;
-  createdAt: Date | null;
-  updatedAt: Date | null;
+  createdAt: string | null;
+  updatedAt: string | null;
 }
 
 export interface ITaskDependency {
@@ -34,5 +34,5 @@ export interface ITaskAttachment {
   fileName: string;
   fileUrl: string;
   size: number;
-  createdAt: Date;
+  createdAt: string;
 }
