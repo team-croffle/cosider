@@ -3,6 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { LoggerModule } from 'nestjs-pino';
 
 import { loggerConfig } from './common/configs/logger.config';
+import { MinioModule } from './common/minio/minio.module';
+import { RedisModule } from './common/redis/redis.module';
 import { DrizzleModule } from './database/drizzle.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TasksModule } from './modules/task/tasks.module';
@@ -15,6 +17,8 @@ import { WorkspacesModule } from './modules/workspace/workspace.module';
       envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env', '../../.env'],
     }),
     LoggerModule.forRoot(loggerConfig),
+    MinioModule,
+    RedisModule,
     DrizzleModule,
     AuthModule,
     WorkspacesModule,
