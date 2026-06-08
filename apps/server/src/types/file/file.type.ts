@@ -1,7 +1,18 @@
 import { EUploadType } from './file.enum';
 
-export interface PendingUpload {
+export type PendingUpload = {
   objectKey: string;
   userId: string;
-  type: EUploadType;
-}
+  uploadType: EUploadType;
+};
+
+export type DownloadUrlWithExpires = {
+  downloadUrl: string;
+  expiresAt: Date;
+};
+
+export type UploadInfo = {
+  uploadUrl: string;
+  uploadToken: string;
+  expiresAt: Date;
+};

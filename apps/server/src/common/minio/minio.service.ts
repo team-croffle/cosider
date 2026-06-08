@@ -1,12 +1,13 @@
-import {
-  MinioPresignedOptions,
-  PresignedDownloadResult,
-  PresignedUploadResult,
-} from '@cosider/shared';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import * as Minio from 'minio';
 
 import { MINIO_CLIENT } from './minio.module';
+
+import {
+  MinioPresignedOptions,
+  PresignedDownloadResult,
+  PresignedUploadResult,
+} from '@/types/minio';
 
 @Injectable()
 export class MinioService {
