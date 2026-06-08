@@ -20,7 +20,9 @@ export interface IRestoreResponse {
   message: string;
 }
 
-export type IUserProfileResponse = Pick<
+export interface IUserProfileResponse extends Pick<
   IUserProfile,
-  'handle' | 'nickname' | 'profileImageUrl' | 'techStacks' | 'jobRole'
->;
+  'handle' | 'nickname' | 'techStacks' | 'jobRole'
+> {
+  profileImageUrl: string | null;
+}

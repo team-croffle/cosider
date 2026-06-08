@@ -1,5 +1,5 @@
 import { ICreateWorkspaceRequest } from '@cosider/shared';
-import { IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateWorkspaceRequest implements ICreateWorkspaceRequest {
   @IsString()
@@ -14,7 +14,6 @@ export class CreateWorkspaceRequest implements ICreateWorkspaceRequest {
   @IsNotEmpty()
   description!: string;
 
-  @IsUrl()
-  @IsNotEmpty()
-  logoUrl!: string;
+  @IsString()
+  logoUploadToken!: string | null;
 }

@@ -9,7 +9,8 @@ export interface IWorkspace {
   name: string;
   status: EWorkspaceStatus;
   description: string | null;
-  logoUrl: string | null;
+  // Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
+  logoImageKey: string | null;
   createdAt: string;
   scheduledDeleteAt: string | null;
   deletedAt: string | null;

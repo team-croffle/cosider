@@ -23,7 +23,8 @@ export interface IProject {
   description: string | null;
   isPublic: boolean;
   key: string;
-  logoUrl: string | null;
+  // Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
+  logoImageKey: string | null;
   techStacks: string[];
   sdlcType: ESdlcType;
   gitRepoUrl: string | null;
