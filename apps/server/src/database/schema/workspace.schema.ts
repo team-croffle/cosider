@@ -29,7 +29,8 @@ export const workspaces = pgTable('workspaces', {
   name: varchar('name', { length: 100 }).notNull(),
   status: workspaceStatusEnum('status').notNull().default(EWorkspaceStatus.ACTIVE),
   description: text('description'),
-  logoUrl: text('logo_url'),
+  // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
+  logoImageKey: text('logo_image_key'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   scheduledDeleteAt: timestamp('scheduled_delete_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft Delete

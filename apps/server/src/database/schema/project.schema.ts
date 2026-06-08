@@ -60,7 +60,8 @@ export const projects = pgTable(
     description: text('description'),
     isPublic: boolean('is_public').default(false).notNull(),
     key: varchar('key', { length: 20 }).notNull(),
-    logoUrl: text('logo_url'),
+    // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
+    logoImageKey: text('logo_image_key'),
     techStacks: jsonb('tech_stacks'),
     sdlcType: sdlcTypeEnum('sdlc_type').$type<ESdlcType>().notNull(),
     gitRepoUrl: varchar('git_repo_url', { length: 255 }),

@@ -109,7 +109,8 @@ export const taskAttachments = pgTable('task_attachments', {
     .references(() => tasks.id, { onDelete: 'cascade' })
     .notNull(),
   fileName: varchar('file_name', { length: 255 }).notNull(),
-  fileUrl: text('file_url').notNull(),
+  // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
+  fileKey: text('file_key').notNull(),
   size: integer('size'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies TaskAttachmentSchema);
