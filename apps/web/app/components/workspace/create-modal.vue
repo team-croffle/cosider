@@ -7,7 +7,7 @@
     name: '',
     slug: '',
     description: null,
-    logoUrl: '',
+    logoUrl: null,
   });
 
   const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
@@ -52,14 +52,25 @@
     // 파일 형식 검증
     if (!ALLOWED_TYPES.includes(file.type)) {
       fileError.value = '지원하지 않는 파일 형식입니다. (jpg, png, webp)';
+      if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value); // 이전 URL 해제
+        previewUrl.value = null; // 미리보기 제거
+      }
       return;
     }
 
     // 파일 크기 검증
     if (file.size > MAX_SIZE) {
       fileError.value = '이미지 크기는 5MB 이하여야 합니다.';
+      if (previewUrl.value) {
+        URL.revokeObjectURL(previewUrl.value); // 이전 URL 해제
+        previewUrl.value = null; // 미리보기 제거
+      }
       return;
     }
+
+    // 이전 URL 해제 후 새 URL 생성
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value);
 
     fileError.value = null;
     previewUrl.value = URL.createObjectURL(file);
@@ -100,9 +111,18 @@
     form.logoUrl = '';
     errors.name = null;
     errors.slug = null;
-    previewUrl.value = null;
     fileError.value = null;
     isSlugManuallyEdited.value = false;
+
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value);
+      previewUrl.value = null;
+    }
+
+    // 같은 파일 재선택 시 change 이벤트 발생하도록 초기화
+    if (fileInput.value) {
+      fileInput.value.value = '';
+    }
   }
 </script>
 
