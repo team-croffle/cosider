@@ -19,7 +19,7 @@ export const MINIO_CLIENT = 'MINIO_CLIENT';
           useSSL: config.get('STORAGE_USE_SSL', 'true') === 'true',
           accessKey: config.getOrThrow<string>('STORAGE_ACCESS_KEY'),
           secretKey: config.getOrThrow<string>('STORAGE_SECRET_KEY'),
-          region: config.get<string>('STORAGE_REGION', 'us-ease-1'),
+          region: config.get<string>('STORAGE_REGION', 'us-east-1'),
           pathStyle: config.get('STORAGE_PATH_STYLE', 'true') === 'true',
         });
       },
