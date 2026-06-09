@@ -1,29 +1,18 @@
+import { EJobRole, EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
+import { uuidv7 } from 'uuidv7';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
-import { JwtPayload } from './interface/jwt-payload.interface';
 
 import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
-import { userProfiles } from '@/database/schema';
+import { userCredentials, userProfiles, users } from '@/database/schema';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
-    private readonly jwtService: JwtService,
-  ) {}
+  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
-  // expiresIn은 필요시 변경 예정.
-  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
-  async generateAccessToken(payload: JwtPayload): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: '5m' });
-  }
-  async generateRefreshToken(payload: JwtPayload): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: '7d' });
-  }
   // #12-signup-email-users
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm } = dto;
@@ -34,31 +23,45 @@ export class AuthService {
 
     this.validatePassword(password);
 
-    //email Duplicate Check
-    const exists = await this.db.query.userProfiles.findFirst({
-      where: eq(userProfiles.email, email),
-    });
-
-    if (exists) {
+    // 이메일 중복 체크 (user_profiles.email에 unique 제약이 있음)
+    const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
+    if (existing.length > 0) {
       throw new BadRequestException('이미 존재하는 이메일입니다.');
     }
 
-    //user Create. 초기 status는 Pending으로 설정. 이메일 인증시 Active 처리.
+    const hashed = await this.hashPassword(password);
 
-    //TODO:
-    // 이메일 인증용 JWT 발급
-    // payload:
-    // {
-    //   userId: user.id,
-    //   email: user.email,
-    // }
-    // expiresIn: 5m
+    // 트랜잭션으로 users, user_credentials, user_profiles 동시 생성
+    await this.db.transaction(async (tx) => {
+      const userId = uuidv7();
 
-    //TODO:
-    // 인증 링크 생성(ENV에 Frontend url 작성.)
-    // const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
-    // Email Service 연동 후 인증 메일 발송
-    // MockUser 저장 -> Drizzle users 테이블 저장
+      await tx.insert(users).values({ id: userId, status: EUserStatus.PENDING });
+
+      await tx.insert(userCredentials).values({
+        id: uuidv7(),
+        userId,
+        provider: EUserCredentialProvider.LOCAL,
+        providerId: email,
+        credential: hashed,
+      });
+
+      // handle 생성 정책: 이메일 앞부분을 기본으로 사용합니다.
+      // 충돌 처리(중복 handle)는 별도 로직으로 처리 필요 — 여기서는 간단하게 사용합니다.
+      const handle = email.split('@')[0];
+
+      await tx.insert(userProfiles).values({
+        id: uuidv7(),
+        userId,
+        email,
+        handle,
+        jobRole: EJobRole.FE_DEV, // 기본값으로 FE_DEV 지정. 필요 시 클라이언트에서 선택하도록 변경하세요.
+      });
+    });
+
+    // TODO:
+    // - 이메일 인증용 JWT 발급 (payload: { userId, email }, expiresIn: 5m)
+    // - 인증 링크 생성 (FRONTEND_URL 환경변수 사용)
+    // - Email Service 연동 후 인증 메일 발송
   }
 
   //TODO
