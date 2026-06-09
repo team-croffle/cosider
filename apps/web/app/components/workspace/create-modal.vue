@@ -2,7 +2,6 @@
   import type { ICreateWorkspaceRequest } from '@cosider/shared';
 
   const isOpen = defineModel<boolean>({ default: false });
-  const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
 
   const form = reactive<ICreateWorkspaceRequest>({
     name: '',
@@ -10,6 +9,8 @@
     description: null,
     logoUrl: '',
   });
+
+  const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
 
   // name → slug 자동 변환
   watch(
@@ -25,6 +26,11 @@
         .replace(/-+/g, '-');
     },
   );
+
+  // 모달 닫힐 때마다 초기화
+  watch(isOpen, (newVal) => {
+    if (!newVal) onClose();
+  });
 
   // image upload
   // TODO: presigned URL → S3 업로드 연결 필요 (백엔드 완성 후)
@@ -58,6 +64,46 @@
     fileError.value = null;
     previewUrl.value = URL.createObjectURL(file);
   }
+
+  // 폼 유효성 검사
+  const errors = reactive({
+    name: null as string | null,
+    slug: null as string | null,
+  });
+
+  function validate(): boolean {
+    errors.name = null;
+    errors.slug = null;
+
+    if (!form.name.trim()) {
+      errors.name = '워크스페이스 이름을 입력해주세요.';
+    }
+
+    if (!form.slug.trim()) {
+      errors.slug = 'Slug를 입력해주세요.';
+    }
+
+    return !errors.name && !errors.slug;
+  }
+
+  function onSubmit() {
+    if (!validate()) return;
+    // TODO: API 호출 (composable 연결 후)
+    console.log('submit', form);
+  }
+
+  // 모달 닫힐 때 상태 초기화
+  function onClose() {
+    form.name = '';
+    form.slug = '';
+    form.description = null;
+    form.logoUrl = '';
+    errors.name = null;
+    errors.slug = null;
+    previewUrl.value = null;
+    fileError.value = null;
+    isSlugManuallyEdited.value = false;
+  }
 </script>
 
 <template>
@@ -86,12 +132,12 @@
         </div>
 
         <!-- Workspace Name -->
-        <UFormField label="Workspace Name" required>
+        <UFormField label="Workspace Name" required :error="errors.name ?? undefined">
           <UInput v-model="form.name" placeholder="Enter workspace name" class="w-full" />
         </UFormField>
 
         <!-- Slug -->
-        <UFormField label="Slug" required>
+        <UFormField label="Slug" required :error="errors.slug ?? undefined">
           <UInput
             v-model="form.slug"
             placeholder="workspace-slug"
@@ -120,7 +166,7 @@
     <template #footer>
       <div class="flex justify-end gap-2">
         <UButton variant="outline" @click="isOpen = false">Cancel</UButton>
-        <UButton>Create Workspace</UButton>
+        <UButton @click="onSubmit">Create Workspace</UButton>
       </div>
     </template>
   </UModal>
