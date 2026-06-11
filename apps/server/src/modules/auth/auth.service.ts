@@ -1,5 +1,6 @@
 import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
@@ -11,7 +12,10 @@ import { userCredentials, userProfiles, users } from '@/database/schema';
 
 @Injectable()
 export class AuthService {
-  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
+  constructor(
+    @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm, handle, jobRole } = dto;
@@ -22,7 +26,6 @@ export class AuthService {
 
     this.validatePassword(password);
 
-    // email 및 handle duplicate 확인
     const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
     if (existing.length > 0) {
       throw new BadRequestException('이미 존재하는 이메일입니다.');
@@ -37,10 +40,11 @@ export class AuthService {
 
     const hashed = await this.hashPassword(password);
 
-    // 트랜잭션으로 users, user_credentials, user_profiles 동시 생성
-    await this.db.transaction(async (tx) => {
-      const userId = uuidv7();
+    // email verify token 생성
+    const userId = uuidv7();
+    const token = await this.jwtService.signAsync({ userId, email }, { expiresIn: '5m' });
 
+    await this.db.transaction(async (tx) => {
       await tx.insert(users).values({ id: userId, status: EUserStatus.PENDING });
 
       await tx.insert(userProfiles).values({
@@ -58,31 +62,40 @@ export class AuthService {
         providerId: email,
         credential: hashed,
       });
+
+      // email Verify Link 생성
+      const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
+      // 이메일 서비스 연동 후 인증메일 발송 로직으로 대체
+      console.log(verifyLink);
     });
   }
 
-  //TODO
-  //:이메일 인증용 JWT 검증
-  //JWT payload 기반 사용자 활성화 처리
-  async verifyEmail(_: EmailVerifyRequest): Promise<void> {
-    // const { token } = dto;
-    //TODO: JwtService.verifyAsync(token)
-    // payload 예시
-    // {
-    //   userId: string;
-    //   email: string;
-    // }
-    //TODO: payload.userId 기준 사용자 조회
-    // user check
-    // if (!user) {
-    //   throw new BadRequestException('존재하지 않는 사용자입니다.');
-    // }
-    // 이미 인증된 사용자 검증
-    // if (user.status === EUserStatus.ACTIVE) {
-    //   throw new BadRequestException('이미 인증된 사용자입니다.');
-    // }
-    // activate user
-    // user.status = EUserStatus.ACTIVE;
+  async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
+    const { token } = dto;
+
+    let payload: { userId: string; email: string };
+
+    try {
+      payload = await this.jwtService.verifyAsync<{
+        userId: string;
+        email: string;
+      }>(token);
+    } catch {
+      throw new BadRequestException('유효하지 않은 인증 토큰입니다.');
+    }
+
+    const [user] = await this.db.select().from(users).where(eq(users.id, payload.userId));
+
+    if (!user) throw new BadRequestException('존재하지 않는 사용자입니다.');
+    if (user.status === 'ACTIVE') throw new BadRequestException('이미 인증된 사용자입니다.');
+    if (user.status !== 'PENDING') throw new BadRequestException('인증 가능한 상태가 아닙니다.');
+
+    await this.db
+      .update(users)
+      .set({
+        status: 'ACTIVE',
+      })
+      .where(eq(users.id, payload.userId));
   }
 
   private async hashPassword(password: string): Promise<string> {
