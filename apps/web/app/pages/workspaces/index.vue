@@ -33,6 +33,15 @@
       createdAt: '2024-05-10T00:00:00Z',
     },
   ];
+
+  // 날짜 포맷 함수
+  function formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  }
 </script>
 
 <template>
@@ -48,11 +57,11 @@
 
     <!-- 카드 그리드 -->
     <!-- TODO: 워크스페이스 목록이 비어있을 때 보여줄 UI 추가 필요 -->
-    <div class="grid grid-cols-3 gap-4">
-      <div
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <UCard
         v-for="workspace in workspaces"
         :key="workspace.slug"
-        class="cursor-pointer rounded-xl border border-white/10 bg-white/5 p-5 transition hover:bg-white/10"
+        class="transition hover:bg-white/10"
       >
         <!-- 로고 + 역할 뱃지 -->
         <div class="mb-4 flex items-start justify-between">
@@ -72,15 +81,9 @@
         <!-- 생성일 -->
         <p class="text-xs text-gray-500">
           <UIcon name="i-lucide-calendar" class="mr-1" />
-          {{
-            new Date(workspace.createdAt).toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-            })
-          }}
+          {{ formatDate(workspace.createdAt) }}
         </p>
-      </div>
+      </UCard>
     </div>
 
     <WorkspaceCreateModal v-model="isCreateModalOpen" />
