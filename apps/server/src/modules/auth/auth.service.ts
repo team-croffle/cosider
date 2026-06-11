@@ -2,9 +2,11 @@ import * as crypto from 'crypto';
 
 import { EUserStatus } from '@cosider/shared';
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
+import { JwtPayload } from './interfaces/jwt-payload.interface';
 
 // import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
 
@@ -19,6 +21,14 @@ type MockUser = {
 @Injectable()
 export class AuthService {
   private users: MockUser[] = [];
+  constructor(private readonly jwtService: JwtService) {}
+
+  async generateAccessToken(payload: JwtPayload): Promise<string> {
+    return this.jwtService.signAsync(payload, { expiresIn: `5m` });
+  }
+  async generateRefreshToken(payload: JwtPayload): Promise<string> {
+    return this.jwtService.signAsync(payload, { expiresIn: '7d' });
+  }
   // #12-signup-email-users
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm } = dto;
