@@ -1,4 +1,4 @@
-import type { IWorkspaceResponse } from '@cosider/shared';
+import type { ICreateWorkspaceRequest, IWorkspaceResponse } from '@cosider/shared';
 
 export function useWorkspace() {
   // slug 실시간 중복 확인
@@ -33,13 +33,7 @@ export function useWorkspace() {
   }
 
   // 워크스페이스 생성
-  // TODO: @cosider/shared ICreateWorkspaceRequest 타입 logoUrl → logoUploadToken 변경 필요 (백엔드 담당자 확인)
-  async function createWorkspace(payload: {
-    name: string;
-    slug: string;
-    description: string | null;
-    logo_upload_token?: string;
-  }): Promise<IWorkspaceResponse> {
+  async function createWorkspace(payload: ICreateWorkspaceRequest): Promise<IWorkspaceResponse> {
     return $fetch<IWorkspaceResponse>('/api/v1/workspaces', {
       method: 'POST',
       body: payload,

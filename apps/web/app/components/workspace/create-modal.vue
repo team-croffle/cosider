@@ -8,7 +8,7 @@
     name: '',
     slug: '',
     description: null,
-    logoUrl: null,
+    logoUploadToken: null,
   });
 
   const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
@@ -98,7 +98,7 @@
     form.name = '';
     form.slug = '';
     form.description = null;
-    form.logoUrl = null;
+    form.logoUploadToken = null;
     fileError.value = null;
     isSlugManuallyEdited.value = false;
 

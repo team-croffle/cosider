@@ -1,17 +1,17 @@
 <script setup lang="ts">
-  import type { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
+  import type { EWorkspaceStatus, EWorkspaceUserRole, IWorkspaceResponse } from '@cosider/shared';
 
   const isCreateModalOpen = ref(false);
 
   // TODO: API 연결 후 제거 (useWorkspace composable로 교체)
-  const workspaces = [
+  const workspaces: IWorkspaceResponse[] = [
     {
       slug: 'my-workspace',
       name: 'My Workspace',
       description: 'Personal workspace for all individual projects and tasks.',
       status: 'ACTIVE' as EWorkspaceStatus,
       role: 'OWNER' as EWorkspaceUserRole,
-      logoUrl: null,
+      logoUrl: '',
       createdAt: '2024-01-15T00:00:00Z',
     },
     {
@@ -20,7 +20,7 @@
       description: "Collaborative space for the Alpha product team's sprints.",
       status: 'ACTIVE' as EWorkspaceStatus,
       role: 'ADMIN' as EWorkspaceUserRole,
-      logoUrl: null,
+      logoUrl: '',
       createdAt: '2024-03-02T00:00:00Z',
     },
     {
@@ -29,7 +29,7 @@
       description: 'Component library, tokens, and design guidelines.',
       status: 'ACTIVE' as EWorkspaceStatus,
       role: 'MEMBER' as EWorkspaceUserRole,
-      logoUrl: null,
+      logoUrl: '',
       createdAt: '2024-05-10T00:00:00Z',
     },
   ];
