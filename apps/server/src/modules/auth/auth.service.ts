@@ -1,4 +1,4 @@
-import { EJobRole, EUserCredentialProvider, EUserStatus } from '@cosider/shared';
+import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
@@ -13,9 +13,8 @@ import { userCredentials, userProfiles, users } from '@/database/schema';
 export class AuthService {
   constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
-  // #12-signup-email-users
   async signup(dto: SignupRequest): Promise<void> {
-    const { email, password, passwordConfirm } = dto;
+    const { email, password, passwordConfirm, handle, jobRole } = dto;
 
     if (password !== passwordConfirm) {
       throw new BadRequestException('비밀번호가 일치하지 않습니다.');
@@ -23,10 +22,17 @@ export class AuthService {
 
     this.validatePassword(password);
 
-    // 이메일 중복 체크 (user_profiles.email에 unique 제약이 있음)
+    // email 및 handle duplicate 확인
     const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
     if (existing.length > 0) {
       throw new BadRequestException('이미 존재하는 이메일입니다.');
+    }
+    const existingHandle = await this.db
+      .select()
+      .from(userProfiles)
+      .where(eq(userProfiles.handle, handle));
+    if (existingHandle.length > 0) {
+      throw new BadRequestException('이미 사용중인 이름입니다.');
     }
 
     const hashed = await this.hashPassword(password);
@@ -37,6 +43,14 @@ export class AuthService {
 
       await tx.insert(users).values({ id: userId, status: EUserStatus.PENDING });
 
+      await tx.insert(userProfiles).values({
+        id: uuidv7(),
+        userId,
+        email,
+        handle,
+        jobRole,
+      });
+
       await tx.insert(userCredentials).values({
         id: uuidv7(),
         userId,
@@ -44,24 +58,7 @@ export class AuthService {
         providerId: email,
         credential: hashed,
       });
-
-      // handle 생성 정책: 이메일 앞부분을 기본으로 사용합니다.
-      // 충돌 처리(중복 handle)는 별도 로직으로 처리 필요 — 여기서는 간단하게 사용합니다.
-      const handle = email.split('@')[0];
-
-      await tx.insert(userProfiles).values({
-        id: uuidv7(),
-        userId,
-        email,
-        handle,
-        jobRole: EJobRole.FE_DEV, // 기본값으로 FE_DEV 지정. 필요 시 클라이언트에서 선택하도록 변경하세요.
-      });
     });
-
-    // TODO:
-    // - 이메일 인증용 JWT 발급 (payload: { userId, email }, expiresIn: 5m)
-    // - 인증 링크 생성 (FRONTEND_URL 환경변수 사용)
-    // - Email Service 연동 후 인증 메일 발송
   }
 
   //TODO
