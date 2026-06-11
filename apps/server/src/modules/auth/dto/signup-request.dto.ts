@@ -1,5 +1,5 @@
-import { ISignupRequest } from '@cosider/shared';
-import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
+import { EJobRole, ISignupRequest } from '@cosider/shared';
+import { IsEmail, IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class SignupRequest implements ISignupRequest {
   @IsEmail()
@@ -13,4 +13,11 @@ export class SignupRequest implements ISignupRequest {
   @IsString()
   @IsNotEmpty()
   passwordConfirm!: string;
+
+  @IsString()
+  @Length(3, 30)
+  handle!: string;
+
+  @IsEnum(EJobRole)
+  jobRole!: EJobRole;
 }
