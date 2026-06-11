@@ -23,8 +23,10 @@ export class AuthService {
   private users: MockUser[] = [];
   constructor(private readonly jwtService: JwtService) {}
 
+  // expiresIn은 필요시 변경 예정.
+  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
   async generateAccessToken(payload: JwtPayload): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: `5m` });
+    return this.jwtService.signAsync(payload, { expiresIn: '5m' });
   }
   async generateRefreshToken(payload: JwtPayload): Promise<string> {
     return this.jwtService.signAsync(payload, { expiresIn: '7d' });
