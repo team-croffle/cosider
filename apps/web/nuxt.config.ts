@@ -12,6 +12,12 @@ export default defineNuxtConfig({
     fallback: 'dark',
   },
 
+  runtimeConfig: {
+    public: {
+      apiBase: process.env.NUXT_PUBLIC_API_BASE,
+    },
+  },
+
   routeRules: {
     '/': { prerender: true },
   },
