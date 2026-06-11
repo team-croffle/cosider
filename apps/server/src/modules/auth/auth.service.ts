@@ -1,27 +1,20 @@
-import * as crypto from 'crypto';
-
-import { EUserStatus } from '@cosider/shared';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import { eq } from 'drizzle-orm';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
-import { JwtPayload } from './interfaces/jwt-payload.interface';
+import { JwtPayload } from './interface/jwt-payload.interface';
 
-// import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
-
-type MockUser = {
-  id: string;
-  email: string;
-  password: string;
-  status: EUserStatus;
-  created_at: string;
-};
+import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import { userProfiles } from '@/database/schema';
 
 @Injectable()
 export class AuthService {
-  private users: MockUser[] = [];
-  constructor(private readonly jwtService: JwtService) {}
+  constructor(
+    @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
+    private readonly jwtService: JwtService,
+  ) {}
 
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
@@ -42,21 +35,15 @@ export class AuthService {
     this.validatePassword(password);
 
     //email Duplicate Check
-    const exists = this.users.find((u) => u.email === email);
+    const exists = await this.db.query.userProfiles.findFirst({
+      where: eq(userProfiles.email, email),
+    });
+
     if (exists) {
       throw new BadRequestException('이미 존재하는 이메일입니다.');
     }
 
     //user Create. 초기 status는 Pending으로 설정. 이메일 인증시 Active 처리.
-    const user: MockUser = {
-      id: crypto.randomUUID(),
-      email,
-      password: await this.hashPassword(password),
-      status: EUserStatus.PENDING,
-      created_at: new Date().toISOString(),
-    };
-
-    this.users.push(user);
 
     //TODO:
     // 이메일 인증용 JWT 발급
