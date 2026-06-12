@@ -1,13 +1,13 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'crypto';
 
 import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
 import Redis from 'ioredis';
 
-import { EmailVerifyRequest, SignupRequest } from './dto';
+import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
 import { IAuthUser } from './interface/authuser.interface';
 
 import { REDIS_CLIENT } from '@/common/redis/redis.module';
@@ -21,8 +21,6 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
-  // expiresIn은 필요시 변경 예정.
-  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
   private async generateAccessToken(user: IAuthUser): Promise<string> {
@@ -44,6 +42,41 @@ export class AuthService {
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
   }
+
+  async validateUser(dto: SigninDto): Promise<IAuthUser> {
+    const result = await this.db
+      .select({
+        userId: users.id,
+        email: userProfiles.email,
+        password: userCredentials.credential,
+      })
+      .from(userProfiles)
+      .innerJoin(users, eq(users.id, userProfiles.userId))
+      .innerJoin(userCredentials, eq(userCredentials.userId, users.id))
+      .where(eq(userProfiles.email, dto.email))
+      .limit(1);
+    if (!result.length) throw new UnauthorizedException('Invalid credentials');
+
+    const user = result[0];
+
+    const isValid = await argon2.verify(user.password, dto.password);
+    if (!isValid) throw new UnauthorizedException('Invalid credentials');
+
+    return {
+      userId: user.userId,
+      email: user.email,
+    };
+  }
+
+  async signin(user: IAuthUser): Promise<{ accessToken: string; refreshToken: string }> {
+    const accessToken = await this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken();
+
+    await this.storeAccessToken(user.userId, accessToken);
+    await this.storeRefreshToken(user.userId, refreshToken);
+    return { accessToken, refreshToken }; // 임시 (cookie 붙이면 제거 가능)
+  }
+
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm, handle, jobRole } = dto;
 
