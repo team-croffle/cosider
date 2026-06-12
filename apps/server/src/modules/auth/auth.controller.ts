@@ -1,10 +1,10 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
-import { EmailVerifyRequest, SignupRequest } from './dto';
+import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
 
 // import { OAuthGuard } from '../guards/oauth.guard';
-// import { SigninGuard} from '../guards/signin.guard;
 // import { LogoutGuard} from '../guards/logout.guard;
 // import { RefreshGuard } from '../guards/refresh.guard';
 
@@ -13,9 +13,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signin')
-  // @UseGuards(SigninGuard)
-  signin(@Req() req: Request): void {
-    console.log(req);
+  async signin(@Body() dto: SigninDto, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const user = await this.authService.validateUser(dto);
+    const { accessToken, refreshToken } = await this.authService.signin(user);
+
+    res.cookie('accessToken', accessToken, { httpOnly: true, sameSite: 'lax', secure: true });
+
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'lax', secure: true });
   }
 
   @Post('signout')
