@@ -3,7 +3,6 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
-import { uuidv7 } from 'uuidv7';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
 import { JwtPayload } from './interface/jwt-payload.interface';
@@ -48,32 +47,38 @@ export class AuthService {
 
     const hashed = await this.hashPassword(password);
 
-    // email verify token 생성
-    const userId = uuidv7();
-    const token = await this.jwtService.signAsync({ userId, email }, { expiresIn: '5m' });
-
     await this.db.transaction(async (tx) => {
-      await tx.insert(users).values({ id: userId, status: EUserStatus.PENDING });
+      const [user] = await tx
+        .insert(users)
+        .values({
+          status: EUserStatus.PENDING,
+        })
+        .returning({ id: users.id });
+      // email verify token 생성
+      const token = await this.jwtService.signAsync(
+        {
+          userId: user.id,
+          email,
+        },
+        { expiresIn: '5m' },
+      );
 
       await tx.insert(userProfiles).values({
-        id: uuidv7(),
-        userId,
+        userId: user.id,
         email,
         handle,
         jobRole,
       });
 
       await tx.insert(userCredentials).values({
-        id: uuidv7(),
-        userId,
+        userId: user.id,
         provider: EUserCredentialProvider.LOCAL,
         providerId: email,
         credential: hashed,
       });
 
-      // email Verify Link 생성
       const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
-      // 이메일 서비스 연동 후 인증메일 발송 로직으로 대체
+
       console.log(verifyLink);
     });
   }
