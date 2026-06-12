@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
+import { JwtPayload } from './interface/jwt-payload.interface';
 
 import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
 import { userCredentials, userProfiles, users } from '@/database/schema';
@@ -16,7 +17,14 @@ export class AuthService {
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
   ) {}
-
+  // expiresIn은 필요시 변경 예정.
+  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
+  async generateAccessToken(payload: JwtPayload): Promise<string> {
+    return this.jwtService.signAsync(payload, { expiresIn: '5m' });
+  }
+  async generateRefreshToken(payload: JwtPayload): Promise<string> {
+    return this.jwtService.signAsync(payload, { expiresIn: '7d' });
+  }
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm, handle, jobRole } = dto;
 
@@ -73,20 +81,23 @@ export class AuthService {
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
     const { token } = dto;
 
-    let payload: { userId: string; email: string };
+    type EmailVerifyPayload = {
+      userId: string;
+      email: string;
+    };
+
+    let payload: EmailVerifyPayload;
 
     try {
-      payload = await this.jwtService.verifyAsync<{
-        userId: string;
-        email: string;
-      }>(token);
+      payload = await this.jwtService.verifyAsync<EmailVerifyPayload>(token);
     } catch {
       throw new BadRequestException('유효하지 않은 인증 토큰입니다.');
     }
 
-    const [user] = await this.db.select().from(users).where(eq(users.id, payload.userId));
+    const [user] = await this.db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
 
     if (!user) throw new BadRequestException('존재하지 않는 사용자입니다.');
+    // Drizzle과 EUserStatus 타입 불일치 오류로 하드코딩. 추후 개선 예정
     if (user.status === 'ACTIVE') throw new BadRequestException('이미 인증된 사용자입니다.');
     if (user.status !== 'PENDING') throw new BadRequestException('인증 가능한 상태가 아닙니다.');
 
