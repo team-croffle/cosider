@@ -99,7 +99,7 @@ export class AuthService {
 
       const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
 
-      console.log(verifyLink);
+      console.log(verifyLink); // 이메일 서비스 미연결 임시 대체라인
     });
   }
 
