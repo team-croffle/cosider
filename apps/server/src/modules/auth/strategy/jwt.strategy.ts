@@ -1,12 +1,12 @@
 import { createHash } from 'crypto';
 
-import { IJwtPayload } from '@cosider/shared';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { IAuthenticatedRequest } from '../interface/authenticated-request.interface';
+import { IAuthenticatedRequest } from '../interface/auth-request.interface';
+import { IPayload } from '../interface/jwtpayload.interface';
 
 import { RedisService } from '@/common/redis/redis.service';
 
@@ -28,7 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(req: IAuthenticatedRequest, payload: IJwtPayload): Promise<IJwtPayload> {
+  async validate(req: IAuthenticatedRequest, payload: IPayload): Promise<IPayload> {
     const accessToken = req.cookies?.accessToken;
 
     if (!accessToken) {
