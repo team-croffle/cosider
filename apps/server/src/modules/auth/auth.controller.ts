@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nestjs/common';
 import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
+import { JwtAuthGuard } from './guard/jwt-auth.guard';
+import type { IAuthenticatedRequest } from './interface/authenticated-request.interface';
 
 // import { OAuthGuard } from '../guards/oauth.guard';
 // import { LogoutGuard} from '../guards/logout.guard;
@@ -12,7 +14,8 @@ import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post('signin')
+  @Post('sign-in')
+  @HttpCode(200)
   async signin(@Body() dto: SigninDto, @Res({ passthrough: true }) res: Response): Promise<void> {
     const user = await this.authService.validateUser(dto);
     const { accessToken, refreshToken } = await this.authService.signin(user);
@@ -22,19 +25,25 @@ export class AuthController {
     res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'lax', secure: true });
   }
 
-  @Post('signout')
-  // @UseGuards(LogoutGuard)
-  //Promise<void>
-  logout(@Req() req: Request): void {
-    console.log(req);
+  @Post('sign-out')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(204)
+  async signout(
+    @Req() req: IAuthenticatedRequest,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.signout(req.user.userId);
+
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
   }
 
-  @Post('signup')
+  @Post('sign-up')
   signup(@Body() dto: SignupRequest): Promise<void> {
     return this.authService.signup(dto);
   }
 
-  @Post('verify')
+  @Post('verify-email')
   verifyEmail(@Body() dto: EmailVerifyRequest): Promise<void> {
     return this.authService.verifyEmail(dto);
   }

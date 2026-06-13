@@ -1,16 +1,16 @@
 import { createHash, randomBytes } from 'crypto';
 
-import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
+import { EUserCredentialProvider, EUserStatus, IAuthUser, IJwtPayload } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 import Redis from 'ioredis';
 
 import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
-import { IAuthUser } from './interface/authuser.interface';
 
 import { REDIS_CLIENT } from '@/common/redis/redis.module';
+import { RedisService } from '@/common/redis/redis.service';
 import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, userCredentials, userProfiles, users } from '@/database/schema';
 
@@ -20,27 +20,46 @@ export class AuthService {
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
     @Inject(REDIS_CLIENT) private readonly redis: Redis,
+    private readonly redisService: RedisService,
   ) {}
+  // 토큰 생성
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
-  private async generateAccessToken(user: IAuthUser): Promise<string> {
-    return this.jwtService.signAsync({ sub: user.userId }, { expiresIn: '5m' });
+  private async generateAccessToken(user: IJwtPayload): Promise<string> {
+    return this.jwtService.signAsync({ userId: user.userId }, { expiresIn: '5m' });
   }
   private generateRefreshToken() {
     return randomBytes(32).toString('hex');
   }
 
-  private async storeAccessToken(userId: string, token: string) {
-    await this.redis.set(`access:${userId}`, token, 'EX', 5 * 60);
+  // 토큰 저장
+  // 다중 기기 로그인 제한
+  private async storeAccessToken(userId: string, accessToken: string): Promise<void> {
+    const hashedToken = createHash('sha256').update(accessToken).digest('hex');
+
+    await this.redisService.set(`access-token:${userId}`, hashedToken, 60 * 5);
   }
-  private async storeRefreshToken(userId: string, token: string): Promise<void> {
-    const hashedToken = createHash('sha256').update(token).digest('hex');
+  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
+    const hashedToken = createHash('sha256').update(refreshToken).digest('hex');
 
     await this.db.insert(refreshTokens).values({
       userId: userId,
       tokenValue: hashedToken,
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
+  }
+
+  // 토큰 제거
+  private async removeAccessToken(userId: string): Promise<void> {
+    await this.redisService.del(`access-token:${userId}`);
+  }
+  private async revokeRefreshToken(userId: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({
+        revokedAt: new Date(),
+      })
+      .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
   }
 
   async validateUser(dto: SigninDto): Promise<IAuthUser> {
@@ -74,7 +93,11 @@ export class AuthService {
 
     await this.storeAccessToken(user.userId, accessToken);
     await this.storeRefreshToken(user.userId, refreshToken);
-    return { accessToken, refreshToken }; // 임시 (cookie 붙이면 제거 가능)
+    return { accessToken, refreshToken };
+  }
+
+  async signout(userId: string): Promise<void> {
+    await Promise.all([this.removeAccessToken(userId), this.revokeRefreshToken(userId)]);
   }
 
   async signup(dto: SignupRequest): Promise<void> {
