@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
-import type { IAuthenticatedRequest } from './interface/authenticated-request.interface';
+import type { IAuthenticatedRequest } from './interface/auth-request.interface';
 
 // import { OAuthGuard } from '../guards/oauth.guard';
 // import { LogoutGuard} from '../guards/logout.guard;

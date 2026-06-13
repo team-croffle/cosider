@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 
-import { EUserCredentialProvider, EUserStatus, IAuthUser, IJwtPayload } from '@cosider/shared';
+import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
@@ -8,6 +8,8 @@ import { and, eq, isNull } from 'drizzle-orm';
 import Redis from 'ioredis';
 
 import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
+import { IAuth } from './interface/auth-user.interface';
+import { IPayload } from './interface/jwtpayload.interface';
 
 import { REDIS_CLIENT } from '@/common/redis/redis.module';
 import { RedisService } from '@/common/redis/redis.service';
@@ -25,7 +27,7 @@ export class AuthService {
   // 토큰 생성
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
-  private async generateAccessToken(user: IJwtPayload): Promise<string> {
+  private async generateAccessToken(user: IPayload): Promise<string> {
     return this.jwtService.signAsync({ userId: user.userId }, { expiresIn: '5m' });
   }
   private generateRefreshToken() {
@@ -62,7 +64,7 @@ export class AuthService {
       .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
   }
 
-  async validateUser(dto: SigninDto): Promise<IAuthUser> {
+  async validateUser(dto: SigninDto): Promise<IAuth> {
     const result = await this.db
       .select({
         userId: users.id,
@@ -87,7 +89,7 @@ export class AuthService {
     };
   }
 
-  async signin(user: IAuthUser): Promise<{ accessToken: string; refreshToken: string }> {
+  async signin(user: IAuth): Promise<{ accessToken: string; refreshToken: string }> {
     const accessToken = await this.generateAccessToken(user);
     const refreshToken = this.generateRefreshToken();
 
