@@ -1,28 +1,48 @@
+import { createHash, randomBytes } from 'node:crypto';
+
 import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { eq } from 'drizzle-orm';
+import Redis from 'ioredis';
 
 import { EmailVerifyRequest, SignupRequest } from './dto';
-import { JwtPayload } from './interface/jwt-payload.interface';
+import { IAuthUser } from './interface/authuser.interface';
 
+import { REDIS_CLIENT } from '@/common/redis/redis.module';
 import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
-import { userCredentials, userProfiles, users } from '@/database/schema';
+import { refreshTokens, userCredentials, userProfiles, users } from '@/database/schema';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
   ) {}
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
-  async generateAccessToken(payload: JwtPayload): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: '5m' });
+  // expiresIn은 필요시 변경 예정.
+  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
+  private async generateAccessToken(user: IAuthUser): Promise<string> {
+    return this.jwtService.signAsync({ sub: user.userId }, { expiresIn: '5m' });
   }
-  async generateRefreshToken(payload: JwtPayload): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: '7d' });
+  private generateRefreshToken() {
+    return randomBytes(32).toString('hex');
+  }
+
+  private async storeAccessToken(userId: string, token: string) {
+    await this.redis.set(`access:${userId}`, token, 'EX', 5 * 60);
+  }
+  private async storeRefreshToken(userId: string, token: string): Promise<void> {
+    const hashedToken = createHash('sha256').update(token).digest('hex');
+
+    await this.db.insert(refreshTokens).values({
+      userId: userId,
+      tokenValue: hashedToken,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
   }
   async signup(dto: SignupRequest): Promise<void> {
     const { email, password, passwordConfirm, handle, jobRole } = dto;
