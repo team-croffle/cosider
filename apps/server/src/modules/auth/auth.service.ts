@@ -96,7 +96,6 @@ export class AuthService {
   async signin(user: AuthenticatedUser): Promise<{ accessToken: string; refreshToken: string }> {
     const payload: IJwtPayload = {
       userId: user.userId,
-      email: user.email,
     };
 
     // 다중 기기 로그인 제한: 기존 세션 무효화
