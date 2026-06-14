@@ -1,7 +1,7 @@
 import { IUserAuthResponse } from '@cosider/shared';
 import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
-export class UserAuthDto implements IUserAuthResponse {
+export class AuthenticatedUser implements IUserAuthResponse {
   @IsString()
   @IsNotEmpty()
   userId!: string;

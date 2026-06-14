@@ -5,12 +5,10 @@ import { BadRequestException, Inject, Injectable, UnauthorizedException } from '
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
-import Redis from 'ioredis';
 
-import { EmailVerifyRequest, JwtPayloadDto, Signin, SignupRequest, UserAuthDto } from './dto';
+import { AuthenticatedUser, EmailVerifyRequest, JwtPayloadDto, Signin, SignupRequest } from './dto';
 import { IJwtPayload } from './interface/jwt-payload.interface';
 
-import { REDIS_CLIENT } from '@/common/redis/redis.module';
 import { RedisService } from '@/common/redis/redis.service';
 import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, userCredentials, userProfiles, users } from '@/database/schema';
@@ -20,7 +18,6 @@ export class AuthService {
   constructor(
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
-    @Inject(REDIS_CLIENT) private readonly redis: Redis,
     private readonly redisService: RedisService,
   ) {}
   // 토큰 생성
@@ -71,7 +68,7 @@ export class AuthService {
     return hashedToken === storedToken;
   }
 
-  async validateUser(dto: Signin): Promise<UserAuthDto> {
+  async validateUser(dto: Signin): Promise<AuthenticatedUser> {
     const result = await this.db
       .select({
         userId: users.id,
@@ -96,7 +93,7 @@ export class AuthService {
     };
   }
 
-  async signin(user: UserAuthDto): Promise<{ accessToken: string; refreshToken: string }> {
+  async signin(user: AuthenticatedUser): Promise<{ accessToken: string; refreshToken: string }> {
     const payload: IJwtPayload = {
       userId: user.userId,
       email: user.email,
