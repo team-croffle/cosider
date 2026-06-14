@@ -1,6 +1,6 @@
-import { IAuthUser } from '@cosider/shared';
+import { Request } from 'express';
 
-export interface IAuth extends IAuthUser {
-  userId: string;
-  email: string;
+export interface AuthRequest extends Request {
+  user: { userId: string; email: string };
+  cookies: { accessToken: string; refreshToken: string };
 }

@@ -2,10 +2,9 @@ import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nes
 import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
-import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
+import { EmailVerifyRequest, Signin, SignupRequest } from './dto';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
-import type { IAuthenticatedRequest } from './interface/auth-request.interface';
-
+import type { AuthRequest } from './interface/auth-user.interface';
 // import { OAuthGuard } from '../guards/oauth.guard';
 // import { LogoutGuard} from '../guards/logout.guard;
 // import { RefreshGuard } from '../guards/refresh.guard';
@@ -16,22 +15,25 @@ export class AuthController {
 
   @Post('sign-in')
   @HttpCode(200)
-  async signin(@Body() dto: SigninDto, @Res({ passthrough: true }) res: Response): Promise<void> {
+  async signin(@Body() dto: Signin, @Res({ passthrough: true }) res: Response): Promise<void> {
     const user = await this.authService.validateUser(dto);
     const { accessToken, refreshToken } = await this.authService.signin(user);
 
-    res.cookie('accessToken', accessToken, { httpOnly: true, sameSite: 'lax', secure: true });
-
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite: 'lax', secure: true });
+    // 개발환경 고려하여 secure: false 추후 true로 변경 예정.
+    const cookieOptions = {
+      httpOnly: true,
+      samesite: 'lax',
+      secure: false,
+      path: '/',
+    };
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, cookieOptions);
   }
 
   @Post('sign-out')
   @UseGuards(JwtAuthGuard)
   @HttpCode(204)
-  async signout(
-    @Req() req: IAuthenticatedRequest,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
+  async signout(@Req() req: AuthRequest, @Res({ passthrough: true }) res: Response): Promise<void> {
     await this.authService.signout(req.user.userId);
 
     res.clearCookie('accessToken');
