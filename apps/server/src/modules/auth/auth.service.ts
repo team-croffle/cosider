@@ -7,9 +7,8 @@ import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
 import Redis from 'ioredis';
 
-import { EmailVerifyRequest, SigninDto, SignupRequest } from './dto';
-import { IAuth } from './interface/auth-user.interface';
-import { IPayload } from './interface/jwtpayload.interface';
+import { EmailVerifyRequest, JwtPayloadDto, Signin, SignupRequest, UserAuthDto } from './dto';
+import { IJwtPayload } from './interface/jwt-payload.interface';
 
 import { REDIS_CLIENT } from '@/common/redis/redis.module';
 import { RedisService } from '@/common/redis/redis.service';
@@ -27,7 +26,7 @@ export class AuthService {
   // 토큰 생성
   // expiresIn은 필요시 변경 예정.
   // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
-  private async generateAccessToken(user: IPayload): Promise<string> {
+  private async generateAccessToken(user: JwtPayloadDto): Promise<string> {
     return this.jwtService.signAsync({ userId: user.userId }, { expiresIn: '5m' });
   }
   private generateRefreshToken() {
@@ -41,6 +40,7 @@ export class AuthService {
 
     await this.redisService.set(`access-token:${userId}`, hashedToken, 60 * 5);
   }
+  //tokenValue Schema .uuid-> varchar 예정 hashedToken 저장
   private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
     const hashedToken = createHash('sha256').update(refreshToken).digest('hex');
 
@@ -64,7 +64,14 @@ export class AuthService {
       .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
   }
 
-  async validateUser(dto: SigninDto): Promise<IAuth> {
+  async validateAccessToken(userId: string, accessToken: string): Promise<boolean> {
+    const hashedToken = createHash('sha256').update(accessToken).digest('hex');
+    const storedToken = await this.redisService.get(`access-token:${userId}`);
+
+    return hashedToken === storedToken;
+  }
+
+  async validateUser(dto: Signin): Promise<UserAuthDto> {
     const result = await this.db
       .select({
         userId: users.id,
@@ -89,12 +96,20 @@ export class AuthService {
     };
   }
 
-  async signin(user: IAuth): Promise<{ accessToken: string; refreshToken: string }> {
-    const accessToken = await this.generateAccessToken(user);
+  async signin(user: UserAuthDto): Promise<{ accessToken: string; refreshToken: string }> {
+    const payload: IJwtPayload = {
+      userId: user.userId,
+      email: user.email,
+    };
+
+    // 다중 기기 로그인 제한: 기존 세션 무효화
+    await this.signout(user.userId);
+
+    const accessToken = await this.generateAccessToken(payload);
     const refreshToken = this.generateRefreshToken();
 
-    await this.storeAccessToken(user.userId, accessToken);
-    await this.storeRefreshToken(user.userId, refreshToken);
+    await this.storeAccessToken(payload.userId, accessToken);
+    await this.storeRefreshToken(payload.userId, refreshToken);
     return { accessToken, refreshToken };
   }
 
