@@ -20,6 +20,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         },
       ]),
       ignoreExpiration: false,
+      // Todo: JWT_SECRET 분리
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
       passReqToCallback: true,
     });

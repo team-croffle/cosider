@@ -21,8 +21,9 @@ export class AuthService {
     private readonly redisService: RedisService,
   ) {}
   // 토큰 생성
+  // Todo:
   // expiresIn은 필요시 변경 예정.
-  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경 예정
+  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경
   private async generateAccessToken(user: JwtPayloadDto): Promise<string> {
     return this.jwtService.signAsync({ userId: user.userId }, { expiresIn: '5m' });
   }
@@ -30,7 +31,6 @@ export class AuthService {
     return randomBytes(32).toString('hex');
   }
 
-  // 토큰 저장
   // 다중 기기 로그인 제한
   private async storeAccessToken(userId: string, accessToken: string): Promise<void> {
     const hashedToken = createHash('sha256').update(accessToken).digest('hex');
@@ -48,7 +48,6 @@ export class AuthService {
     });
   }
 
-  // 토큰 제거
   private async removeAccessToken(userId: string): Promise<void> {
     await this.redisService.del(`access-token:${userId}`);
   }
@@ -191,7 +190,7 @@ export class AuthService {
     const [user] = await this.db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
 
     if (!user) throw new BadRequestException('존재하지 않는 사용자입니다.');
-    // Drizzle과 EUserStatus 타입 불일치 오류로 하드코딩. 추후 개선 예정
+    // Todo: Drizzle과 EUserStatus 타입 불일치 오류로 하드코딩. 추후 개선
     if (user.status === 'ACTIVE') throw new BadRequestException('이미 인증된 사용자입니다.');
     if (user.status !== 'PENDING') throw new BadRequestException('인증 가능한 상태가 아닙니다.');
 
