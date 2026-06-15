@@ -1,12 +1,12 @@
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
 
 import {
-  CheckHandleExistsResponseDto,
-  DeactivateReqeustDto,
-  DeactivateResponseDto,
-  RestoreRequestDto,
-  RestoreResponseDto,
-  UserProfileResponseDto,
+  CheckHandleExistsResponse,
+  DeactivateReqeust,
+  DeactivateResponse,
+  RestoreRequest,
+  RestoreResponse,
+  UserProfileResponse,
 } from './dto';
 import { UsersService } from './users.service';
 // import { DeactivateGuard } from '../guards/deactivate.guard'
@@ -18,7 +18,7 @@ export class UsersController {
   @Post('deactivate')
   @HttpCode(HttpStatus.OK)
   // @UseGuards(DeactivateGuard)
-  deactivate(@Body() deactivate: DeactivateReqeustDto): DeactivateResponseDto {
+  deactivate(@Body() deactivate: DeactivateReqeust): DeactivateResponse {
     console.log(deactivate);
     return {
       message: '계정 삭제가 완료 되었습니다.',
@@ -27,20 +27,20 @@ export class UsersController {
 
   @Post('restore')
   @HttpCode(HttpStatus.OK)
-  restore(@Body() restoreDto: RestoreRequestDto): RestoreResponseDto {
-    console.log(restoreDto);
+  restore(@Body() restore: RestoreRequest): RestoreResponse {
+    console.log(restore);
     return {
       message: '계정이 복구되었습니다.',
     };
   }
 
   @Get(':handle')
-  getProfile(@Param('handle') handle: string): UserProfileResponseDto {
+  getProfile(@Param('handle') handle: string): UserProfileResponse {
     return this.usersService.getProfile(handle);
   }
 
   @Get('exists/handle')
-  checkHandleExists(@Query('handle') handle: string): CheckHandleExistsResponseDto {
+  checkHandleExists(@Query('handle') handle: string): CheckHandleExistsResponse {
     return this.usersService.checkHandleExists(handle);
   }
 }
