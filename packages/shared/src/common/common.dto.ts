@@ -1,45 +1,37 @@
-import { EFileRefType, EFileVisibility } from './common.enum';
+import { IMediaFile } from './common.interface';
 
-export interface FileUploadRequest {
-  fileName: string;
-  mimeType: string;
-  fileSize: number;
-  visibility: EFileVisibility;
-  refType?: EFileRefType;
-  refId?: string;
-}
+export type IFileUploadRequest = Pick<
+  IMediaFile,
+  'originalName' | 'mimeType' | 'fileSize' | 'visibility' | 'refType' | 'refId'
+>;
 
-export interface FileUploadUrlResponse {
+export interface IFileUploadUrlResponse {
   uploadUrl: string;
   uploadToken: string;
   expiresIn: number;
 }
 
-export interface FileUploadCompletionRequest {
+export type IFileMetadata = Pick<
+  IMediaFile,
+  'id' | 'originalName' | 'mimeType' | 'fileSize' | 'visibility' | 'createdAt'
+>;
+
+export interface IFileUploadCompletionRequest {
   uploadToken: string;
-  metadata?: FileMetadata;
+  metadata?: IFileMetadata;
 }
 
-export interface FileMetadata {
-  id: string;
-  originalName: string;
-  mimeType: string;
-  fileSize: number;
-  visibility: EFileVisibility;
-  createdAt: string;
-}
-
-export interface CheckExistsResponse {
+export interface ICheckExistsResponse {
   isAvailable: boolean;
 }
 
-export interface PageMetaData {
+export interface IPageMetaData {
   currentPage: number;
   limit: number;
   totalCount: number;
   hasMore: boolean;
 }
 
-export interface LinkDocumentDto {
+export interface ILinkDocumentDto {
   documentId: string;
 }
