@@ -16,4 +16,5 @@ export enum EFileRefType {
   PROJECT = 'PROJECT', // 프로젝트 로고 이미지
   TASK = 'TASK', // 태스크 첨부파일
   WORKSPACE = 'WORKSPACE', // 워크스페이스 로고 이미지
+  DOCUMENT = 'DOCUMENT', // 문서 첨부파일
 }
