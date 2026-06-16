@@ -21,7 +21,7 @@ import { userProfiles, workspace_members, workspaces } from '@/database/schema';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
+  constructor(@Inject(DB_CONNECTION as string) private readonly db: DrizzleDB) {}
 
   async createWorkspace(dto: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
     // 트랜잭션으로 워크스페이스와 워크스페이스 멤버 등록을 함께 생성
@@ -33,7 +33,7 @@ export class WorkspacesService {
           slug: dto.slug,
           name: dto.name,
           description: dto.description,
-          logoImageKey: dto.logoUploadToken, // TODO: uploadToken -> S3 Key 변환 후 교체
+          logoImageId: null, // TODO: uploadToken -> S3 Key 변환 후 교체
         })
         .returning()
         .catch((e: { code: string }) => {
@@ -61,7 +61,7 @@ export class WorkspacesService {
       name: workspace.name,
       status: workspace.status,
       description: workspace.description ?? '',
-      logoUrl: '', // TODO: S3에서 logoImageKey로 PresignedURL 변환 후 교체
+      logoImageId: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
       createdAt: workspace.createdAt.toISOString(),
       role: EWorkspaceUserRole.OWNER,
     };
@@ -74,7 +74,7 @@ export class WorkspacesService {
         name: workspaces.name,
         status: workspaces.status,
         description: workspaces.description,
-        logoImageKey: workspaces.logoImageKey, // S3 Key -> URL 변환 필요
+        logoImageId: workspaces.logoImageId, // S3 Key -> URL 변환 필요
         createdAt: workspaces.createdAt,
         role: workspace_members.role,
       })
@@ -87,7 +87,7 @@ export class WorkspacesService {
       name: w.name,
       status: w.status,
       description: w.description ?? '',
-      logoUrl: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
+      logoImageId: w.logoImageId,
       createdAt: w.createdAt.toISOString(),
       role: w.role,
     }));
@@ -100,13 +100,13 @@ export class WorkspacesService {
         name: workspaces.name,
         status: workspaces.status,
         description: workspaces.description,
-        logoImageKey: workspaces.logoImageKey, // S3 Key -> URL 변환 필요
+        logoImageId: workspaces.logoImageId, // S3 Key -> URL 변환 필요
         createdAt: workspaces.createdAt,
         role: workspace_members.role,
         owner: {
           handle: userProfiles.handle,
           nickname: userProfiles.nickname,
-          profileImageUrl: userProfiles.profileImageKey, // S3 Key -> URL 변환 필요
+          profileImageId: userProfiles.profileImageId, // S3 Key -> URL 변환 필요
         },
       })
       .from(workspaces)
@@ -128,10 +128,14 @@ export class WorkspacesService {
       name: workspace.name,
       status: workspace.status,
       description: workspace.description ?? '',
-      logoUrl: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
+      logoImageId: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
       createdAt: workspace.createdAt.toISOString(),
       role: workspace.role,
-      owner: workspace.owner,
+      owner: {
+        handle: workspace.owner.handle,
+        nickname: workspace.owner.nickname ?? '',
+        profileImageId: workspace.owner.profileImageId,
+      },
       projects: [], // TODO: 프로젝트 정보로 교체
     };
   }
@@ -168,7 +172,7 @@ export class WorkspacesService {
       name: updatedWorkspace.name,
       status: updatedWorkspace.status,
       description: updatedWorkspace.description ?? '',
-      logoUrl: '',
+      logoImageId: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
       createdAt: updatedWorkspace.createdAt.toISOString(),
       role: member.role,
     };
