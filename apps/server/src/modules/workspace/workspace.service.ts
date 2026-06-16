@@ -87,7 +87,7 @@ export class WorkspacesService {
       name: w.name,
       status: w.status,
       description: w.description ?? '',
-      logoUrl: w.logoImageKey ?? '', // TODO: S3에서 logoImageKey로 PresignedURL 변환 후 교체
+      logoUrl: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
       createdAt: w.createdAt.toISOString(),
       role: w.role,
     }));
@@ -128,7 +128,7 @@ export class WorkspacesService {
       name: workspace.name,
       status: workspace.status,
       description: workspace.description ?? '',
-      logoUrl: workspace.logoImageKey ?? '',
+      logoUrl: '', // TODO: S3 서비스 완성 후 logoImageKey로 PresignedURL 변환 예정
       createdAt: workspace.createdAt.toISOString(),
       role: workspace.role,
       owner: workspace.owner,
@@ -140,6 +140,9 @@ export class WorkspacesService {
     workspaceSlug: string,
     dto: UpdateWorkspaceRequest,
   ): Promise<WorkspaceResponse> {
+    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+
     const [updatedWorkspace] = await this.db
       .update(workspaces)
       .set({
@@ -147,25 +150,17 @@ export class WorkspacesService {
         description: dto.description,
         slug: dto.slug,
       })
-      .where(eq(workspaces.slug, workspaceSlug))
-      .returning();
+      .where(eq(workspaces.id, member.workspaceId))
+      .returning()
+      .catch((e: { code?: string }) => {
+        if (e.code === '23505') {
+          throw new ConflictException('이미 사용중인 slug입니다.');
+        }
+        throw e;
+      });
 
     if (!updatedWorkspace) {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
-    }
-
-    const [member] = await this.db
-      .select({ role: workspace_members.role })
-      .from(workspace_members)
-      .where(
-        and(
-          eq(workspace_members.workspaceId, updatedWorkspace.id),
-          eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
-        ),
-      );
-
-    if (!member) {
-      throw new NotFoundException('워크스페이스 멤버를 찾을 수 없습니다.');
     }
 
     return {
@@ -173,13 +168,16 @@ export class WorkspacesService {
       name: updatedWorkspace.name,
       status: updatedWorkspace.status,
       description: updatedWorkspace.description ?? '',
-      logoUrl: updatedWorkspace.logoImageKey ?? '', // TODO: S3 Key → URL 변환
+      logoUrl: '',
       createdAt: updatedWorkspace.createdAt.toISOString(),
       role: member.role,
     };
   }
 
   async deleteWorkspace(workspaceSlug: string): Promise<WorkspaceDeleteAcceptedResponse> {
+    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+
     const [deletedWorkspace] = await this.db
       .update(workspaces)
       .set({
@@ -187,7 +185,7 @@ export class WorkspacesService {
         deletedAt: new Date(),
         scheduledDeleteAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30일 후 (FRID-32 기준)
       })
-      .where(eq(workspaces.slug, workspaceSlug))
+      .where(eq(workspaces.id, member.workspaceId))
       .returning();
 
     if (!deletedWorkspace) {
@@ -203,6 +201,9 @@ export class WorkspacesService {
   }
 
   async restoreWorkspace(workspaceSlug: string): Promise<void> {
+    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+
     const [restoredWorkspace] = await this.db
       .update(workspaces)
       .set({
@@ -210,11 +211,26 @@ export class WorkspacesService {
         deletedAt: null,
         scheduledDeleteAt: null,
       })
-      .where(eq(workspaces.slug, workspaceSlug))
+      .where(eq(workspaces.id, member.workspaceId))
       .returning();
 
     if (!restoredWorkspace) {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
     }
+  }
+
+  // 워크스페이스 멤버 조회 및 권한 체크
+  private async findMemberOrThrow(workspaceSlug: string, userId: string) {
+    const [member] = await this.db
+      .select({ role: workspace_members.role, workspaceId: workspaces.id })
+      .from(workspaces)
+      .innerJoin(workspace_members, eq(workspaces.id, workspace_members.workspaceId))
+      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspace_members.userId, userId)));
+
+    if (!member) {
+      throw new NotFoundException('존재하지 않는 워크스페이스이거나 접근 권한이 없습니다.');
+    }
+
+    return member;
   }
 }
