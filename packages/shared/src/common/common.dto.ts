@@ -1,13 +1,32 @@
+import { EFileRefType, EFileVisibility } from './common.enum';
+
 export interface FileUploadRequest {
   fileName: string;
-  contentType: string;
+  mimeType: string;
   fileSize: number;
+  visibility: EFileVisibility;
+  refType?: EFileRefType;
+  refId?: string;
 }
 
 export interface FileUploadUrlResponse {
   uploadUrl: string;
   uploadToken: string;
   expiresIn: number;
+}
+
+export interface FileUploadCompletionRequest {
+  uploadToken: string;
+  metadata?: FileMetadata;
+}
+
+export interface FileMetadata {
+  id: string;
+  originalName: string;
+  mimeType: string;
+  fileSize: number;
+  visibility: EFileVisibility;
+  createdAt: string;
 }
 
 export interface CheckExistsResponse {

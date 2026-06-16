@@ -24,5 +24,6 @@ export interface IUserProfileResponse extends Pick<
   IUserProfile,
   'handle' | 'nickname' | 'techStacks' | 'jobRole'
 > {
-  profileImageUrl: string | null;
+  // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
+  profileImageId: string | null;
 }

@@ -31,8 +31,8 @@ export interface IUserProfile {
   handle: string;
   email: string;
   nickname: string;
-  // Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-  profileImageKey: string | null;
+  // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
+  profileImageId: string | null;
   jobRole: EJobRole;
   techStacks: string[] | null;
   updatedAt: string | null;

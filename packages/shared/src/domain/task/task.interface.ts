@@ -35,8 +35,8 @@ export interface ITaskAttachment {
   id: string;
   taskId: ITask['id'];
   fileName: string;
-  // Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-  fileKey: string;
+  // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
+  fileId: string;
   size: number;
   createdAt: string;
 }
