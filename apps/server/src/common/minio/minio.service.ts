@@ -1,5 +1,5 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import * as Minio from 'minio';
+import type { BucketItemStat, Client } from 'minio';
 
 import { MINIO_CLIENT } from './minio.module';
 
@@ -13,7 +13,7 @@ import {
 export class MinioService {
   private readonly logger = new Logger(MinioService.name);
 
-  constructor(@Inject(MINIO_CLIENT) private readonly client: Minio.Client) {}
+  constructor(@Inject(MINIO_CLIENT) private readonly client: Client) {}
 
   /**
    * 없으면 자동 생성하기
@@ -54,6 +54,10 @@ export class MinioService {
       downloadUrl,
       expiresAt: new Date(Date.now() + expiry * 1000),
     };
+  }
+
+  async statObject(bucket: string, objectName: string): Promise<BucketItemStat> {
+    return await this.client.statObject(bucket, objectName);
   }
 
   async delete(bucket: string, objectName: string): Promise<void> {

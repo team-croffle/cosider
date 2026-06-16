@@ -1,15 +1,6 @@
-import { EUploadType } from './file.enum';
+import { IMediaFile } from '@cosider/shared';
 
-export type PendingUpload = {
-  objectKey: string;
-  userId: string;
-  uploadType: EUploadType;
-};
-
-export type DownloadUrlWithExpires = {
-  downloadUrl: string;
-  expiresAt: Date;
-};
+export type PendingUpload = Omit<IMediaFile, 'id' | 'bucketName' | 'createdAt'>;
 
 export type UploadInfo = {
   uploadUrl: string;

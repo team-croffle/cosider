@@ -1,10 +1,22 @@
-import { BadRequestException, ForbiddenException, Injectable } from '@nestjs/common';
+import { EFileRefType, EFileVisibility } from '@cosider/shared';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Inject,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { eq } from 'drizzle-orm';
 import { uuidv7 } from 'uuidv7';
+
+import { FileMetadata, FileUploadRequest, FileUploadUrlResponse } from './dto';
 
 import { MinioService } from '@/common/minio/minio.service';
 import { RedisService } from '@/common/redis/redis.service';
-import { DownloadUrlWithExpires, EUploadType, PendingUpload, UploadInfo } from '@/types/file';
+import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import { mediaFiles } from '@/database/schema';
+import { PendingUpload } from '@/types/file';
 
 @Injectable()
 export class FilesService {
@@ -15,6 +27,7 @@ export class FilesService {
     private readonly minio: MinioService,
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
   ) {
     this.bucket = this.config.getOrThrow<string>('STORAGE_BUCKET');
   }
@@ -23,29 +36,36 @@ export class FilesService {
    * presigned PUT URL + upload_token 발급
    * 각 도메인 서비스에서 type을 지정해서 호출
    */
-  async issueUploadToken(
-    userId: string,
-    fileName: string,
-    uploadType: EUploadType,
-  ): Promise<UploadInfo> {
-    const ext = fileName.split('.').pop();
-    const objectKey = this.buildObjectKey(userId, uploadType, ext);
+  async issueUploadToken(userId: string, dto: FileUploadRequest): Promise<FileUploadUrlResponse> {
+    const ext = dto.originalName.split('.').pop();
+    const objectKey = this.buildObjectKey(userId, dto.refType, ext, dto.refId);
     const uploadToken = uuidv7();
 
     const { uploadUrl } = await this.minio.getPresignedUploadUrl(this.bucket, objectKey, {
       expiry: this.uploadTtl,
     });
 
+    const pendingInfo: PendingUpload = {
+      objectKey,
+      originalName: dto.originalName,
+      mimeType: dto.mimeType,
+      fileSize: dto.fileSize,
+      visibility: dto.visibility,
+      refType: dto.refType,
+      refId: dto.refId,
+      ownerId: userId,
+    };
+
     await this.redis.setJson<PendingUpload>(
       `pending:upload:${uploadToken}`,
-      { objectKey, userId, uploadType },
+      pendingInfo,
       this.uploadTtl,
     );
 
     return {
       uploadUrl,
       uploadToken,
-      expiresAt: new Date(Date.now() + this.uploadTtl * 1000),
+      expiresIn: this.uploadTtl,
     };
   }
 
@@ -56,53 +76,108 @@ export class FilesService {
   async consumeUploadToken(
     userId: string,
     uploadToken: string,
-    expectedType: EUploadType,
+    expectedType: EFileRefType,
   ): Promise<string> {
     const pending = await this.redis.getJson<PendingUpload>(`pending:upload:${uploadToken}`);
 
-    if (!pending) throw new BadRequestException('INVALID_OR_EXPIRED_UPLOAD_TOKEN');
-    if (pending.userId !== userId) throw new ForbiddenException('UPLOAD_TOKEN_USER_MISMATCH');
-    if (pending.uploadType !== expectedType)
+    if (!pending) {
+      throw new BadRequestException('INVALID_OR_EXPIRED_UPLOAD_TOKEN');
+    }
+    if (pending.ownerId !== userId) {
+      throw new ForbiddenException('UPLOAD_TOKEN_USER_MISMATCH');
+    }
+    if (pending.refType !== expectedType) {
       throw new BadRequestException('UPLOAD_TOKEN_TYPE_MISMATCH');
+    }
+
+    try {
+      const stat = await this.minio.statObject(this.bucket, pending.objectKey);
+
+      if (stat.size !== pending.fileSize) {
+        throw new BadRequestException('FILE_UPLOAD_SIZE_MISMATCH');
+      }
+    } catch (err) {
+      Logger.error(err, 'FilesService.consumeUploadToken');
+      throw new BadRequestException('FILE_NOT_FOUND_IN_STORAGE');
+    }
 
     await this.redis.del(`pending:upload:${uploadToken}`);
 
-    return pending.objectKey;
+    const [media] = await this.db
+      .insert(mediaFiles)
+      .values({
+        bucketName: this.bucket,
+        objectKey: pending.objectKey,
+        originalName: pending.originalName,
+        mimeType: pending.mimeType,
+        fileSize: pending.fileSize,
+        visibility: pending.visibility,
+        refType: pending.refType,
+        refId: pending.refId,
+        ownerId: pending.ownerId,
+      })
+      .returning({ id: mediaFiles.id });
+
+    return media.id;
   }
 
   /**
-   * object_key → presigned GET URL 변환
+   * object_id → presigned GET URL 변환
    * 이미지/로고 등 응답에 URL 포함할 때 사용
    */
-  async toPresignedUrl(objectKey: string | null): Promise<string | null> {
-    if (!objectKey) return null;
-    const { downloadUrl } = await this.minio.getPresignedDownloadUrl(this.bucket, objectKey);
+  async toPresignedUrl(objectId: string | null): Promise<string | null> {
+    if (!objectId) return null;
+    const [file] = await this.db
+      .select({ objectKey: mediaFiles.objectKey })
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, objectId))
+      .limit(1);
+
+    if (!file) return null;
+
+    const { downloadUrl } = await this.minio.getPresignedDownloadUrl(this.bucket, file.objectKey);
     return downloadUrl;
   }
 
-  /**
-   * object_key → presigned GET URL + 만료시간 반환
-   * 첨부파일 다운로드처럼 만료시간도 함께 내려줄 때 사용
-   */
-  async toPresignedDownload(objectKey: string): Promise<DownloadUrlWithExpires> {
-    const { downloadUrl, expiresAt } = await this.minio.getPresignedDownloadUrl(
-      this.bucket,
-      objectKey,
-    );
-    return { downloadUrl, expiresAt };
+  async getMediaInfo(objectId: string | null): Promise<FileMetadata | null> {
+    if (!objectId) return null;
+    const [file] = await this.db
+      .select()
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, objectId))
+      .limit(1);
+
+    if (!file) return null;
+
+    return {
+      id: file.id,
+      originalName: file.originalName,
+      mimeType: file.mimeType,
+      fileSize: file.fileSize,
+      visibility: file.visibility as EFileVisibility,
+      createdAt: file.createdAt?.toISOString() ?? 'unknown',
+    };
   }
 
-  private buildObjectKey(userId: string, type: EUploadType, ext?: string): string {
+  private buildObjectKey(userId: string, type: EFileRefType, ext?: string, refId?: string): string {
     const id = uuidv7();
     switch (type) {
-      case EUploadType.USER_AVATAR:
-        return `avatars/users/${userId}/${id}.${ext}`;
-      case EUploadType.WORKSPACE_LOGO:
-        return `logos/workspaces/${id}.${ext}`;
-      case EUploadType.PROJECT_LOGO:
-        return `logos/projects/${id}.${ext}`;
-      case EUploadType.TASK_ATTACHMENT:
-        return `task-attachments/${id}.${ext}`;
+      case EFileRefType.USER:
+        return `avatars/users/${userId}/${id}${ext ? `.${ext}` : ''}`;
+      case EFileRefType.WORKSPACE:
+        if (!refId) throw new BadRequestException('WORKSPACE_REF_ID_REQUIRED');
+        return `logos/workspaces/${refId}/${id}${ext ? `.${ext}` : ''}`;
+      case EFileRefType.PROJECT:
+        if (!refId) throw new BadRequestException('PROJECT_REF_ID_REQUIRED');
+        return `logos/projects/${refId}/${id}${ext ? `.${ext}` : ''}`;
+      case EFileRefType.TASK:
+        if (!refId) throw new BadRequestException('TASK_REF_ID_REQUIRED');
+        return `task-attachments/${refId}/${id}${ext ? `.${ext}` : ''}`;
+      case EFileRefType.DOCUMENT:
+        if (!refId) throw new BadRequestException('DOCUMENT_REF_ID_REQUIRED');
+        return `documents/${refId}/${id}${ext ? `.${ext}` : ''}`;
+      default:
+        throw new BadRequestException('INVALID_FILE_TYPE');
     }
   }
 }
