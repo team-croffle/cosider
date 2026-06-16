@@ -139,6 +139,9 @@ export class FilesService {
     return downloadUrl;
   }
 
+  /**
+   * DB에서 파일 정보를 조회하고 presigned download url 을 발급하여 반환
+   */
   async getMediaInfo(objectId: string | null): Promise<FileMetadata | null> {
     if (!objectId) return null;
     const [file] = await this.db
