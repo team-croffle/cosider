@@ -1,5 +1,12 @@
 import { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Inject,
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
+import { and, eq } from 'drizzle-orm';
 
 import {
   CreateWorkspaceRequest,
@@ -9,77 +16,205 @@ import {
   WorkspaceResponse,
 } from './dto';
 
-// TODO: Drizzle 세팅 완료 후 실제 DB 쿼리로 교체
-const DUMMY_WORKSPACE = {
-  id: '497f6eca-6276-4993-bfeb-53cbbbba6f08',
-  slug: 'my-workspace',
-  name: 'My Workspace',
-  status: EWorkspaceStatus.ACTIVE,
-  description: '테스트 워크스페이스입니다.',
-  logo_url: 'https://example.com/logo.png',
-  role: EWorkspaceUserRole.OWNER,
-  created_at: new Date().toISOString(),
-};
+import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import { userProfiles, workspace_members, workspaces } from '@/database/schema';
 
 @Injectable()
 export class WorkspacesService {
+  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
+
   async createWorkspace(dto: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
-    // TODO: DB insert 로직으로 교체
-    // TODO: workspaces 테이블 insert 후 workspace_members에 생성자 OWNER로 자동 등록
-    return await Promise.resolve({
-      ...DUMMY_WORKSPACE,
-      slug: dto.slug,
-      name: dto.name,
-      description: dto.description,
-      logo_url: dto.logo_url,
+    // 트랜잭션으로 워크스페이스와 워크스페이스 멤버 등록을 함께 생성
+    const workspace = await this.db.transaction(async (tx) => {
+      const [created] = await tx
+        .insert(workspaces)
+        .values({
+          ownerId: '00000000-0000-0000-0000-000000000000', // TODO: 로그인 유저 ID로 교체
+          slug: dto.slug,
+          name: dto.name,
+          description: dto.description,
+          logoImageKey: dto.logoUploadToken, // TODO: uploadToken -> S3 Key 변환 후 교체
+        })
+        .returning()
+        .catch((e: { code: string }) => {
+          if (e.code === '23505') {
+            throw new ConflictException('이미 사용중인 slug입니다.');
+          }
+          throw e;
+        });
+
+      if (!created) {
+        throw new InternalServerErrorException('워크스페이스 생성에 실패했습니다.');
+      }
+
+      await tx.insert(workspace_members).values({
+        userId: '00000000-0000-0000-0000-000000000000', // TODO: 로그인 유저 ID로 교체
+        workspaceId: created.id,
+        role: EWorkspaceUserRole.OWNER,
+      });
+
+      return created;
     });
+
+    return {
+      slug: workspace.slug,
+      name: workspace.name,
+      status: workspace.status,
+      description: workspace.description ?? '',
+      logoUrl: '', // TODO: S3에서 logoImageKey로 PresignedURL 변환 후 교체
+      createdAt: workspace.createdAt.toISOString(),
+      role: EWorkspaceUserRole.OWNER,
+    };
   }
 
   async getWorkspaceList(): Promise<WorkspaceResponse[]> {
-    // TODO: 로그인 유저 기준 workspace_members 조회로 교체
-    return Promise.resolve([DUMMY_WORKSPACE]);
+    const workspaceList = await this.db
+      .select({
+        slug: workspaces.slug,
+        name: workspaces.name,
+        status: workspaces.status,
+        description: workspaces.description,
+        logoImageKey: workspaces.logoImageKey, // S3 Key -> URL 변환 필요
+        createdAt: workspaces.createdAt,
+        role: workspace_members.role,
+      })
+      .from(workspace_members)
+      .innerJoin(workspaces, eq(workspace_members.workspaceId, workspaces.id))
+      .where(eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000')); // TODO: 로그인 유저 ID로 교체
+
+    return workspaceList.map((w) => ({
+      slug: w.slug,
+      name: w.name,
+      status: w.status,
+      description: w.description ?? '',
+      logoUrl: w.logoImageKey ?? '', // TODO: S3에서 logoImageKey로 PresignedURL 변환 후 교체
+      createdAt: w.createdAt.toISOString(),
+      role: w.role,
+    }));
   }
 
   async getWorkspaceDetail(workspaceSlug: string): Promise<WorkspaceDetailResponse> {
-    // TODO: slug 기준 workspace 조회 후 projects 조회로 교체
-    return await Promise.resolve({
-      ...DUMMY_WORKSPACE,
-      slug: workspaceSlug,
-      owner: {},
-      members: [],
-      projects: [],
-    });
+    const [workspace] = await this.db
+      .select({
+        slug: workspaces.slug,
+        name: workspaces.name,
+        status: workspaces.status,
+        description: workspaces.description,
+        logoImageKey: workspaces.logoImageKey, // S3 Key -> URL 변환 필요
+        createdAt: workspaces.createdAt,
+        role: workspace_members.role,
+        owner: {
+          handle: userProfiles.handle,
+          nickname: userProfiles.nickname,
+          profileImageUrl: userProfiles.profileImageKey, // S3 Key -> URL 변환 필요
+        },
+      })
+      .from(workspaces)
+      .innerJoin(workspace_members, eq(workspaces.id, workspace_members.workspaceId))
+      .innerJoin(userProfiles, eq(workspaces.ownerId, userProfiles.userId))
+      .where(
+        and(
+          eq(workspaces.slug, workspaceSlug),
+          eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
+        ),
+      );
+
+    if (!workspace) {
+      throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
+    }
+
+    return {
+      slug: workspace.slug,
+      name: workspace.name,
+      status: workspace.status,
+      description: workspace.description ?? '',
+      logoUrl: workspace.logoImageKey ?? '',
+      createdAt: workspace.createdAt.toISOString(),
+      role: workspace.role,
+      owner: workspace.owner,
+      projects: [], // TODO: 프로젝트 정보로 교체
+    };
   }
 
   async updateWorkspace(
     workspaceSlug: string,
     dto: UpdateWorkspaceRequest,
   ): Promise<WorkspaceResponse> {
-    // TODO: slug 기준 workspace 업데이트 교체
-    return await Promise.resolve({
-      ...DUMMY_WORKSPACE,
-      slug: dto.slug,
-      name: dto.name,
-      description: dto.description,
-    });
+    const [updatedWorkspace] = await this.db
+      .update(workspaces)
+      .set({
+        name: dto.name,
+        description: dto.description,
+        slug: dto.slug,
+      })
+      .where(eq(workspaces.slug, workspaceSlug))
+      .returning();
+
+    if (!updatedWorkspace) {
+      throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
+    }
+
+    const [member] = await this.db
+      .select({ role: workspace_members.role })
+      .from(workspace_members)
+      .where(
+        and(
+          eq(workspace_members.workspaceId, updatedWorkspace.id),
+          eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
+        ),
+      );
+
+    if (!member) {
+      throw new NotFoundException('워크스페이스 멤버를 찾을 수 없습니다.');
+    }
+
+    return {
+      slug: updatedWorkspace.slug,
+      name: updatedWorkspace.name,
+      status: updatedWorkspace.status,
+      description: updatedWorkspace.description ?? '',
+      logoUrl: updatedWorkspace.logoImageKey ?? '', // TODO: S3 Key → URL 변환
+      createdAt: updatedWorkspace.createdAt.toISOString(),
+      role: member.role,
+    };
   }
 
   async deleteWorkspace(workspaceSlug: string): Promise<WorkspaceDeleteAcceptedResponse> {
-    // TODO: status를 DELETE_PENDING으로 변경 후 scheduled_delete_at 설정으로 교체
-    // TODO: FRID-32(1개월) vs ERD(24시간) 정책 불일치, 확인 후 수정 필요
-    const now = new Date();
-    const scheduledDeleteAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24시간 후
+    const [deletedWorkspace] = await this.db
+      .update(workspaces)
+      .set({
+        status: EWorkspaceStatus.DELETE_PENDING,
+        deletedAt: new Date(),
+        scheduledDeleteAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30일 후 (FRID-32 기준)
+      })
+      .where(eq(workspaces.slug, workspaceSlug))
+      .returning();
 
-    return await Promise.resolve({
+    if (!deletedWorkspace) {
+      throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
+    }
+
+    return {
       slug: workspaceSlug,
       status: EWorkspaceStatus.DELETE_PENDING,
-      deleted_at: now.toISOString(),
-      scheduled_delete_at: scheduledDeleteAt.toISOString(),
-    });
+      deletedAt: deletedWorkspace.deletedAt!.toISOString(),
+      scheduledDeleteAt: deletedWorkspace.scheduledDeleteAt!.toISOString(),
+    };
   }
 
-  async restoreWorkspace(_workspaceSlug: string): Promise<void> {
-    // TODO: status를 ACTIVE로 변경 후 scheduled_delete_at, deleted_at NULL로 교체
-    return await Promise.resolve();
+  async restoreWorkspace(workspaceSlug: string): Promise<void> {
+    const [restoredWorkspace] = await this.db
+      .update(workspaces)
+      .set({
+        status: EWorkspaceStatus.ACTIVE,
+        deletedAt: null,
+        scheduledDeleteAt: null,
+      })
+      .where(eq(workspaces.slug, workspaceSlug))
+      .returning();
+
+    if (!restoredWorkspace) {
+      throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
+    }
   }
 }
