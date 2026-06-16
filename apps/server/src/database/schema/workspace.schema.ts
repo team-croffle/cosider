@@ -27,7 +27,10 @@ export const workspaces = pgTable('workspaces', {
     .notNull(),
   slug: varchar('slug', { length: 30 }).unique().notNull(),
   name: varchar('name', { length: 100 }).notNull(),
-  status: workspaceStatusEnum('status').notNull().default(EWorkspaceStatus.ACTIVE),
+  status: workspaceStatusEnum('status')
+    .$type<EWorkspaceStatus>()
+    .notNull()
+    .default(EWorkspaceStatus.ACTIVE),
   description: text('description'),
   // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
   logoImageKey: text('logo_image_key'),
@@ -56,7 +59,10 @@ export const workspace_members = pgTable(
     workspaceId: uuid('workspace_id')
       .references(() => workspaces.id, { onDelete: 'cascade' })
       .notNull(),
-    role: workspaceMemberRoleEnum('role').notNull().default(EWorkspaceUserRole.MEMBER),
+    role: workspaceMemberRoleEnum('role')
+      .$type<EWorkspaceUserRole>()
+      .notNull()
+      .default(EWorkspaceUserRole.MEMBER),
     joinedAt: timestamp('joined_at', { withTimezone: true }).defaultNow().notNull(),
   } satisfies WorkspaceMemberSchema,
   (table) => [uniqueIndex('workspace_member_uidx').on(table.workspaceId, table.userId)],
