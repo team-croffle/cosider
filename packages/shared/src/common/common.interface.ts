@@ -1,15 +1,15 @@
 import { EFileRefType, EFileVisibility } from './common.enum';
 
-export interface MediaFile {
+export interface IMediaFile {
   id: string;
   bucketName: string;
   objectKey: string;
   originalName: string;
   mimeType: string;
   fileSize: number;
+  visibility: EFileVisibility;
+  refType: EFileRefType;
   refId: string;
   ownerId: string | null;
-  refType: EFileRefType;
-  visibility: EFileVisibility;
   createdAt: string;
 }
