@@ -1,4 +1,10 @@
-import type { FileUploadRequest, FileUploadUrlResponse, LinkDocumentDto } from '@cosider/shared';
+import type {
+  EFileRefType,
+  EFileVisibility,
+  IFileUploadRequest,
+  IFileUploadUrlResponse,
+  ILinkDocumentDto,
+} from '@cosider/shared';
 
 import type { UploadOptions } from '~/types/storage.type';
 
@@ -9,14 +15,25 @@ export function useFileUpload() {
   const progress = ref<number>(0);
   const error = ref<string | null>(null);
 
-  async function getUploadUrl(file: File, endpoint: string): Promise<FileUploadUrlResponse> {
-    const body: FileUploadRequest = {
-      fileName: file.name,
-      contentType: file.type,
+  let currentXhr: XMLHttpRequest | null = null;
+
+  async function getUploadUrl(
+    file: File,
+    endpoint: string,
+    visibility: EFileVisibility,
+    refType: EFileRefType,
+    refId: string,
+  ): Promise<IFileUploadUrlResponse> {
+    const body: IFileUploadRequest = {
+      originalName: file.name,
+      mimeType: file.type,
       fileSize: file.size,
+      visibility,
+      refType,
+      refId,
     };
 
-    const resp = await $api<FileUploadUrlResponse>(endpoint, {
+    const resp = await $api<IFileUploadUrlResponse>(endpoint, {
       method: 'POST',
       body,
     });
@@ -30,7 +47,11 @@ export function useFileUpload() {
     onProgress?: (p: number) => void,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
+      if (!import.meta.client) {
+        return reject(new Error('Storage upload can only be performed on the client side'));
+      }
       const xhr = new XMLHttpRequest();
+      currentXhr = xhr;
 
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
@@ -56,21 +77,41 @@ export function useFileUpload() {
     });
   }
 
+  function abortUpload(): void {
+    if (currentXhr) {
+      currentXhr.abort();
+      error.value = 'Upload aborted by user';
+      uploading.value = false;
+      progress.value = 0;
+      currentXhr = null;
+    }
+  }
+
   async function linkDocument(uploadToken: string, documentId: string): Promise<void> {
-    const body: LinkDocumentDto = { documentId };
+    const body: ILinkDocumentDto = { documentId };
     await $api(`/storage/link/${uploadToken}`, {
       method: 'POST',
       body,
     });
   }
 
-  async function upload({ file, endpoint, onProgress }: UploadOptions) {
+  async function upload({ file, endpoint, visibility, refType, refId, onProgress }: UploadOptions) {
+    if (uploading.value) {
+      throw new Error('Upload is already in progress.');
+    }
+
     uploading.value = true;
     progress.value = 0;
     error.value = null;
 
     try {
-      const { uploadUrl, uploadToken } = await getUploadUrl(file, endpoint);
+      const { uploadUrl, uploadToken } = await getUploadUrl(
+        file,
+        endpoint,
+        visibility,
+        refType,
+        refId,
+      );
       await putToStorage(file, uploadUrl, onProgress);
       return { uploadToken };
     } catch (err: unknown) {
@@ -81,5 +122,5 @@ export function useFileUpload() {
     }
   }
 
-  return { upload, linkDocument, uploading, progress, error };
+  return { upload, abortUpload, linkDocument, uploading, progress, error };
 }
