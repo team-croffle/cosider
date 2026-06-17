@@ -4,7 +4,7 @@ import * as Minio from 'minio';
 
 import { MinioService } from './minio.service';
 
-export const MINIO_CLIENT = 'MINIO_CLIENT';
+import { MINIO_CLIENT } from '@/common/constants';
 
 @Global()
 @Module({

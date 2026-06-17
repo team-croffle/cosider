@@ -5,8 +5,7 @@ import { Pool } from 'pg';
 
 import * as schema from './schema';
 
-export const PG_POOL = 'PG_POOL';
-export const DB_CONNECTION = 'DB_CONNECTION';
+import { DB_CONNECTION, PG_POOL } from '@/common/constants';
 
 export type DrizzleDB = NodePgDatabase<typeof schema>;
 
@@ -20,15 +19,19 @@ export type DrizzleDB = NodePgDatabase<typeof schema>;
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
         // 환경 변수에서 DB URL을 가져옵니다.
-        const connectionString = configService.get<string>('DATABASE_URL');
-
-        if (!connectionString) {
-          throw new Error('DATABASE_URL is not defined in the environment variables');
-        }
+        const dbHost = configService.getOrThrow<string>('DB_HOST');
+        const dbPort = configService.getOrThrow<number>('DB_PORT');
+        const dbUser = configService.getOrThrow<string>('DB_USER');
+        const dbPassword = configService.getOrThrow<string>('DB_PASSWORD');
+        const dbName = configService.getOrThrow<string>('DB_DATABASE');
 
         // Connection Pool 설정
         const pool = new Pool({
-          connectionString,
+          host: dbHost,
+          port: Number(dbPort),
+          user: dbUser,
+          password: dbPassword,
+          database: dbName,
           max: 20, // 최대 커넥션 수
         });
 

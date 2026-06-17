@@ -12,9 +12,10 @@ import { uuidv7 } from 'uuidv7';
 
 import { FileMetadata, FileUploadRequest, FileUploadUrlResponse } from './dto';
 
+import { DB_CONNECTION } from '@/common/constants';
 import { MinioService } from '@/common/minio/minio.service';
 import { RedisService } from '@/common/redis/redis.service';
-import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import type { DrizzleDB } from '@/database/drizzle.module';
 import { mediaFiles } from '@/database/schema';
 import { PendingUpload } from '@/types/file';
 

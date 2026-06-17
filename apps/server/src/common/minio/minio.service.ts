@@ -1,8 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { BucketItemStat, Client } from 'minio';
 
-import { MINIO_CLIENT } from './minio.module';
-
+import { MINIO_CLIENT } from '@/common/constants';
 import {
   MinioPresignedOptions,
   PresignedDownloadResult,
