@@ -1,4 +1,15 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  Query,
+  UseInterceptors,
+  ClassSerializerInterceptor,
+} from '@nestjs/common';
 
 import {
   CheckHandleExistsResponse,
@@ -35,8 +46,9 @@ export class UsersController {
   }
 
   @Get(':handle')
-  getProfile(@Param('handle') handle: string): UserProfileResponse {
-    return this.usersService.getProfile(handle);
+  @UseInterceptors(ClassSerializerInterceptor)
+  async getProfile(@Param('handle') handle: string): Promise<UserProfileResponse> {
+    return await this.usersService.getProfile(handle);
   }
 
   @Get('exists/handle')
