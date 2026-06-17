@@ -32,8 +32,7 @@ export const workspaces = pgTable('workspaces', {
     .notNull()
     .default(EWorkspaceStatus.ACTIVE),
   description: text('description'),
-  // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-  logoImageId: text('logo_image_id'),
+  logoImageId: uuid('logo_image_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   scheduledDeleteAt: timestamp('scheduled_delete_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft Delete
