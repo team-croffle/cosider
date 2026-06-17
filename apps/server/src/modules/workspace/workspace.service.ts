@@ -16,12 +16,13 @@ import {
   WorkspaceResponse,
 } from './dto';
 
-import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import { DB_CONNECTION } from '@/common/constants';
+import { type DrizzleDB } from '@/database/drizzle.module';
 import { userProfiles, workspace_members, workspaces } from '@/database/schema';
 
 @Injectable()
 export class WorkspacesService {
-  constructor(@Inject(DB_CONNECTION as string) private readonly db: DrizzleDB) {}
+  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
   async createWorkspace(dto: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
     // 트랜잭션으로 워크스페이스와 워크스페이스 멤버 등록을 함께 생성
