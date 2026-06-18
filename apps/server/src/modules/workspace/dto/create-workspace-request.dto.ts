@@ -18,5 +18,8 @@ export class CreateWorkspaceRequest implements ICreateWorkspaceRequest {
   uploadUrl!: string | null;
 
   @IsString()
+  uploadToken!: string | null;
+
+  @IsString()
   logoUploadToken!: string | null;
 }
