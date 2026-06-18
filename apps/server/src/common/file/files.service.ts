@@ -38,7 +38,7 @@ export class FilesService {
    * 각 도메인 서비스에서 type을 지정해서 호출
    */
   async issueUploadToken(userId: string, dto: FileUploadRequest): Promise<FileUploadUrlResponse> {
-    const ext = dto.originalName.split('.').pop();
+    const ext = dto.fileName.split('.').pop();
     const objectKey = this.buildObjectKey(userId, dto.refType, ext, dto.refId);
     const uploadToken = uuidv7();
 
@@ -48,7 +48,7 @@ export class FilesService {
 
     const pendingInfo: PendingUpload = {
       objectKey,
-      originalName: dto.originalName,
+      fileName: dto.fileName,
       mimeType: dto.mimeType,
       fileSize: dto.fileSize,
       visibility: dto.visibility,
@@ -98,10 +98,17 @@ export class FilesService {
         throw new BadRequestException('FILE_UPLOAD_SIZE_MISMATCH');
       }
     } catch (err) {
+      // 의도적으로 던진 예외인 경우 그대로 다시 던짐
+      if (err instanceof BadRequestException) {
+        throw err;
+      }
+
+      // 그 외의 경우는 파일이 스토리지에 존재하지 않는 것으로 간주
       Logger.error(err, 'FilesService.consumeUploadToken');
       throw new BadRequestException('FILE_NOT_FOUND_IN_STORAGE');
     }
 
+    // 업로드 완료 후 token은 redis에서 삭제. (재사용 방지)
     await this.redis.del(`pending:upload:${uploadToken}`);
 
     const [media] = await this.db
@@ -109,7 +116,7 @@ export class FilesService {
       .values({
         bucketName: this.bucket,
         objectKey: pending.objectKey,
-        originalName: pending.originalName,
+        fileName: pending.fileName,
         mimeType: pending.mimeType,
         fileSize: pending.fileSize,
         visibility: pending.visibility,
@@ -155,7 +162,7 @@ export class FilesService {
 
     return {
       id: file.id,
-      originalName: file.originalName,
+      fileName: file.fileName,
       mimeType: file.mimeType,
       fileSize: file.fileSize,
       visibility: file.visibility as EFileVisibility,
@@ -165,21 +172,24 @@ export class FilesService {
 
   private buildObjectKey(userId: string, type: EFileRefType, ext?: string, refId?: string): string {
     const id = uuidv7();
+
+    if (type !== EFileRefType.USER && !refId) {
+      throw new BadRequestException('REF_ID_REQUIRED');
+    }
+
+    const extPart = ext ? `.${ext}` : '';
+
     switch (type) {
       case EFileRefType.USER:
-        return `avatars/users/${userId}/${id}${ext ? `.${ext}` : ''}`;
+        return `avatars/users/${userId}/${id}${extPart}`;
       case EFileRefType.WORKSPACE:
-        if (!refId) throw new BadRequestException('WORKSPACE_REF_ID_REQUIRED');
-        return `logos/workspaces/${refId}/${id}${ext ? `.${ext}` : ''}`;
+        return `logos/workspaces/${refId}/${id}${extPart}`;
       case EFileRefType.PROJECT:
-        if (!refId) throw new BadRequestException('PROJECT_REF_ID_REQUIRED');
-        return `logos/projects/${refId}/${id}${ext ? `.${ext}` : ''}`;
+        return `logos/projects/${refId}/${id}${extPart}`;
       case EFileRefType.TASK:
-        if (!refId) throw new BadRequestException('TASK_REF_ID_REQUIRED');
-        return `task-attachments/${refId}/${id}${ext ? `.${ext}` : ''}`;
+        return `task-attachments/${refId}/${id}${extPart}`;
       case EFileRefType.DOCUMENT:
-        if (!refId) throw new BadRequestException('DOCUMENT_REF_ID_REQUIRED');
-        return `documents/${refId}/${id}${ext ? `.${ext}` : ''}`;
+        return `documents/${refId}/${id}${extPart}`;
       default:
         throw new BadRequestException('INVALID_FILE_TYPE');
     }

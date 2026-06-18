@@ -32,7 +32,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
-import { priorityEnum } from './common.schema';
+import { mediaFiles, priorityEnum } from './common.schema';
 import { users } from './user.schema';
 import { workspaces } from './workspace.schema';
 
@@ -61,7 +61,7 @@ export const projects = pgTable(
     isPublic: boolean('is_public').default(false).notNull(),
     key: varchar('key', { length: 20 }).notNull(),
     // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-    logoImageId: uuid('logo_image_id'),
+    logoImageId: uuid('logo_image_id').references(() => mediaFiles.id),
     techStacks: jsonb('tech_stacks'),
     sdlcType: sdlcTypeEnum('sdlc_type').$type<ESdlcType>().notNull(),
     gitRepoUrl: varchar('git_repo_url', { length: 255 }),

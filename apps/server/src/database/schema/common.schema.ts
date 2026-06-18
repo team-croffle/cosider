@@ -2,6 +2,8 @@ import { EFileRefType, EFileVisibility, EPriority, IMediaFile } from '@cosider/s
 import { bigint, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { users } from './user.schema';
+
 export const priorityEnum = pgEnum(
   'priority_enum',
   Object.values(EPriority) as [string, ...string[]],
@@ -26,13 +28,15 @@ export const mediaFiles = pgTable('media_files', {
     .primaryKey()
     .$defaultFn(() => uuidv7()),
   bucketName: varchar('bucket_name', { length: 50 }).notNull(),
-  objectKey: text('object_key').notNull(),
-  originalName: text('original_name').notNull().unique(),
+  objectKey: text('object_key').notNull().unique(),
+  fileName: text('file_name').notNull(),
   mimeType: text('mime_type').notNull(),
   fileSize: bigint('file_size', { mode: 'number' }).notNull(),
   visibility: fileVisibilityEnum('visibility').notNull(),
   refType: fileRefTypeEnum('ref_type').notNull(),
   refId: uuid('ref_id').notNull(),
-  ownerId: uuid('owner_id').notNull(),
+  ownerId: uuid('owner_id')
+    .references(() => users.id, { onDelete: 'set null' })
+    .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 } satisfies MediaFileSchema);

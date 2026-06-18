@@ -4,7 +4,7 @@ import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 export class FileUploadRequest implements IFileUploadRequest {
   @IsString()
   @IsNotEmpty()
-  originalName!: string;
+  fileName!: string;
 
   @IsString()
   @IsNotEmpty()

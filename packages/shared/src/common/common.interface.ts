@@ -4,7 +4,7 @@ export interface IMediaFile {
   id: string;
   bucketName: string;
   objectKey: string;
-  originalName: string;
+  fileName: string;
   mimeType: string;
   fileSize: number;
   visibility: EFileVisibility;

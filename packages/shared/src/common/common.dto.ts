@@ -2,7 +2,7 @@ import { IMediaFile } from './common.interface';
 
 export type IFileUploadRequest = Pick<
   IMediaFile,
-  'originalName' | 'mimeType' | 'fileSize' | 'visibility' | 'refType' | 'refId'
+  'fileName' | 'mimeType' | 'fileSize' | 'visibility' | 'refType' | 'refId'
 >;
 
 export interface IFileUploadUrlResponse {
@@ -13,7 +13,7 @@ export interface IFileUploadUrlResponse {
 
 export type IFileMetadata = Pick<
   IMediaFile,
-  'id' | 'originalName' | 'mimeType' | 'fileSize' | 'visibility' | 'createdAt'
+  'id' | 'fileName' | 'mimeType' | 'fileSize' | 'visibility' | 'createdAt'
 >;
 
 export interface IFileUploadCompletionRequest {

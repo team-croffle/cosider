@@ -18,7 +18,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
-import { priorityEnum } from './common.schema';
+import { mediaFiles, priorityEnum } from './common.schema';
 import { documents } from './document.schema';
 import { projects, sprints } from './project.schema';
 import { requirements } from './requirement.schema';
@@ -108,9 +108,9 @@ export const taskAttachments = pgTable('task_attachments', {
   taskId: uuid('task_id')
     .references(() => tasks.id, { onDelete: 'cascade' })
     .notNull(),
-  fileName: varchar('file_name', { length: 255 }).notNull(),
   // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-  fileId: uuid('file_id').notNull(),
-  size: integer('size'),
+  fileId: uuid('file_id')
+    .references(() => mediaFiles.id)
+    .notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies TaskAttachmentSchema);
