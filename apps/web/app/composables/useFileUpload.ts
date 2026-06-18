@@ -3,7 +3,6 @@ import type {
   EFileVisibility,
   IFileUploadRequest,
   IFileUploadUrlResponse,
-  ILinkDocumentDto,
 } from '@cosider/shared';
 
 import type { UploadOptions } from '~/types/storage.type';
@@ -87,14 +86,6 @@ export function useFileUpload() {
     }
   }
 
-  async function linkDocument(uploadToken: string, documentId: string): Promise<void> {
-    const body: ILinkDocumentDto = { documentId };
-    await $api(`/storage/link/${uploadToken}`, {
-      method: 'POST',
-      body,
-    });
-  }
-
   async function upload({ file, endpoint, visibility, refType, refId, onProgress }: UploadOptions) {
     if (uploading.value) {
       throw new Error('Upload is already in progress.');
@@ -122,5 +113,5 @@ export function useFileUpload() {
     }
   }
 
-  return { upload, abortUpload, linkDocument, uploading, progress, error };
+  return { upload, abortUpload, uploading, progress, error };
 }
