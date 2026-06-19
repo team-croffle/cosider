@@ -4,10 +4,8 @@ import { IUserProfileResponse } from '../user';
 import { EWorkspaceUserRole } from './workspace.enum';
 import { IWorkspace } from './workspace.interface';
 
-export interface ICreateWorkspaceRequest
-  extends Pick<IWorkspace, 'name' | 'slug' | 'description'>, IFileUploadCompletionRequest {
-  logoUploadToken: string | null;
-}
+export type ICreateWorkspaceRequest = Pick<IWorkspace, 'name' | 'slug' | 'description'> &
+  IFileUploadCompletionRequest;
 export type IUpdateWorkspaceRequest = Pick<IWorkspace, 'name' | 'description' | 'slug'>;
 export type IWorkspaceDeleteAcceptedResponse = Pick<
   IWorkspace,
