@@ -88,7 +88,9 @@ export const userProfiles = pgTable('user_profiles', {
   handle: varchar('handle', { length: 30 }).unique().notNull(),
   nickname: varchar('nickname', { length: 100 }),
   // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
-  profileImageId: uuid('profile_image_id').references(() => mediaFiles.id),
+  profileImageId: uuid('profile_image_id').references(() => mediaFiles.id, {
+    onDelete: 'set null',
+  }),
   jobRole: userJobRoleEnum('job_role').notNull(),
   techStacks: jsonb('tech_stacks'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),

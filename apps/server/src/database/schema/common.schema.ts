@@ -35,8 +35,6 @@ export const mediaFiles = pgTable('media_files', {
   visibility: fileVisibilityEnum('visibility').notNull(),
   refType: fileRefTypeEnum('ref_type').notNull(),
   refId: uuid('ref_id').notNull(),
-  ownerId: uuid('owner_id')
-    .references(() => users.id, { onDelete: 'set null' })
-    .notNull(),
+  ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 } satisfies MediaFileSchema);

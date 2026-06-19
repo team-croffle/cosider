@@ -33,7 +33,7 @@ export const workspaces = pgTable('workspaces', {
     .notNull()
     .default(EWorkspaceStatus.ACTIVE),
   description: text('description'),
-  logoImageId: uuid('logo_image_id').references(() => mediaFiles.id),
+  logoImageId: uuid('logo_image_id').references(() => mediaFiles.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   scheduledDeleteAt: timestamp('scheduled_delete_at', { withTimezone: true }),
   deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft Delete
