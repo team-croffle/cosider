@@ -12,6 +12,6 @@ export interface AuthenticatedUser {
   twoFactorEnabled: boolean;
   email: string;
   handle: string;
-  nickname: string;
+  nickname: string | null;
   jobRole: EJobRole;
 }
