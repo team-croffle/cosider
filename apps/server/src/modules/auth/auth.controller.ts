@@ -15,6 +15,14 @@ import type { AuthenticatedUser, GeneratedAuthTokens } from '@/types/auth/auth.t
 
 @Controller('api/v1/auth')
 export class AuthController {
+  // 개발환경 고려하여 secure: false 추후 true로 변경 예정.
+  private readonly cookieOptions = {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: false,
+    path: '/',
+  };
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('sign-in')
@@ -41,8 +49,9 @@ export class AuthController {
   ): Promise<void> {
     await this.authService.revokeToken(refreshToken);
 
-    res.clearCookie('accessToken');
-    res.clearCookie('refreshToken');
+    res.clearCookie('accessToken', this.cookieOptions);
+    res.clearCookie('refreshToken', this.cookieOptions);
+    res.clearCookie('expiresAt', this.cookieOptions);
   }
 
   // @Post('sign-up')
@@ -79,16 +88,8 @@ export class AuthController {
   private setNewAuthTokens(tokens: GeneratedAuthTokens, res: Response): void {
     const { accessToken, refreshToken, expiresAt } = tokens;
 
-    // 개발환경 고려하여 secure: false 추후 true로 변경 예정.
-    const cookieOptions = {
-      httpOnly: true,
-      samesite: 'lax',
-      secure: false,
-      path: '/',
-    };
-
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, cookieOptions);
-    res.cookie('expiresAt', expiresAt.toISOString(), cookieOptions);
+    res.cookie('accessToken', accessToken, this.cookieOptions);
+    res.cookie('refreshToken', refreshToken, this.cookieOptions);
+    res.cookie('expiresAt', expiresAt.toISOString(), this.cookieOptions);
   }
 }
