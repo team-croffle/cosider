@@ -77,7 +77,7 @@ export class AuthService {
   // 탈취 시 Access Token의 만료는 Redis를 통해 Blacklist로 관리함.
 
   private async getValidRefreshTokenRecord(refreshToken: string) {
-    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+    const tokenHash = this.hashToken(refreshToken);
 
     const [record] = await this.db
       .select()

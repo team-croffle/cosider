@@ -1,4 +1,4 @@
-import { EFileRefType, EFileVisibility } from '@cosider/shared';
+import { EFileRefType } from '@cosider/shared';
 import {
   BadRequestException,
   ForbiddenException,
@@ -165,7 +165,7 @@ export class FilesService {
       fileName: file.fileName,
       mimeType: file.mimeType,
       fileSize: file.fileSize,
-      visibility: file.visibility as EFileVisibility,
+      visibility: file.visibility,
       createdAt: file.createdAt?.toISOString() ?? 'unknown',
     };
   }
