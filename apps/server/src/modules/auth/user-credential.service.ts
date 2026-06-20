@@ -12,26 +12,30 @@ import { and, eq } from 'drizzle-orm';
 import { DB_CONNECTION } from '@/common/constants';
 import type { DrizzleDB } from '@/database/drizzle.module';
 import { userCredentials, userProfiles, users } from '@/database/schema';
+import { AuthenticatedUser, ExistingProviders } from '@/types/auth';
 
 @Injectable()
 export class UserCredentialService {
   constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
-  public async verifyLocalCredentials(email: string, password: string): Promise<unknown> {
+  public async verifyLocalCredentials(
+    email: string,
+    password: string,
+  ): Promise<AuthenticatedUser | null> {
     const [record] = await this.db
       .select({
         userId: users.id,
         status: users.status,
         twoFactorEnabled: users.twoFactorEnabled,
-        email: userProfiles.email,
+        email: users.email,
         passwordHash: userCredentials.credential,
         nickname: userProfiles.nickname,
         handle: userProfiles.handle,
         jobRole: userProfiles.jobRole,
       })
       .from(users)
-      .innerJoin(userProfiles, eq(users.id, userProfiles.userId))
       .innerJoin(userCredentials, eq(users.id, userCredentials.userId))
+      .leftJoin(userProfiles, eq(users.id, userProfiles.userId))
       // local 인증에서 providerId는 email 이다. 추가적으로 provider는 local이다.
       .where(
         and(
@@ -92,9 +96,32 @@ export class UserCredentialService {
       status: record.status,
       twoFactorEnabled: record.twoFactorEnabled,
       email: record.email,
-      handle: record.handle,
+      handle: record.handle!,
       nickname: record.nickname,
-      jobRole: record.jobRole,
+      jobRole: record.jobRole!,
+    };
+  }
+
+  public async findExistingProvidersByEmail(email: string): Promise<ExistingProviders | null> {
+    const records = await this.db
+      // 필요한 최소한의 필드만 선택 (Projection)
+      .select({
+        id: users.id,
+        status: users.status,
+        provider: userCredentials.provider,
+      })
+      .from(users)
+      .innerJoin(userCredentials, eq(users.id, userCredentials.userId))
+      .where(and(eq(users.email, email)));
+
+    if (records.length === 0) {
+      return null;
+    }
+
+    return {
+      userId: records[0].id,
+      status: records[0].status,
+      providers: records.map((record) => record.provider),
     };
   }
 }

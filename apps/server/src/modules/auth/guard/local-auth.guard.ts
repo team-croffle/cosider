@@ -8,7 +8,7 @@ import {
 
 import { UserCredentialService } from '../user-credential.service';
 
-import type { AuthenticatedUser, LocalAuthRequest } from '@/types/auth';
+import type { LocalAuthRequest } from '@/types/auth';
 
 @Injectable()
 export class LocalAuthGuard implements CanActivate {
@@ -29,7 +29,7 @@ export class LocalAuthGuard implements CanActivate {
       });
     }
 
-    req.user = user as unknown as AuthenticatedUser;
+    req.user = user;
     return true;
   }
 }
