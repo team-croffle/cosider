@@ -1,17 +1,18 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 
 import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
-import { BadRequestException, Inject, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import { AuthenticatedUser, EmailVerifyRequest, JwtPayloadDto, Signin, SignupRequest } from './dto';
-import { IJwtPayload } from './interface/jwt-payload.interface';
+import { EmailVerifyRequest, JwtPayloadDto, SignupRequest } from './dto';
 
+import { DB_CONNECTION } from '@/common/constants';
 import { RedisService } from '@/common/redis/redis.service';
-import { DB_CONNECTION, type DrizzleDB } from '@/database/drizzle.module';
+import { type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, userCredentials, userProfiles, users } from '@/database/schema';
+import { GeneratedAuthTokens } from '@/types/auth/auth.type';
 
 @Injectable()
 export class AuthService {
@@ -20,96 +21,64 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly redisService: RedisService,
   ) {}
+
   // 토큰 생성
-  // Todo:
-  // expiresIn은 필요시 변경 예정.
-  // AccessToken과 RefreshToken의 secret또한 필요시 분리/변경
-  private async generateAccessToken(user: JwtPayloadDto): Promise<string> {
-    return this.jwtService.signAsync({ userId: user.userId }, { expiresIn: '5m' });
-  }
-  private generateRefreshToken() {
-    return randomBytes(32).toString('hex');
-  }
+  // 함수 변경 이유: accessToken과 refreshToken을 같이 생성하여 반환할 필요가 있음.
+  public async generateAuthTokens({ userId }: JwtPayloadDto): Promise<GeneratedAuthTokens> {
+    // Access Token은 JWT로 생성
+    const accessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '15m' });
 
-  // 다중 기기 로그인 제한
-  private async storeAccessToken(userId: string, accessToken: string): Promise<void> {
-    const hashedToken = createHash('sha256').update(accessToken).digest('hex');
+    // Refresh Token은 Opaque UUID로 생성
+    // uuidv7은 시간 기반임. 또한 DB의 PK 정렬을 위함.
+    // 그래서 C++ Core 레벨의 crypto.randomUUID()를 통해 빠르고 오버헤드가 없으며, 예측 불가능한 랜덤 토큰을 사용.
+    const refreshToken = randomUUID();
 
-    await this.redisService.set(`access-token:${userId}`, hashedToken, 60 * 5);
-  }
-  //tokenValue Schema .uuid-> varchar 예정 hashedToken 저장
-  private async storeRefreshToken(userId: string, refreshToken: string): Promise<void> {
-    const hashedToken = createHash('sha256').update(refreshToken).digest('hex');
+    // refresh Token은 sha256으로 hashing. DB Leak시 랜덤값 노출 방지.
+    const tokenValue = this.hashToken(refreshToken);
 
+    // 만료기한 7일
+    const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7);
+
+    // refresh token은 db에 insert 해야함.
+    // TODO: 향후 group-key를 토큰마다 부여함.
+    // 그룹키를 쓰면, 하나의 기기에 대해 token을 관리할 수 있고, 탈취 시 해당 group-key를 가진 토큰만 invalid 처리하면 된다.
+    // 하지만 현재는 그런 기능이 없으므로 userId 기준으로 토큰을 관리함.
     await this.db.insert(refreshTokens).values({
-      userId: userId,
-      tokenValue: hashedToken,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      userId,
+      tokenValue,
+      expiresAt,
     });
+
+    // Controller에서 쿠키 설정과 함께 클라이언트에게 전달됨.
+    return {
+      accessToken,
+      refreshToken,
+      expiresAt,
+    };
   }
 
-  private async removeAccessToken(userId: string): Promise<void> {
-    await this.redisService.del(`access-token:${userId}`);
+  private hashToken(token: string): string {
+    return createHash('sha256').update(token).digest('hex');
   }
-  private async revokeRefreshToken(userId: string): Promise<void> {
+
+  // Redis에 Access Token이 저장되는 함수는 제거.
+  // 사유: Access Token은 Stateless인 JWT이므로, 서명(signature)만으로 검증이 가능함.
+  // 탈취 시 Access Token의 만료는 Redis를 통해 Blacklist로 관리함.
+
+  public async signout(token: string): Promise<void> {
+    const hashedToken = this.hashToken(token);
+
     await this.db
       .update(refreshTokens)
-      .set({
-        revokedAt: new Date(),
-      })
+      .set({ revokedAt: new Date() })
+      .where(eq(refreshTokens.tokenValue, hashedToken));
+  }
+
+  public async revokeRefreshToken(userId: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
       .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
-  }
-
-  async validateAccessToken(userId: string, accessToken: string): Promise<boolean> {
-    const hashedToken = createHash('sha256').update(accessToken).digest('hex');
-    const storedToken = await this.redisService.get(`access-token:${userId}`);
-
-    return hashedToken === storedToken;
-  }
-
-  async validateUser(dto: Signin): Promise<AuthenticatedUser> {
-    const result = await this.db
-      .select({
-        userId: users.id,
-        email: userProfiles.email,
-        password: userCredentials.credential,
-      })
-      .from(userProfiles)
-      .innerJoin(users, eq(users.id, userProfiles.userId))
-      .innerJoin(userCredentials, eq(userCredentials.userId, users.id))
-      .where(eq(userProfiles.email, dto.email))
-      .limit(1);
-    if (!result.length) throw new UnauthorizedException('Invalid credentials');
-
-    const user = result[0];
-
-    const isValid = await argon2.verify(user.password, dto.password);
-    if (!isValid) throw new UnauthorizedException('Invalid credentials');
-
-    return {
-      userId: user.userId,
-      email: user.email,
-    };
-  }
-
-  async signin(user: AuthenticatedUser): Promise<{ accessToken: string; refreshToken: string }> {
-    const payload: IJwtPayload = {
-      userId: user.userId,
-    };
-
-    // 다중 기기 로그인 제한: 기존 세션 무효화
-    await this.signout(user.userId);
-
-    const accessToken = await this.generateAccessToken(payload);
-    const refreshToken = this.generateRefreshToken();
-
-    await this.storeAccessToken(payload.userId, accessToken);
-    await this.storeRefreshToken(payload.userId, refreshToken);
-    return { accessToken, refreshToken };
-  }
-
-  async signout(userId: string): Promise<void> {
-    await Promise.all([this.removeAccessToken(userId), this.revokeRefreshToken(userId)]);
   }
 
   async signup(dto: SignupRequest): Promise<void> {
