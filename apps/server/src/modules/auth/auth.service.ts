@@ -1,23 +1,27 @@
-import { createHash, randomUUID } from 'crypto';
+import { createHash, randomBytes } from 'crypto';
 
-import { EUserStatus } from '@cosider/shared';
+import { EUserCredentialProvider } from '@cosider/shared';
 import {
   BadRequestException,
+  ConflictException,
   HttpStatus,
   Inject,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as argon2 from 'argon2';
+import { isStrongPassword } from 'class-validator';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { Redis } from 'ioredis';
 
 import { EmailVerifyRequest } from './dto';
+import { SignupRequest } from './dto/signup-request.dto';
 import { UserCredentialService } from './user-credential.service';
 
-import { DB_CONNECTION, REDIS_CLIENT } from '@/common/constants';
+import { DB_CONNECTION, REDIS_CLIENT, REDIS_KEY_REGISTER_PENDING } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
-import { refreshTokens, users } from '@/database/schema';
+import { refreshTokens, userCredentials, users } from '@/database/schema';
 import type { GeneratedAuthTokens, JwtUserPayload } from '@/types/auth';
 
 @Injectable()
@@ -38,7 +42,7 @@ export class AuthService {
     // Refresh Token은 Opaque UUID로 생성
     // uuidv7은 시간 기반임. 또한 DB의 PK 정렬을 위함.
     // 그래서 C++ Core 레벨의 crypto.randomUUID()를 통해 빠르고 오버헤드가 없으며, 예측 불가능한 랜덤 토큰을 사용.
-    const refreshToken = randomUUID();
+    const refreshToken = randomBytes(32).toString('hex');
 
     // refresh Token은 sha256으로 hashing. DB Leak시 랜덤값 노출 방지.
     const tokenValue = this.hashToken(refreshToken);
@@ -146,39 +150,108 @@ export class AuthService {
 
   // validateUser는 분리 (Single Responsibility Principle)
 
-  // async signup(dto: SignupRequest): Promise<void> {
-  // }
+  async signupLocal(dto: SignupRequest): Promise<void> {
+    const { email, password, passwordConfirm } = dto;
+
+    if (password !== passwordConfirm) {
+      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+    }
+
+    const isPasswordValid = isStrongPassword(password, {
+      minLength: 8,
+      minLowercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    });
+    if (!isPasswordValid) {
+      throw new BadRequestException('비밀번호는 8자 이상, 영문, 숫자를 포함해야 합니다.');
+    }
+
+    const existing = await this.userCredentialService.findExistingProvidersByEmail(email);
+    if (existing) {
+      if (existing.providers.includes(EUserCredentialProvider.LOCAL)) {
+        // 이미 존재하는 계정이며, LOCAL provider가 존재.
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          errorCode: 'ACCOUNT_ALREADY_EXISTS',
+          message: 'ERR_ACCOUNT_ALREADY_EXISTS',
+        });
+      } else {
+        // 연동 로직: LOCAL(Email/PW) 계정은 없지만, 다른 OAuth 계정이 이미 존재.
+        throw new ConflictException({
+          statusCode: HttpStatus.CONFLICT,
+          errorCode: 'REQUIRE_SOCIAL_LINKING',
+          message: 'ERR_REQUIRE_SOCIAL_LINKING',
+          meta: {
+            userId: existing.userId,
+            // 사용자가 선택할 수 있는 provider 항목
+            providers: existing.providers,
+          },
+        });
+      }
+    }
+
+    // 존재하는 계정이 없으니 새로 생성. 단, redis에 임시 유저 생성하고 이메일 인증 성공 시 db에 insert 진행.
+    const verificationToken = randomBytes(32).toString('hex');
+    const hashedToken = this.hashToken(verificationToken);
+
+    // redis에 적재
+    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${hashedToken}`;
+    await this.redis.hset(redisKey, {
+      email: email,
+      password: password,
+    });
+
+    // 유효시간 1시간.
+    await this.redis.expire(redisKey, 60 * 60 * 1);
+
+    // TODO: 메일링 Service를 추가하여 verificationToken을 이메일로 발송하는 로직 추가.
+    // this.mailService.sendVerificationMail(email, verificationToken);
+  }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
     const { token } = dto;
+    const hashedToken = this.hashToken(token);
 
-    type EmailVerifyPayload = {
-      userId: string;
-      email: string;
-    };
+    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${hashedToken}`;
+    const pendingUser = await this.redis.hgetall(redisKey);
 
-    let payload: EmailVerifyPayload;
-
-    try {
-      payload = await this.jwtService.verifyAsync<EmailVerifyPayload>(token);
-    } catch {
-      throw new BadRequestException('유효하지 않은 인증 토큰입니다.');
+    if (!pendingUser || Object.keys(pendingUser).length === 0) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        errorCode: 'INVALID_TOKEN',
+        message: 'ERR_INVALID_TOKEN',
+      });
     }
 
-    const [user] = await this.db.select().from(users).where(eq(users.id, payload.userId)).limit(1);
+    const { email, password } = pendingUser;
 
-    if (!user) throw new BadRequestException('존재하지 않는 사용자입니다.');
-    // Todo: Drizzle과 EUserStatus 타입 불일치 오류로 하드코딩. 추후 개선
-    if (user.status === EUserStatus.ACTIVE)
-      throw new BadRequestException('이미 인증된 사용자입니다.');
-    if (user.status !== EUserStatus.PENDING)
-      throw new BadRequestException('인증 가능한 상태가 아닙니다.');
+    const existing = await this.userCredentialService.findExistingProvidersByEmail(email);
+    if (existing) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        errorCode: 'ALREADY_REGISTERED',
+        message: 'ERR_ALREADY_REGISTERED',
+      });
+    }
 
-    await this.db
-      .update(users)
-      .set({
-        status: EUserStatus.ACTIVE,
-      })
-      .where(eq(users.id, payload.userId));
+    // 트랜잭션으로 user, user_credential 동시 insert 진행.
+    await this.db.transaction(async (tx) => {
+      // 들어갈 Value는 email 밖에 없음.
+      // Why? -> id는 자동 생성, status는 default(PENDING), createdAt은 defaultNow()
+      // Pendingd이면 로그인 후 Profile을 입력받아야 함.
+      const [user] = await tx.insert(users).values({ email }).returning();
+
+      const cryptedPassword = await argon2.hash(password);
+      await tx.insert(userCredentials).values({
+        userId: user.id,
+        provider: EUserCredentialProvider.LOCAL,
+        providerId: email,
+        credential: cryptedPassword,
+      });
+    });
+
+    // 완료되었으므로 redis에서 삭제.
+    await this.redis.del(redisKey);
   }
 }

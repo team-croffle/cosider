@@ -33,6 +33,12 @@ export const users = pgTable('users', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
+  // email을 이 곳으로 옮긴 이유:
+  // PENDING(가입했지만 Profile이 없음) 상태인 경우, email 조회를 위해 profile을 조회?
+  // => 모순 발생. Profile이 없기 떄문에, 애초에 조회에서 에러 발생함.
+  // ==> email을 users로 옮겨 해결.
+  // ===> PENDING 상태인 유저라도 이메일로 검색이 필요하기 때문
+  email: varchar('email', { length: 254 }).notNull().unique(),
   status: userStatusEnum('status').default(EUserStatus.PENDING).notNull(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   twoFactorSecret: text('two_factor_secret'),
@@ -84,7 +90,6 @@ export const userProfiles = pgTable('user_profiles', {
     .$defaultFn(() => uuidv7())
     .primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  email: varchar('email', { length: 254 }).notNull().unique(),
   handle: varchar('handle', { length: 30 }).unique().notNull(),
   nickname: varchar('nickname', { length: 100 }),
   // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
