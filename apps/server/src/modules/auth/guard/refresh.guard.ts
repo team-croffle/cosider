@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 
-import { RefreshRequest } from '@/types/auth/auth-request.type';
+import type { RefreshRequest } from '@/types/auth';
 
 @Injectable()
 export class RefreshGuard implements CanActivate {

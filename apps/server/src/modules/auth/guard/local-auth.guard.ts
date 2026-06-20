@@ -8,8 +8,7 @@ import {
 
 import { UserCredentialService } from '../user-credential.service';
 
-import { LocalAuthRequest } from '@/types/auth/auth-request.type';
-import { AuthenticatedUser } from '@/types/auth/auth.type';
+import type { AuthenticatedUser, LocalAuthRequest } from '@/types/auth';
 
 @Injectable()
 export class LocalAuthGuard implements CanActivate {

@@ -13,6 +13,7 @@
     "*.module.ts": "nest-module",
     "*.service.ts": "nest-service",
     "*.guard.ts": "nest-guard",
+    "*.decorator.ts": "nest-decorator",
     "*.schema.ts": "database"
   }
 }

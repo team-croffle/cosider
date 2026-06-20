@@ -1,4 +1,4 @@
-import { EJobRole, EUserStatus } from '@cosider/shared';
+import { EJobRole, EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 
 export interface GeneratedAuthTokens {
   accessToken: string;
@@ -14,4 +14,10 @@ export interface AuthenticatedUser {
   handle: string;
   nickname: string | null;
   jobRole: EJobRole;
+}
+
+export interface ExistingProviders {
+  userId: string;
+  status: EUserStatus;
+  providers: EUserCredentialProvider[];
 }
