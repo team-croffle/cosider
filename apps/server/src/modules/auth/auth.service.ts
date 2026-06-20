@@ -9,7 +9,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { Redis } from 'ioredis';
 
@@ -73,7 +72,7 @@ export class AuthService {
   // 사유: Access Token은 Stateless인 JWT이므로, 서명(signature)만으로 검증이 가능함.
   // 탈취 시 Access Token의 만료는 Redis를 통해 Blacklist로 관리함.
 
-  public async refreshTokens(refreshToken: string): Promise<GeneratedAuthTokens> {
+  private async getValidRefreshTokenRecord(refreshToken: string) {
     const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
 
     const [record] = await this.db
@@ -98,6 +97,18 @@ export class AuthService {
       });
     }
 
+    return record;
+  }
+
+  private async markTokenAsRevoked(tokenId: string): Promise<void> {
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(eq(refreshTokens.id, tokenId));
+  }
+
+  public async refreshTokens(refreshToken: string): Promise<GeneratedAuthTokens> {
+    const record = await this.getValidRefreshTokenRecord(refreshToken);
     if (record.revokedAt !== null) {
       await this.revokeAllTokensByUserId(record.userId!);
       throw new UnauthorizedException({
@@ -107,38 +118,13 @@ export class AuthService {
       });
     }
 
-    await this.db
-      .update(refreshTokens)
-      .set({ revokedAt: new Date() })
-      .where(eq(refreshTokens.id, record.id));
+    await this.markTokenAsRevoked(record.id);
 
     return this.generateAuthTokens({ userId: record.userId! });
   }
 
   public async revokeToken(refreshToken: string): Promise<void> {
-    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
-
-    const [record] = await this.db
-      .select()
-      .from(refreshTokens)
-      .where(eq(refreshTokens.tokenValue, tokenHash))
-      .limit(1);
-
-    if (!record) {
-      throw new UnauthorizedException({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        errorCode: 'INVALID_TOKEN',
-        message: 'ERR_INVALID_TOKEN',
-      });
-    }
-
-    if (new Date() > record.expiresAt) {
-      throw new UnauthorizedException({
-        statusCode: HttpStatus.UNAUTHORIZED,
-        errorCode: 'EXPIRED_TOKEN',
-        message: 'ERR_EXPIRED_TOKEN',
-      });
-    }
+    const record = await this.getValidRefreshTokenRecord(refreshToken);
 
     if (record.revokedAt !== null) {
       throw new UnauthorizedException({
@@ -148,10 +134,7 @@ export class AuthService {
       });
     }
 
-    await this.db
-      .update(refreshTokens)
-      .set({ revokedAt: new Date() })
-      .where(eq(refreshTokens.id, record.id));
+    await this.markTokenAsRevoked(record.id);
   }
 
   public async revokeAllTokensByUserId(userId: string): Promise<void> {
@@ -164,28 +147,6 @@ export class AuthService {
   // validateUser는 분리 (Single Responsibility Principle)
 
   // async signup(dto: SignupRequest): Promise<void> {
-  //   const { email, password, passwordConfirm } = dto;
-
-  //   if (password !== passwordConfirm) {
-  //     throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-  //   }
-
-  //   const isPasswordValid = isStrongPassword(password, {
-  //     minLength: 8,
-  //     minLowercase: 1,
-  //     minNumbers: 1,
-  //     minSymbols: 1,
-  //   });
-  //   if (!isPasswordValid) {
-  //     throw new BadRequestException('비밀번호는 8자 이상, 영문, 숫자를 포함해야 합니다.');
-  //   }
-
-  //   const existing = await this.userCredentialService.findExistingProvidersByEmail(email);
-  //   if (existing) {
-  //     if (existing.status === EUserStatus.ACTIVE) {
-  //       throw new BadRequestException('이미 존재하는 이메일입니다.');
-  //     }
-  //   }
   // }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
@@ -219,16 +180,5 @@ export class AuthService {
         status: EUserStatus.ACTIVE,
       })
       .where(eq(users.id, payload.userId));
-  }
-
-  private async hashPassword(password: string): Promise<string> {
-    return argon2.hash(password);
-  }
-
-  private validatePassword(password: string): void {
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d`!@#$%^&*]{8}$/;
-    if (!regex.test(password)) {
-      throw new BadRequestException('비밀번호는 8자 이상, 영문, 숫자를 포함해야 합니다.');
-    }
   }
 }
