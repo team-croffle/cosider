@@ -10,12 +10,12 @@ type RequirementSchema = Record<keyof IRequirement, unknown>;
 
 export const requirementTypeEnum = pgEnum(
   'requirement_type',
-  Object.values(ERequirementBlockType) as [string, ...string[]],
+  Object.values(ERequirementBlockType) as [ERequirementBlockType, ...ERequirementBlockType[]],
 );
 
 export const requirementStatusEnum = pgEnum(
   'requirement_status',
-  Object.values(ERequirementStatus) as [string, ...string[]],
+  Object.values(ERequirementStatus) as [ERequirementStatus, ...ERequirementStatus[]],
 );
 
 export const requirements = pgTable(

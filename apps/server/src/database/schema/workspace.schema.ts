@@ -16,7 +16,7 @@ type WorkspaceSchemaKeys = Record<keyof IWorkspace, unknown>;
 
 export const workspaceStatusEnum = pgEnum(
   'workspace_status',
-  Object.values(EWorkspaceStatus) as [string, ...string[]],
+  Object.values(EWorkspaceStatus) as [EWorkspaceStatus, ...EWorkspaceStatus[]],
 );
 
 export const workspaces = pgTable('workspaces', {
@@ -44,7 +44,7 @@ type WorkspaceMemberSchema = Record<keyof IWorkspaceMember, unknown>;
 
 export const workspaceMemberRoleEnum = pgEnum(
   'workspace_member_role',
-  Object.values(EWorkspaceUserRole) as [string, ...string[]],
+  Object.values(EWorkspaceUserRole) as [EWorkspaceUserRole, ...EWorkspaceUserRole[]],
 );
 
 export const workspace_members = pgTable(

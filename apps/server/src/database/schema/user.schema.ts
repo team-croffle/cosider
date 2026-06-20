@@ -26,14 +26,14 @@ type UserSchemaKeys = Record<keyof IUser, unknown>;
 
 export const userStatusEnum = pgEnum(
   'user_status',
-  Object.values(EUserStatus) as [string, ...string[]],
+  Object.values(EUserStatus) as [EUserStatus, ...EUserStatus[]],
 );
 
 export const users = pgTable('users', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
-  status: userStatusEnum('status').default('PENDING').notNull(),
+  status: userStatusEnum('status').default(EUserStatus.PENDING).notNull(),
   twoFactorEnabled: boolean('two_factor_enabled').default(false).notNull(),
   twoFactorSecret: text('two_factor_secret'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
@@ -45,7 +45,7 @@ type UserCredentialSchema = Record<keyof IUserCredential, unknown>;
 
 export const userCredentialProviderEnum = pgEnum(
   'user_credential_provider',
-  Object.values(EUserCredentialProvider) as [string, ...string[]],
+  Object.values(EUserCredentialProvider) as [EUserCredentialProvider, ...EUserCredentialProvider[]],
 );
 
 export const userCredentials = pgTable('user_credentials', {
@@ -76,7 +76,7 @@ type UserProfileSchema = Record<keyof IUserProfile, unknown>;
 
 export const userJobRoleEnum = pgEnum(
   'user_job_role',
-  Object.values(EJobRole) as [string, ...string[]],
+  Object.values(EJobRole) as [EJobRole, ...EJobRole[]],
 );
 
 export const userProfiles = pgTable('user_profiles', {

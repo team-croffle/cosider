@@ -26,17 +26,17 @@ type DocumentSchema = Record<keyof IDocument, unknown>;
 
 export const documentTypeEnum = pgEnum(
   'document_type',
-  Object.values(EDocumentType) as [string, ...string[]],
+  Object.values(EDocumentType) as [EDocumentType, ...EDocumentType[]],
 );
 
 export const contentTypeEnum = pgEnum(
   'content_type',
-  Object.values(EContentType) as [string, ...string[]],
+  Object.values(EContentType) as [EContentType, ...EContentType[]],
 );
 
 export const sourceTypeEnum = pgEnum(
   'source_type',
-  Object.values(ESourceType) as [string, ...string[]],
+  Object.values(ESourceType) as [ESourceType, ...ESourceType[]],
 );
 
 export const documents = pgTable('documents', {
@@ -78,7 +78,7 @@ type WhiteboardObjectSchema = Record<keyof IWhiteboardObject, unknown>;
 
 export const mappedEntityTypeEnum = pgEnum(
   'mapped_entity_type',
-  Object.values(EMappedEntityType) as [string, ...string[]],
+  Object.values(EMappedEntityType) as [EMappedEntityType, ...EMappedEntityType[]],
 );
 
 export const whiteboardObjects = pgTable('whiteboard_objects', {

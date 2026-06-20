@@ -41,7 +41,7 @@ type ProjectSchema = Record<keyof IProject, unknown>;
 
 export const sdlcTypeEnum = pgEnum(
   'sdlc_type_enum',
-  Object.values(ESdlcType) as [string, ...string[]],
+  Object.values(ESdlcType) as [ESdlcType, ...ESdlcType[]],
 );
 
 export const projects = pgTable(
@@ -63,7 +63,7 @@ export const projects = pgTable(
     // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
     logoImageId: uuid('logo_image_id').references(() => mediaFiles.id, { onDelete: 'set null' }),
     techStacks: jsonb('tech_stacks'),
-    sdlcType: sdlcTypeEnum('sdlc_type').$type<ESdlcType>().notNull(),
+    sdlcType: sdlcTypeEnum('sdlc_type').notNull(),
     gitRepoUrl: varchar('git_repo_url', { length: 255 }),
     gitProvider: varchar('git_provider', { length: 20 }),
     gitDefaultBranch: varchar('git_default_branch', { length: 100 }).default('main'),
@@ -78,7 +78,7 @@ type ProjectMemberSchema = Record<keyof IProjectMember, unknown>;
 
 export const projectMemberRoleEnum = pgEnum(
   'project_member_role',
-  Object.values(EProjectMemberRole) as [string, ...string[]],
+  Object.values(EProjectMemberRole) as [EProjectMemberRole, ...EProjectMemberRole[]],
 );
 
 export const projectMembers = pgTable(
@@ -111,7 +111,7 @@ type ProjectStageSchema = Record<keyof IProjectStage, unknown>;
 
 export const stageStatusEnum = pgEnum(
   'stage_status',
-  Object.values(EStageStatus) as [string, ...string[]],
+  Object.values(EStageStatus) as [EStageStatus, ...EStageStatus[]],
 );
 
 export const projectStages = pgTable('project_stages', {
@@ -132,7 +132,7 @@ type ProjectStageHistorySchema = Record<keyof IProjectStageHistory, unknown>;
 
 export const stageEditActionEnum = pgEnum(
   'stage_action',
-  Object.values(EStageEditAction) as [string, ...string[]],
+  Object.values(EStageEditAction) as [EStageEditAction, ...EStageEditAction[]],
 );
 
 export const projectStageHistories = pgTable('stage_histories', {
@@ -153,7 +153,7 @@ type SprintSchema = Record<keyof ISprint, unknown>;
 
 export const sprintStatusEnum = pgEnum(
   'sprint_status',
-  Object.values(ESprintStatus) as [string, ...string[]],
+  Object.values(ESprintStatus) as [ESprintStatus, ...ESprintStatus[]],
 );
 
 export const sprints = pgTable('sprints', {
@@ -193,7 +193,7 @@ type TestRunSchema = Record<keyof ITestRun, unknown>;
 
 export const testStatusEnum = pgEnum(
   'test_status',
-  Object.values(ETestStatus) as [string, ...string[]],
+  Object.values(ETestStatus) as [ETestStatus, ...ETestStatus[]],
 );
 
 export const testRuns = pgTable('test_runs', {
@@ -213,12 +213,12 @@ type DeploymentSchema = Record<keyof IProjectDeployment, unknown>;
 
 export const deploymentPlatformEnum = pgEnum(
   'deployment_platform',
-  Object.values(EDeploymentPlatform) as [string, ...string[]],
+  Object.values(EDeploymentPlatform) as [EDeploymentPlatform, ...EDeploymentPlatform[]],
 );
 
 export const deploymentStatusEnum = pgEnum(
   'deployment_status',
-  Object.values(EDeployStatus) as [string, ...string[]],
+  Object.values(EDeployStatus) as [EDeployStatus, ...EDeployStatus[]],
 );
 
 export const projectDeployments = pgTable('project_deployments', {

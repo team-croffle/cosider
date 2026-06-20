@@ -29,7 +29,7 @@ type TaskSchema = Record<keyof ITask, unknown>;
 
 export const taskStatusEnum = pgEnum(
   'task_status',
-  Object.values(ETaskStatus) as [string, ...string[]],
+  Object.values(ETaskStatus) as [ETaskStatus, ...ETaskStatus[]],
 );
 
 export const tasks = pgTable(

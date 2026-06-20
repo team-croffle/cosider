@@ -9,7 +9,7 @@ type NotificationSchema = Record<keyof INotification, unknown>;
 
 export const notificationTypeEnum = pgEnum(
   'notification_type',
-  Object.values(ENotificationType) as [string, ...string[]],
+  Object.values(ENotificationType) as [ENotificationType, ...ENotificationType[]],
 );
 
 export const notifications = pgTable('notifications', {

@@ -6,7 +6,7 @@ import { users } from './user.schema';
 
 export const priorityEnum = pgEnum(
   'priority_enum',
-  Object.values(EPriority) as [string, ...string[]],
+  Object.values(EPriority) as [EPriority, ...EPriority[]],
 );
 
 // ############### MEDIA FILES ###############
@@ -15,12 +15,12 @@ type MediaFileSchema = Record<keyof IMediaFile, unknown>;
 
 export const fileVisibilityEnum = pgEnum(
   'file_visibility_enum',
-  Object.values(EFileVisibility) as [string, ...string[]],
+  Object.values(EFileVisibility) as [EFileVisibility, ...EFileVisibility[]],
 );
 
 export const fileRefTypeEnum = pgEnum(
   'file_ref_type_enum',
-  Object.values(EFileRefType) as [string, ...string[]],
+  Object.values(EFileRefType) as [EFileRefType, ...EFileRefType[]],
 );
 
 export const mediaFiles = pgTable('media_files', {
