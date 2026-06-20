@@ -2,9 +2,13 @@ import { Body, Controller, Get, HttpCode, Post, Req, Res, UseGuards } from '@nes
 import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
-import { EmailVerifyRequest, Signin, SignupRequest } from './dto';
+import { CurrentUser, ExtractRefreshToken } from './decorator';
+import { EmailVerifyRequest } from './dto';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
-import type { AuthRequest } from './interface/auth-user.interface';
+import { LocalAuthGuard } from './guard/local-auth.guard';
+import { RefreshGuard } from './guard/refresh.guard';
+
+import type { AuthenticatedUser, GeneratedAuthTokens } from '@/types/auth/auth.type';
 // import { OAuthGuard } from '../guards/oauth.guard';
 // import { LogoutGuard} from '../guards/logout.guard;
 // import { RefreshGuard } from '../guards/refresh.guard';
@@ -15,35 +19,36 @@ export class AuthController {
 
   @Post('sign-in')
   @HttpCode(200)
-  async signin(@Body() dto: Signin, @Res({ passthrough: true }) res: Response): Promise<void> {
-    const user = await this.authService.validateUser(dto);
-    const { accessToken, refreshToken } = await this.authService.signin(user);
-
-    // 개발환경 고려하여 secure: false 추후 true로 변경 예정.
-    const cookieOptions = {
-      httpOnly: true,
-      samesite: 'lax',
-      secure: false,
-      path: '/',
-    };
-    res.cookie('accessToken', accessToken, cookieOptions);
-    res.cookie('refreshToken', refreshToken, cookieOptions);
+  // 커스텀 가드에서 Email/PW 인증 후, user 객체가 request 객체에 주입됨.
+  @UseGuards(LocalAuthGuard)
+  async localSignIn(
+    // 주입된 user 객체를 매개변수로 받음.
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    // generateAUthTokens에서 userId를 알아서 뽑아씀
+    const tokens = await this.authService.generateAuthTokens(user);
+    this.setNewAuthTokens(tokens, res);
   }
 
   @Post('sign-out')
-  @UseGuards(JwtAuthGuard)
   @HttpCode(204)
-  async signout(@Req() req: AuthRequest, @Res({ passthrough: true }) res: Response): Promise<void> {
-    await this.authService.signout(req.user.userId);
+  // Jwt 인증이 된 상태에서 -> signout -> revocation 처리 -> 쿠키 삭제.
+  @UseGuards(JwtAuthGuard)
+  async signout(
+    @ExtractRefreshToken() refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.revokeToken(refreshToken);
 
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
   }
 
-  @Post('sign-up')
-  signup(@Body() dto: SignupRequest): Promise<void> {
-    return this.authService.signup(dto);
-  }
+  // @Post('sign-up')
+  // signup(@Body() dto: SignupRequest): Promise<void> {
+  //   return this.authService.signup(dto);
+  // }
 
   @Post('verify-email')
   verifyEmail(@Body() dto: EmailVerifyRequest): Promise<void> {
@@ -62,8 +67,28 @@ export class AuthController {
   }
 
   @Post('refresh')
-  // @UseGuards(RefreshGuard)
-  refresh(@Req() req: Request): void {
-    console.log(req);
+  @UseGuards(RefreshGuard)
+  async refresh(
+    @ExtractRefreshToken() refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const tokens = await this.authService.refreshTokens(refreshToken);
+    this.setNewAuthTokens(tokens, res);
+  }
+
+  private setNewAuthTokens(tokens: GeneratedAuthTokens, res: Response): void {
+    const { accessToken, refreshToken, expiresAt } = tokens;
+
+    // 개발환경 고려하여 secure: false 추후 true로 변경 예정.
+    const cookieOptions = {
+      httpOnly: true,
+      samesite: 'lax',
+      secure: false,
+      path: '/',
+    };
+
+    res.cookie('accessToken', accessToken, cookieOptions);
+    res.cookie('refreshToken', refreshToken, cookieOptions);
+    res.cookie('expiresAt', expiresAt.toISOString(), cookieOptions);
   }
 }

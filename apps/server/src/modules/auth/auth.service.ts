@@ -1,24 +1,33 @@
 import { createHash, randomUUID } from 'crypto';
 
 import { EUserStatus } from '@cosider/shared';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpStatus,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
+import type { Redis } from 'ioredis';
 
 import { EmailVerifyRequest } from './dto';
+import { UserCredentialService } from './user-credential.service';
 
-import { DB_CONNECTION } from '@/common/constants';
+import { DB_CONNECTION, REDIS_CLIENT } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, users } from '@/database/schema';
-import { GeneratedAuthTokens } from '@/types/auth/auth.type';
-import { JwtUserPayload } from '@/types/auth/jwt.type';
+import type { GeneratedAuthTokens, JwtUserPayload } from '@/types/auth';
 
 @Injectable()
 export class AuthService {
   constructor(
+    @Inject(REDIS_CLIENT) private readonly redis: Redis,
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
+    private readonly userCredentialService: UserCredentialService,
   ) {}
 
   // 토큰 생성
@@ -64,16 +73,88 @@ export class AuthService {
   // 사유: Access Token은 Stateless인 JWT이므로, 서명(signature)만으로 검증이 가능함.
   // 탈취 시 Access Token의 만료는 Redis를 통해 Blacklist로 관리함.
 
-  public async signout(token: string): Promise<void> {
-    const hashedToken = this.hashToken(token);
+  public async refreshTokens(refreshToken: string): Promise<GeneratedAuthTokens> {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
+    const [record] = await this.db
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.tokenValue, tokenHash))
+      .limit(1);
+
+    if (!record) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'INVALID_TOKEN',
+        message: 'ERR_INVALID_TOKEN',
+      });
+    }
+
+    if (new Date() > record.expiresAt) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'EXPIRED_TOKEN',
+        message: 'ERR_EXPIRED_TOKEN',
+      });
+    }
+
+    if (record.revokedAt !== null) {
+      await this.revokeAllTokensByUserId(record.userId!);
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'REVOKED_TOKEN',
+        message: 'ERR_REVOKED_TOKEN',
+      });
+    }
 
     await this.db
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
-      .where(eq(refreshTokens.tokenValue, hashedToken));
+      .where(eq(refreshTokens.id, record.id));
+
+    return this.generateAuthTokens({ userId: record.userId! });
   }
 
-  public async revokeRefreshToken(userId: string): Promise<void> {
+  public async revokeToken(refreshToken: string): Promise<void> {
+    const tokenHash = createHash('sha256').update(refreshToken).digest('hex');
+
+    const [record] = await this.db
+      .select()
+      .from(refreshTokens)
+      .where(eq(refreshTokens.tokenValue, tokenHash))
+      .limit(1);
+
+    if (!record) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'INVALID_TOKEN',
+        message: 'ERR_INVALID_TOKEN',
+      });
+    }
+
+    if (new Date() > record.expiresAt) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'EXPIRED_TOKEN',
+        message: 'ERR_EXPIRED_TOKEN',
+      });
+    }
+
+    if (record.revokedAt !== null) {
+      throw new UnauthorizedException({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        errorCode: 'ALREADY_REVOKED',
+        message: 'ERR_ALREADY_REVOKED',
+      });
+    }
+
+    await this.db
+      .update(refreshTokens)
+      .set({ revokedAt: new Date() })
+      .where(eq(refreshTokens.id, record.id));
+  }
+
+  public async revokeAllTokensByUserId(userId: string): Promise<void> {
     await this.db
       .update(refreshTokens)
       .set({ revokedAt: new Date() })
@@ -82,63 +163,29 @@ export class AuthService {
 
   // validateUser는 분리 (Single Responsibility Principle)
 
-  // async signup(dto: ): Promise<void> {
-  //   const { email, password, passwordConfirm, handle, jobRole } = dto;
+  // async signup(dto: SignupRequest): Promise<void> {
+  //   const { email, password, passwordConfirm } = dto;
 
   //   if (password !== passwordConfirm) {
   //     throw new BadRequestException('비밀번호가 일치하지 않습니다.');
   //   }
 
-  //   this.validatePassword(password);
-
-  //   const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
-  //   if (existing.length > 0) {
-  //     throw new BadRequestException('이미 존재하는 이메일입니다.');
-  //   }
-  //   const existingHandle = await this.db
-  //     .select()
-  //     .from(userProfiles)
-  //     .where(eq(userProfiles.handle, handle));
-  //   if (existingHandle.length > 0) {
-  //     throw new BadRequestException('이미 사용중인 이름입니다.');
-  //   }
-
-  //   const hashed = await this.hashPassword(password);
-
-  //   await this.db.transaction(async (tx) => {
-  //     const [user] = await tx
-  //       .insert(users)
-  //       .values({
-  //         status: EUserStatus.PENDING,
-  //       })
-  //       .returning({ id: users.id });
-  //     // email verify token 생성
-  //     const token = await this.jwtService.signAsync(
-  //       {
-  //         userId: user.id,
-  //         email,
-  //       },
-  //       { expiresIn: '5m' },
-  //     );
-
-  //     await tx.insert(userProfiles).values({
-  //       userId: user.id,
-  //       email,
-  //       handle,
-  //       jobRole,
-  //     });
-
-  //     await tx.insert(userCredentials).values({
-  //       userId: user.id,
-  //       provider: EUserCredentialProvider.LOCAL,
-  //       providerId: email,
-  //       credential: hashed,
-  //     });
-
-  //     const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
-
-  //     console.log(verifyLink); // 이메일 서비스 미연결 임시 대체라인
+  //   const isPasswordValid = isStrongPassword(password, {
+  //     minLength: 8,
+  //     minLowercase: 1,
+  //     minNumbers: 1,
+  //     minSymbols: 1,
   //   });
+  //   if (!isPasswordValid) {
+  //     throw new BadRequestException('비밀번호는 8자 이상, 영문, 숫자를 포함해야 합니다.');
+  //   }
+
+  //   const existing = await this.userCredentialService.findExistingProvidersByEmail(email);
+  //   if (existing) {
+  //     if (existing.status === EUserStatus.ACTIVE) {
+  //       throw new BadRequestException('이미 존재하는 이메일입니다.');
+  //     }
+  //   }
   // }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
@@ -179,9 +226,9 @@ export class AuthService {
   }
 
   private validatePassword(password: string): void {
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d`!@#$%^&*]{8,20}$/;
+    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d`!@#$%^&*]{8}$/;
     if (!regex.test(password)) {
-      throw new BadRequestException('비밀번호는 8~20자, 영문, 숫자를 포함해야 합니다.');
+      throw new BadRequestException('비밀번호는 8자 이상, 영문, 숫자를 포함해야 합니다.');
     }
   }
 }
