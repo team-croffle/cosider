@@ -1,30 +1,29 @@
 import { createHash, randomUUID } from 'crypto';
 
-import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
+import { EUserStatus } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import { EmailVerifyRequest, JwtPayloadDto, SignupRequest } from './dto';
+import { EmailVerifyRequest } from './dto';
 
 import { DB_CONNECTION } from '@/common/constants';
-import { RedisService } from '@/common/redis/redis.service';
 import { type DrizzleDB } from '@/database/drizzle.module';
-import { refreshTokens, userCredentials, userProfiles, users } from '@/database/schema';
+import { refreshTokens, users } from '@/database/schema';
 import { GeneratedAuthTokens } from '@/types/auth/auth.type';
+import { JwtUserPayload } from '@/types/auth/jwt.type';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
-    private readonly redisService: RedisService,
   ) {}
 
   // 토큰 생성
   // 함수 변경 이유: accessToken과 refreshToken을 같이 생성하여 반환할 필요가 있음.
-  public async generateAuthTokens({ userId }: JwtPayloadDto): Promise<GeneratedAuthTokens> {
+  public async generateAuthTokens({ userId }: JwtUserPayload): Promise<GeneratedAuthTokens> {
     // Access Token은 JWT로 생성
     const accessToken = this.jwtService.sign({ sub: userId }, { expiresIn: '15m' });
 
@@ -81,64 +80,66 @@ export class AuthService {
       .where(and(eq(refreshTokens.userId, userId), isNull(refreshTokens.revokedAt)));
   }
 
-  async signup(dto: SignupRequest): Promise<void> {
-    const { email, password, passwordConfirm, handle, jobRole } = dto;
+  // validateUser는 분리 (Single Responsibility Principle)
 
-    if (password !== passwordConfirm) {
-      throw new BadRequestException('비밀번호가 일치하지 않습니다.');
-    }
+  // async signup(dto: ): Promise<void> {
+  //   const { email, password, passwordConfirm, handle, jobRole } = dto;
 
-    this.validatePassword(password);
+  //   if (password !== passwordConfirm) {
+  //     throw new BadRequestException('비밀번호가 일치하지 않습니다.');
+  //   }
 
-    const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
-    if (existing.length > 0) {
-      throw new BadRequestException('이미 존재하는 이메일입니다.');
-    }
-    const existingHandle = await this.db
-      .select()
-      .from(userProfiles)
-      .where(eq(userProfiles.handle, handle));
-    if (existingHandle.length > 0) {
-      throw new BadRequestException('이미 사용중인 이름입니다.');
-    }
+  //   this.validatePassword(password);
 
-    const hashed = await this.hashPassword(password);
+  //   const existing = await this.db.select().from(userProfiles).where(eq(userProfiles.email, email));
+  //   if (existing.length > 0) {
+  //     throw new BadRequestException('이미 존재하는 이메일입니다.');
+  //   }
+  //   const existingHandle = await this.db
+  //     .select()
+  //     .from(userProfiles)
+  //     .where(eq(userProfiles.handle, handle));
+  //   if (existingHandle.length > 0) {
+  //     throw new BadRequestException('이미 사용중인 이름입니다.');
+  //   }
 
-    await this.db.transaction(async (tx) => {
-      const [user] = await tx
-        .insert(users)
-        .values({
-          status: EUserStatus.PENDING,
-        })
-        .returning({ id: users.id });
-      // email verify token 생성
-      const token = await this.jwtService.signAsync(
-        {
-          userId: user.id,
-          email,
-        },
-        { expiresIn: '5m' },
-      );
+  //   const hashed = await this.hashPassword(password);
 
-      await tx.insert(userProfiles).values({
-        userId: user.id,
-        email,
-        handle,
-        jobRole,
-      });
+  //   await this.db.transaction(async (tx) => {
+  //     const [user] = await tx
+  //       .insert(users)
+  //       .values({
+  //         status: EUserStatus.PENDING,
+  //       })
+  //       .returning({ id: users.id });
+  //     // email verify token 생성
+  //     const token = await this.jwtService.signAsync(
+  //       {
+  //         userId: user.id,
+  //         email,
+  //       },
+  //       { expiresIn: '5m' },
+  //     );
 
-      await tx.insert(userCredentials).values({
-        userId: user.id,
-        provider: EUserCredentialProvider.LOCAL,
-        providerId: email,
-        credential: hashed,
-      });
+  //     await tx.insert(userProfiles).values({
+  //       userId: user.id,
+  //       email,
+  //       handle,
+  //       jobRole,
+  //     });
 
-      const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
+  //     await tx.insert(userCredentials).values({
+  //       userId: user.id,
+  //       provider: EUserCredentialProvider.LOCAL,
+  //       providerId: email,
+  //       credential: hashed,
+  //     });
 
-      console.log(verifyLink); // 이메일 서비스 미연결 임시 대체라인
-    });
-  }
+  //     const verifyLink = `${process.env.FRONTEND_URL}/auth/verify?token=${token}`;
+
+  //     console.log(verifyLink); // 이메일 서비스 미연결 임시 대체라인
+  //   });
+  // }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
     const { token } = dto;
@@ -160,13 +161,15 @@ export class AuthService {
 
     if (!user) throw new BadRequestException('존재하지 않는 사용자입니다.');
     // Todo: Drizzle과 EUserStatus 타입 불일치 오류로 하드코딩. 추후 개선
-    if (user.status === 'ACTIVE') throw new BadRequestException('이미 인증된 사용자입니다.');
-    if (user.status !== 'PENDING') throw new BadRequestException('인증 가능한 상태가 아닙니다.');
+    if (user.status === EUserStatus.ACTIVE)
+      throw new BadRequestException('이미 인증된 사용자입니다.');
+    if (user.status !== EUserStatus.PENDING)
+      throw new BadRequestException('인증 가능한 상태가 아닙니다.');
 
     await this.db
       .update(users)
       .set({
-        status: 'ACTIVE',
+        status: EUserStatus.ACTIVE,
       })
       .where(eq(users.id, payload.userId));
   }
