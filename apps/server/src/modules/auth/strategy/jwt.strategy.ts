@@ -1,22 +1,18 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { AuthService } from '../auth.service';
-import { AuthRequest } from '../interface/auth-user.interface';
-import { IJwtPayload } from '../interface/jwt-payload.interface';
+import { AuthRequest } from '@/types/auth/auth-request.type';
+import { JwtPayload, JwtUserPayload } from '@/types/auth/jwt.type';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(
-    private readonly configService: ConfigService,
-    private readonly authService: AuthService,
-  ) {
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: AuthRequest) => {
-          return req?.cookies?.accessToken ?? null;
+          return req.cookies.accessToken ?? null;
         },
       ]),
       ignoreExpiration: false,
@@ -26,19 +22,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     });
   }
 
-  async validate(req: AuthRequest, payload: IJwtPayload): Promise<IJwtPayload> {
-    const accessToken = req.cookies?.accessToken;
-
-    if (!accessToken) {
-      throw new UnauthorizedException();
-    }
-
-    const isValid = await this.authService.validateAccessToken(payload.userId, accessToken);
-
-    if (!isValid) {
-      throw new UnauthorizedException('다중기기 로그인 미허용');
-    }
-
-    return payload;
+  validate(payload: JwtPayload): JwtUserPayload {
+    return { userId: payload.sub };
   }
 }
