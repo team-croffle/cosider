@@ -1,4 +1,4 @@
-export interface IRestoreCofirmRequest {
+export interface IRestoreConfirmRequest {
   token: string;
 }
 
