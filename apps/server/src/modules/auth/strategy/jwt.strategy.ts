@@ -7,7 +7,7 @@ import type { AuthRequest, JwtPayload, JwtUserPayload } from '@/types/auth';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
-  constructor(private readonly configService: ConfigService) {
+  constructor(configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (req: AuthRequest) => {
@@ -15,13 +15,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         },
       ]),
       ignoreExpiration: false,
-      // Todo: JWT_SECRET 분리
       secretOrKey: configService.getOrThrow<string>('JWT_SECRET'),
       passReqToCallback: true,
     });
   }
 
-  validate(payload: JwtPayload): JwtUserPayload {
+  validate(_req: AuthRequest, payload: JwtPayload): JwtUserPayload {
     return { userId: payload.sub };
   }
 }
