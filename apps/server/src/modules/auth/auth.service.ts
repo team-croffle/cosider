@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'crypto';
+import { createHash, randomBytes, randomUUID } from 'crypto';
 
 import { EUserCredentialProvider } from '@cosider/shared';
 import {
@@ -19,11 +19,16 @@ import { EmailVerifyRequest } from './dto';
 import { SignupRequest } from './dto/signup-request.dto';
 import { UserCredentialService } from './user-credential.service';
 
-import { DB_CONNECTION, REDIS_CLIENT, REDIS_KEY_REGISTER_PENDING } from '@/common/constants';
+import {
+  DB_CONNECTION,
+  MAIL_VERIFY_PURPOSE,
+  REDIS_CLIENT,
+  REDIS_KEY_REGISTER_PENDING,
+} from '@/common/constants';
 import { MailService } from '@/common/mail/mail.service';
 import { type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, userCredentials, users } from '@/database/schema';
-import type { GeneratedAuthTokens, JwtUserPayload } from '@/types/auth';
+import type { JwtMailVerifyPayload, GeneratedAuthTokens, JwtUserPayload } from '@/types/auth';
 
 @Injectable()
 export class AuthService {
@@ -194,14 +199,28 @@ export class AuthService {
     }
 
     // 존재하는 계정이 없으니 새로 생성. 단, redis에 임시 유저 생성하고 이메일 인증 성공 시 db에 insert 진행.
-    const verificationToken = randomBytes(32).toString('hex');
-    const hashedToken = this.hashToken(verificationToken);
+    // email을 redis key로 사용하기 위해 randomByte 대신 jwt를 사용
+    const verificationToken = this.jwtService.sign<JwtMailVerifyPayload>(
+      {
+        email,
+        purpose: MAIL_VERIFY_PURPOSE,
+      },
+      {
+        expiresIn: '1h',
+        // 토큰 자체를 랜덤하게 하기 위해 토큰에 id 추가.
+        jwtid: randomUUID(),
+      },
+    );
 
     // redis에 적재
-    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${hashedToken}`;
+    // !!변경: email 사용:
+    // => token을 쓰면, 만약 누군가가 회원가입 요청 후 미인증으로 10번을 반복하면, redis에 10개의 토큰이 적재됨.
+    // => email을 쓰면, 동일한 email에 대해 10번의 덮어쓰기만 발생하여 redis 사용량이 줄어듦.
+    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${email}`;
     await this.redis.hset(redisKey, {
       email: email,
       password: password,
+      token: verificationToken,
     });
 
     // 유효시간 1시간.
@@ -212,13 +231,12 @@ export class AuthService {
   }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {
-    const { token } = dto;
-    const hashedToken = this.hashToken(token);
+    let payload: JwtMailVerifyPayload;
 
-    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${hashedToken}`;
-    const pendingUser = await this.redis.hgetall(redisKey);
-
-    if (!pendingUser || Object.keys(pendingUser).length === 0) {
+    try {
+      payload = this.jwtService.verify<JwtMailVerifyPayload>(dto.token);
+    } catch {
+      // verify는 token이 유효하지 않거나 만료되었을 경우 throw.
       throw new BadRequestException({
         statusCode: HttpStatus.BAD_REQUEST,
         errorCode: 'INVALID_TOKEN',
@@ -226,7 +244,33 @@ export class AuthService {
       });
     }
 
-    const { email, password } = pendingUser;
+    if (payload.purpose !== MAIL_VERIFY_PURPOSE) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        errorCode: 'INVALID_TOKEN',
+        message: 'ERR_INVALID_TOKEN',
+      });
+    }
+
+    const redisKey = `${REDIS_KEY_REGISTER_PENDING}:${payload.email}`;
+    const pendingUser = await this.redis.hgetall(redisKey);
+
+    if (!pendingUser || Object.keys(pendingUser).length === 0) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        errorCode: 'INVALID_EMAIL',
+        message: 'ERR_INVALID_EMAIL',
+      });
+    }
+
+    const { email, password, token: storedToken } = pendingUser;
+    if (dto.token !== storedToken) {
+      throw new BadRequestException({
+        statusCode: HttpStatus.BAD_REQUEST,
+        errorCode: 'INVALID_TOKEN',
+        message: 'ERR_INVALID_TOKEN',
+      });
+    }
 
     const existing = await this.userCredentialService.findExistingProvidersByEmail(email);
     if (existing) {

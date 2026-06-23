@@ -7,3 +7,8 @@ export interface JwtPayload {
 export interface JwtUserPayload {
   userId: string;
 }
+
+export interface JwtMailVerifyPayload {
+  email: string;
+  purpose: string;
+}
