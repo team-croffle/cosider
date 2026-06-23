@@ -8,7 +8,7 @@
     "dev:server": "turbo run dev --filter=@cosider/server",
     "lint": "turbo run lint",
     "format": "prettier --write",
-    "check-types": "turbo run check-types",
+    "typecheck": "turbo run typecheck",
     "prepare": "husky"
   },
   "devDependencies": {
