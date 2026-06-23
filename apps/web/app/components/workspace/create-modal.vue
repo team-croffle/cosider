@@ -3,6 +3,7 @@
   import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
   const isOpen = defineModel<boolean>({ default: false });
+  const workspaceStore = useWorkspaceStore();
 
   const form = reactive<ICreateWorkspaceRequest>({
     name: '',
@@ -89,8 +90,10 @@
   }
 
   async function onSubmit(event: FormSubmitEvent<typeof form>) {
-    // TODO: API 호출
-    console.log('submit', event.data);
+    const success = await workspaceStore.createWorkspace(event.data);
+    if (success) {
+      isOpen.value = false;
+    }
   }
 
   // 모달 닫힐 때 상태 초기화
