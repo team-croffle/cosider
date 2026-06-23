@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import { CurrentUser, ExtractRefreshToken } from './decorator';
 import { EmailVerifyRequest } from './dto';
+import { SignupRequest } from './dto/signup-request.dto';
 import { JwtAuthGuard } from './guard/jwt-auth.guard';
 import { LocalAuthGuard } from './guard/local-auth.guard';
 import { RefreshGuard } from './guard/refresh.guard';
@@ -54,12 +55,16 @@ export class AuthController {
     res.clearCookie('expiresAt', this.cookieOptions);
   }
 
-  // @Post('sign-up')
-  // signup(@Body() dto: SignupRequest): Promise<void> {
-  //   return this.authService.signup(dto);
-  // }
+  @Post('sign-up')
+  // 가입 요청 Acceptance
+  @HttpCode(202)
+  signup(@Body() dto: SignupRequest): Promise<void> {
+    return this.authService.signupLocal(dto);
+  }
 
   @Post('verify-email')
+  // 이메일 인증 후 실제 record 생성
+  @HttpCode(201)
   verifyEmail(@Body() dto: EmailVerifyRequest): Promise<void> {
     return this.authService.verifyEmail(dto);
   }
