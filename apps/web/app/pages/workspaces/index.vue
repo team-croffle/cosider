@@ -1,38 +1,8 @@
 <script setup lang="ts">
-  import type { EWorkspaceStatus, EWorkspaceUserRole, IWorkspaceResponse } from '@cosider/shared';
-
   const isCreateModalOpen = ref(false);
+  const workspaceStore = useWorkspaceStore();
 
-  // TODO: API 연결 후 제거 (useWorkspace composable로 교체)
-  const workspaces: IWorkspaceResponse[] = [
-    {
-      slug: 'my-workspace',
-      name: 'My Workspace',
-      description: 'Personal workspace for all individual projects and tasks.',
-      status: 'ACTIVE' as EWorkspaceStatus,
-      role: 'OWNER' as EWorkspaceUserRole,
-      logoUrl: '',
-      createdAt: '2024-01-15T00:00:00Z',
-    },
-    {
-      slug: 'team-alpha',
-      name: 'Team Alpha',
-      description: "Collaborative space for the Alpha product team's sprints.",
-      status: 'ACTIVE' as EWorkspaceStatus,
-      role: 'ADMIN' as EWorkspaceUserRole,
-      logoUrl: '',
-      createdAt: '2024-03-02T00:00:00Z',
-    },
-    {
-      slug: 'design-system',
-      name: 'Design System',
-      description: 'Component library, tokens, and design guidelines.',
-      status: 'ACTIVE' as EWorkspaceStatus,
-      role: 'MEMBER' as EWorkspaceUserRole,
-      logoUrl: '',
-      createdAt: '2024-05-10T00:00:00Z',
-    },
-  ];
+  await workspaceStore.fetchWorkspaces();
 
   // 날짜 포맷 함수
   function formatDate(dateStr: string): string {
@@ -57,9 +27,10 @@
 
     <!-- 카드 그리드 -->
     <!-- TODO: 워크스페이스 목록이 비어있을 때 보여줄 UI 추가 필요 -->
-    <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div v-if="workspaceStore.isLoading" class="py-8 text-center">로딩 중...</div>
+    <div v-else class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
       <UCard
-        v-for="workspace in workspaces"
+        v-for="workspace in workspaceStore.workspaces"
         :key="workspace.slug"
         class="transition hover:bg-white/10"
       >
