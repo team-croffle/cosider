@@ -1,3 +1,5 @@
+import { URL } from 'url';
+
 import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -16,7 +18,7 @@ export class MailService {
     const frontUrl = this.configService.get<string>('CLIENT_URL', 'http://localhost:3000');
 
     // callback url
-    const verificationUrl = `${frontUrl}/auth/verify?token=${token}`;
+    const verificationUrl = new URL(`/auth/verify?token=${token}`, frontUrl).toString();
 
     try {
       // template을 이용해서 메일 생성
