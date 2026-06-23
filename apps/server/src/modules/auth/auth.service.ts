@@ -20,6 +20,7 @@ import { SignupRequest } from './dto/signup-request.dto';
 import { UserCredentialService } from './user-credential.service';
 
 import { DB_CONNECTION, REDIS_CLIENT, REDIS_KEY_REGISTER_PENDING } from '@/common/constants';
+import { MailService } from '@/common/mail/mail.service';
 import { type DrizzleDB } from '@/database/drizzle.module';
 import { refreshTokens, userCredentials, users } from '@/database/schema';
 import type { GeneratedAuthTokens, JwtUserPayload } from '@/types/auth';
@@ -31,6 +32,7 @@ export class AuthService {
     @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
     private readonly jwtService: JwtService,
     private readonly userCredentialService: UserCredentialService,
+    private readonly mailService: MailService,
   ) {}
 
   // 토큰 생성
@@ -205,8 +207,8 @@ export class AuthService {
     // 유효시간 1시간.
     await this.redis.expire(redisKey, 60 * 60 * 1);
 
-    // TODO: 메일링 Service를 추가하여 verificationToken을 이메일로 발송하는 로직 추가.
-    // this.mailService.sendVerificationMail(email, verificationToken);
+    // 메일링 Service를 추가하여 verificationToken을 이메일로 발송
+    await this.mailService.sendVerificationMail(email, verificationToken);
   }
 
   async verifyEmail(dto: EmailVerifyRequest): Promise<void> {

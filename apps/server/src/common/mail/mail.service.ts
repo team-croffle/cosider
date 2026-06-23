@@ -11,12 +11,15 @@ export class MailService {
     private readonly configService: ConfigService,
   ) {}
 
+  // Verification Mail을 전송
   public async sendVerificationMail(email: string, token: string): Promise<void> {
     const frontUrl = this.configService.get<string>('CLIENT_URL', 'http://localhost:3000');
 
+    // callback url
     const verificationUrl = `${frontUrl}/auth/verify?token=${token}`;
 
     try {
+      // template을 이용해서 메일 생성
       await this.mailerService.sendMail({
         to: email,
         subject: '[CoSider] Verify your email',
@@ -28,6 +31,7 @@ export class MailService {
 
       this.logger.log(`Verification email sent to ${email}`);
     } catch (error) {
+      // 전송 실패 시
       this.logger.error(`Failed to send verification email to ${email}`, error);
       throw new InternalServerErrorException('Failed to send verification email');
     }

@@ -15,6 +15,7 @@ import { MailService } from './mail.service';
         transport: {
           host: config.get<string>('MAIL_HOST'),
           port: config.get<number>('MAIL_PORT'),
+          // 465: true, 587: false
           secure: config.get<number>('MAIL_PORT') === 465,
           auth: {
             user: config.get<string>('MAIL_USER'),
