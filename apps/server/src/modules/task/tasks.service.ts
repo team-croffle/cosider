@@ -1,6 +1,6 @@
 import { EPriority, ITask } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, inArray } from 'drizzle-orm';
 
 import { CreateNewTaskRequestDto, TaskResponseDto, UpdateTaskRequestDto } from './dto';
 
@@ -47,51 +47,74 @@ export class TasksService {
       throw new BadRequestException('projectId is required');
     }
 
-    // 프로젝트 내 다음 taskNumber 계산
-    const last = await this.db
-      .select()
-      .from(tasks)
-      .where(eq(tasks.projectId, projectId))
-      .orderBy(desc(tasks.taskNumber))
-      .limit(1);
+    const maxRetries = 3;
+    let attempt = 0;
 
-    const nextTaskNumber = (last[0]?.taskNumber ?? 0) + 1;
+    while (attempt < maxRetries) {
+      attempt++;
 
-    // Insert task
-    const [inserted] = await this.db
-      .insert(tasks)
-      .values({
-        projectId,
-        taskNumber: nextTaskNumber,
-        title: createNewTaskDto.title,
-        description: createNewTaskDto.description ?? null,
-        assigneeId: null,
-        assigneeNickname: null,
-        reporterId: null,
-        reporterNickname: null,
-        linkedDocumentId: createNewTaskDto.linkedDocumentId ?? null,
-        sprintId: createNewTaskDto.sprintId ?? null,
-        status: createNewTaskDto.status,
-        priority: createNewTaskDto.priority ?? EPriority.MID,
-        startDate: createNewTaskDto.startDate ? new Date(createNewTaskDto.startDate) : null,
-        dueDate: createNewTaskDto.dueDate ? new Date(createNewTaskDto.dueDate) : null,
-      })
-      .returning();
+      try {
+        return await this.db.transaction(async (tx) => {
+          const last = await tx
+            .select()
+            .from(tasks)
+            .where(eq(tasks.projectId, projectId))
+            .orderBy(desc(tasks.taskNumber))
+            .limit(1);
 
-    if (!inserted) {
-      throw new BadRequestException('Failed to create task');
+          const nextTaskNumber = (last[0]?.taskNumber ?? 0) + 1;
+
+          const [inserted] = await tx
+            .insert(tasks)
+            .values({
+              projectId,
+              taskNumber: nextTaskNumber,
+              title: createNewTaskDto.title,
+              description: createNewTaskDto.description ?? null,
+              assigneeId: null,
+              assigneeNickname: null,
+              reporterId: null,
+              reporterNickname: null,
+              linkedDocumentId: createNewTaskDto.linkedDocumentId ?? null,
+              sprintId: createNewTaskDto.sprintId ?? null,
+              status: createNewTaskDto.status,
+              priority: createNewTaskDto.priority ?? EPriority.MID,
+              startDate: createNewTaskDto.startDate ? new Date(createNewTaskDto.startDate) : null,
+              dueDate: createNewTaskDto.dueDate ? new Date(createNewTaskDto.dueDate) : null,
+            })
+            .returning();
+
+          if (!inserted) {
+            throw new Error('Insert failed');
+          }
+
+          if (createNewTaskDto.linkedRequirementIds?.length) {
+            const links = createNewTaskDto.linkedRequirementIds.map((reqId) => ({
+              requirementId: reqId,
+              taskId: inserted.id,
+            }));
+            await tx.insert(requirementTaskLinks).values(links);
+          }
+
+          return this.mapRowToDto(inserted, createNewTaskDto.linkedRequirementIds);
+        });
+      } catch (error: unknown) {
+        const isPgError = (err: unknown): err is { code: string } => {
+          return typeof err === 'object' && err !== null && 'code' in err;
+        };
+
+        if (isPgError(error) && error.code === '23505') {
+          if (attempt === maxRetries) {
+            throw new BadRequestException(
+              'Failed to create task after multiple attempts due to concurrent insertions. Please try again.',
+            );
+          }
+          continue; // Retry the transaction
+        }
+        throw error; // Rethrow other errors
+      }
     }
-
-    // requirement links가 있으면 삽입 (옵션)
-    if (createNewTaskDto.linkedRequirementIds?.length) {
-      const links = createNewTaskDto.linkedRequirementIds.map((reqId) => ({
-        requirementId: reqId,
-        taskId: inserted.id,
-      }));
-      await this.db.insert(requirementTaskLinks).values(links);
-    }
-
-    return this.mapRowToDto(inserted, createNewTaskDto.linkedRequirementIds);
+    throw new BadRequestException('Failed to create task');
   }
 
   // Task 목록 조회
@@ -102,9 +125,31 @@ export class TasksService {
       .where(eq(tasks.projectId, projectId))
       .orderBy(desc(tasks.createdAt));
 
-    return rows.map((row) => this.mapRowToDto(row as DBTaskRowFromITask));
-  }
+    // 없으면 빈 배열 반환
+    if (rows.length === 0) {
+      return [];
+    }
 
+    const taskIds = rows.map((row) => row.id);
+
+    const links = await this.db
+      .select()
+      .from(requirementTaskLinks)
+      .where(inArray(requirementTaskLinks.taskId, taskIds));
+
+    const linksMap = links.reduce(
+      (acc, link) => {
+        if (!acc[link.taskId]) {
+          acc[link.taskId] = [];
+        }
+        acc[link.taskId].push(link.requirementId);
+        return acc;
+      },
+      {} as Record<string, string[]>,
+    );
+
+    return rows.map((row) => this.mapRowToDto(row as DBTaskRowFromITask, linksMap[row.id] || []));
+  }
   // Task 상세 조회
   async findOne(projectId: string, taskNumber: number): Promise<TaskResponseDto> {
     const [row] = await this.db
