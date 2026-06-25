@@ -1,6 +1,6 @@
 import { createHash, randomBytes, randomUUID } from 'crypto';
 
-import { EUserCredentialProvider } from '@cosider/shared';
+import { EUserCredentialProvider, EUserStatus } from '@cosider/shared';
 import {
   BadRequestException,
   ConflictException,
@@ -295,6 +295,9 @@ export class AuthService {
         providerId: email,
         credential: cryptedPassword,
       });
+
+      // user 상태를 ACTIVE로 변경 (이메일 인증 완료)
+      await tx.update(users).set({ status: EUserStatus.ACTIVE });
     });
 
     // 완료되었으므로 redis에서 삭제.
