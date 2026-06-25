@@ -1,5 +1,5 @@
 import { EFileRefType, EFileVisibility, IFileUploadRequest } from '@cosider/shared';
-import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FileUploadRequest implements IFileUploadRequest {
   @IsString()
@@ -20,6 +20,6 @@ export class FileUploadRequest implements IFileUploadRequest {
   refType!: EFileRefType;
 
   @IsString()
-  @IsNotEmpty()
-  refId!: string;
+  @IsOptional()
+  refId?: string;
 }
