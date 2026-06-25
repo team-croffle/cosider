@@ -121,12 +121,27 @@ export class FilesService {
         fileSize: pending.fileSize,
         visibility: pending.visibility,
         refType: pending.refType,
-        refId: pending.refId,
+        refId: pending.refId ?? null,
         ownerId: pending.ownerId,
       })
       .returning({ id: mediaFiles.id });
 
     return media.id;
+  }
+
+  // 업로드 후 ref_id 연결
+  async connectMediaFile(objectId: string, refId: string): Promise<void> {
+    const [media] = await this.db
+      .select({ id: mediaFiles.id })
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, objectId))
+      .limit(1);
+
+    if (!media) {
+      throw new BadRequestException('MEDIA_NOT_FOUND');
+    }
+
+    await this.db.update(mediaFiles).set({ refId }).where(eq(mediaFiles.id, objectId));
   }
 
   /**
