@@ -59,6 +59,28 @@ export class MinioService {
     return await this.client.statObject(bucket, objectName);
   }
 
+  async copyObject(
+    sourceBucket: string,
+    sourceObject: string,
+    targetBucket: string,
+    targetObject: string,
+  ): Promise<void> {
+    const sourcePath = `/${sourceBucket}/${sourceObject}`;
+    await this.client.copyObject(targetBucket, targetObject, sourcePath);
+    this.logger.log(`Copied: ${sourcePath} to /${targetBucket}/${targetObject}`);
+  }
+
+  async moveObject(
+    sourceBucket: string,
+    sourceObject: string,
+    targetBucket: string,
+    targetObject: string,
+  ): Promise<void> {
+    await this.copyObject(sourceBucket, sourceObject, targetBucket, targetObject);
+    await this.delete(sourceBucket, sourceObject);
+    this.logger.log(`Moved: ${sourceBucket}/${sourceObject} to ${targetBucket}/${targetObject}`);
+  }
+
   async delete(bucket: string, objectName: string): Promise<void> {
     await this.client.removeObject(bucket, objectName);
     this.logger.log(`Deleted: ${bucket}/${objectName}`);
