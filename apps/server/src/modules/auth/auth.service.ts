@@ -297,7 +297,7 @@ export class AuthService {
       });
 
       // user 상태를 ACTIVE로 변경 (이메일 인증 완료)
-      await tx.update(users).set({ status: EUserStatus.ACTIVE });
+      await tx.update(users).set({ status: EUserStatus.ACTIVE }).where(eq(users.id, user.id));
     });
 
     // 완료되었으므로 redis에서 삭제.
