@@ -21,10 +21,10 @@ export function useFileUpload() {
     endpoint: string,
     visibility: EFileVisibility,
     refType: EFileRefType,
-    refId: string,
+    refId?: string,
   ): Promise<IFileUploadUrlResponse> {
     const body: IFileUploadRequest = {
-      originalName: file.name,
+      fileName: file.name,
       mimeType: file.type,
       fileSize: file.size,
       visibility,
