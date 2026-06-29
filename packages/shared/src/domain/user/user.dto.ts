@@ -45,3 +45,8 @@ export interface IPasswordUpdateRequest {
 export interface IAccountDeleteRequest {
   password: string;
 }
+
+export type IAuthUserResponse = Pick<
+  IUserProfile,
+  'handle' | 'nickname' | 'profileImageId' | 'jobRole'
+>;
