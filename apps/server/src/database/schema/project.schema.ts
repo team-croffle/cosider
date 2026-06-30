@@ -62,7 +62,7 @@ export const projects = pgTable(
     key: varchar('key', { length: 20 }).notNull(),
     // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공
     logoImageId: uuid('logo_image_id').references(() => mediaFiles.id, { onDelete: 'set null' }),
-    techStacks: jsonb('tech_stacks'),
+    techStacks: jsonb('tech_stacks').$type<string[]>(),
     sdlcType: sdlcTypeEnum('sdlc_type').notNull(),
     gitRepoUrl: varchar('git_repo_url', { length: 255 }),
     gitProvider: varchar('git_provider', { length: 20 }),
