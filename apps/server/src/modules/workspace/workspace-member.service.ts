@@ -14,21 +14,27 @@ import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
 import { userProfiles, workspace_members, workspaces } from '@/database/schema';
 
-const ROLE_RANK: Record<EWorkspaceUserRole, number> = {
-  // 숫자가 작을수록 권한 높음. 동급/상급 멤버를 방출/역할변경 못하게 막는 비교용.
+const ROLE_WEIGHT: Record<EWorkspaceUserRole, number> = {
+  // 권한별 가중치 (낮을수록 권한이 낮음)
   // 문서에 명시된 규칙은 아니고 서비스 내부에서만 사용되는 규칙임.
-  [EWorkspaceUserRole.OWNER]: 0,
-  [EWorkspaceUserRole.ADMIN]: 1,
-  [EWorkspaceUserRole.MEMBER]: 2,
-  [EWorkspaceUserRole.VIEWER]: 3,
+  [EWorkspaceUserRole.VIEWER]: 10,
+  [EWorkspaceUserRole.MEMBER]: 20,
+  [EWorkspaceUserRole.ADMIN]: 30,
+  [EWorkspaceUserRole.OWNER]: 40,
 };
+
+function canManage(actorRole: EWorkspaceUserRole, targetRole: EWorkspaceUserRole): boolean {
+  return ROLE_WEIGHT[actorRole] > ROLE_WEIGHT[targetRole];
+}
 
 @Injectable()
 export class WorkspaceMembersService {
   constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
-  async getWorkspaceMemberList(workspaceSlug: string): Promise<WorkspaceMemberResponse[]> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async getWorkspaceMemberList(
+    workspaceSlug: string,
+    userId: string,
+  ): Promise<WorkspaceMemberResponse[]> {
     const member = await this.findMemberOrThrow(workspaceSlug, userId);
 
     const memberList = await this.db
@@ -52,12 +58,15 @@ export class WorkspaceMembersService {
     }));
   }
 
-  async kickMemberFromWorkspace(workspaceSlug: string, targetHandle: string): Promise<void> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async kickMemberFromWorkspace(
+    workspaceSlug: string,
+    targetHandle: string,
+    userId: string,
+  ): Promise<void> {
     const actor = await this.findMemberOrThrow(workspaceSlug, userId);
 
-    // Admin 이상만 방출 가능
-    if (actor.role !== EWorkspaceUserRole.OWNER && actor.role !== EWorkspaceUserRole.ADMIN) {
+    // MEMBER보다 높은 권한(ADMIN, OWNER)만 통과시키기 위한 기준값 비교
+    if (!canManage(actor.role, EWorkspaceUserRole.MEMBER)) {
       throw new ForbiddenException('멤버를 방출할 권한이 없습니다.');
     }
 
@@ -69,7 +78,7 @@ export class WorkspaceMembersService {
     }
 
     // 동급 이상의 권한을 가진 멤버는 방출 불가
-    if (ROLE_RANK[actor.role] >= ROLE_RANK[target.role]) {
+    if (!canManage(actor.role, target.role)) {
       throw new ForbiddenException('동급 이상의 권한을 가진 멤버는 방출할 수 없습니다.');
     }
 
@@ -101,12 +110,12 @@ export class WorkspaceMembersService {
     workspaceSlug: string,
     targetHandle: string,
     dto: UpdateMemberRoleRequest,
+    userId: string,
   ): Promise<void> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
     const actor = await this.findMemberOrThrow(workspaceSlug, userId);
 
-    // Admin 이상만 역할 변경 가능
-    if (actor.role !== EWorkspaceUserRole.OWNER && actor.role !== EWorkspaceUserRole.ADMIN) {
+    // MEMBER보다 높은 권한(ADMIN, OWNER)만 역할 변경 가능
+    if (!canManage(actor.role, EWorkspaceUserRole.MEMBER)) {
       throw new ForbiddenException('멤버 역할을 변경할 권한이 없습니다.');
     }
 
@@ -121,7 +130,7 @@ export class WorkspaceMembersService {
       throw new BadRequestException('본인의 역할은 변경할 수 없습니다.');
     }
 
-    if (ROLE_RANK[actor.role] >= ROLE_RANK[target.role]) {
+    if (!canManage(actor.role, target.role)) {
       throw new ForbiddenException('동급 이상의 권한을 가진 멤버는 변경할 수 없습니다.');
     }
 
@@ -136,8 +145,7 @@ export class WorkspaceMembersService {
       );
   }
 
-  async leaveWorkspace(workspaceSlug: string): Promise<void> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async leaveWorkspace(workspaceSlug: string, userId: string): Promise<void> {
     const actor = await this.findMemberOrThrow(workspaceSlug, userId);
 
     // Owner가 위임 없이 탈퇴 시도 시 차단
@@ -155,8 +163,11 @@ export class WorkspaceMembersService {
       );
   }
 
-  async delegateOwner(workspaceSlug: string, dto: DelegateOwnerRequest): Promise<void> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async delegateOwner(
+    workspaceSlug: string,
+    dto: DelegateOwnerRequest,
+    userId: string,
+  ): Promise<void> {
     const actor = await this.findMemberOrThrow(workspaceSlug, userId);
 
     // Owner만 소유권 위임 가능
