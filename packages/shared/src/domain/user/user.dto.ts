@@ -1,31 +1,52 @@
 import { IUser, IUserProfile } from './user.interface';
 
-export interface ICheckHandleExistsResponse {
-  isAvailable: boolean;
+// 설계에 맞춰 변경함.
+
+// User Profiles
+export type IUserProfileResponse = Pick<
+  IUserProfile,
+  'handle' | 'nickname' | 'techStacks' | 'jobRole' | 'profileImageId'
+>;
+
+export type IUserProfileUpdateRequest = Partial<
+  Pick<IUserProfile, 'nickname' | 'techStacks' | 'jobRole'>
+>;
+
+export type IUserProfileDetailResponse = Pick<IUser, 'email'> &
+  Pick<
+    IUserProfile,
+    | 'handle'
+    | 'nickname'
+    | 'profileImageId'
+    | 'techStacks'
+    | 'jobRole'
+    | 'updatedAt'
+    | 'handleUpdatedAt'
+  >;
+
+// User Accounts
+export type IUserAccountResponse = Pick<IUser, 'email'> &
+  Pick<IUserProfile, 'handle' | 'profileImageId' | 'updatedAt' | 'handleUpdatedAt'>;
+
+export type IUserHandleUpdateRequest = Partial<Pick<IUserProfile, 'handle'>>;
+
+export interface IAccountDeleteAcceptedResponse extends Pick<IUser, 'status' | 'deletedAt'> {
+  userId: string;
+  recoveryDeadline: string;
+  permanentDeletionAt: string;
 }
 
-export interface IDeactivateRequest {
+export interface IPasswordUpdateRequest {
+  currentPassword: string;
+  newPassword: string;
+  newPasswordConfirm: string;
+}
+
+export interface IAccountDeleteRequest {
   password: string;
 }
 
-export interface IDeactivateResponse {
-  message: string;
-}
-
-// 스키마 변경에 따른 DTO 타입 조정
-export interface IRestoreRequest extends Pick<IUser, 'email'> {
-  code: string;
-}
-
-export interface IRestoreResponse {
-  message: string;
-}
-
-// 스키마 변경에 따른 DTO 타입 조정
-export interface IUserProfileResponse
-  extends
-    Pick<IUserProfile, 'handle' | 'nickname' | 'techStacks' | 'jobRole'>,
-    Pick<IUser, 'email'> {
-  // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
-  profileImageId: string | null;
-}
+export type IAuthUserResponse = Pick<
+  IUserProfile,
+  'handle' | 'nickname' | 'profileImageId' | 'jobRole'
+>;

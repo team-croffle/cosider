@@ -97,7 +97,7 @@ export const userProfiles = pgTable('user_profiles', {
     onDelete: 'set null',
   }),
   jobRole: userJobRoleEnum('job_role').notNull(),
-  techStacks: jsonb('tech_stacks'),
+  techStacks: jsonb('tech_stacks').$type<string[]>(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
-  nicknameUpdatedAt: timestamp('nickname_updated_at', { withTimezone: true }).defaultNow(),
+  handleUpdatedAt: timestamp('handle_updated_at', { withTimezone: true }).defaultNow(),
 } satisfies UserProfileSchema);
