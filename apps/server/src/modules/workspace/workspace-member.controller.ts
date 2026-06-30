@@ -1,7 +1,22 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Patch,
+  UseGuards,
+} from '@nestjs/common';
+
+import { CurrentUser } from '../auth/decorator';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 
 import { DelegateOwnerRequest, UpdateMemberRoleRequest, WorkspaceMemberResponse } from './dto';
 import { WorkspaceMembersService } from './workspace-member.service';
+
+import type { AuthenticatedUser } from '@/types/auth/auth.type';
 
 @Controller('api/v1/workspaces')
 export class WorkspaceMembersController {
@@ -9,42 +24,62 @@ export class WorkspaceMembersController {
 
   // Workspace Member Apis
   @Get(':workspace_slug/members')
+  @UseGuards(JwtAuthGuard)
   async getWorkspaceMemberList(
     @Param('workspace_slug') workspaceSlug: string,
-    // @CurrentUser() userId: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkspaceMemberResponse[]> {
-    return this.workspaceMembersService.getWorkspaceMemberList(workspaceSlug);
+    return this.workspaceMembersService.getWorkspaceMemberList(workspaceSlug, user.userId);
   }
 
   @Patch(':workspace_slug/members/:user_handle')
+  @UseGuards(JwtAuthGuard)
   async updateMemberRole(
     @Param('workspace_slug') workspaceSlug: string,
     @Param('user_handle') userHandle: string,
     @Body() dto: UpdateMemberRoleRequest,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.workspaceMembersService.updateMemberRole(workspaceSlug, userHandle, dto);
+    return this.workspaceMembersService.updateMemberRole(
+      workspaceSlug,
+      userHandle,
+      dto,
+      user.userId,
+    );
   }
 
   @Delete(':workspace_slug/members/:user_handle')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async kickMemberFromWorkspace(
     @Param('workspace_slug') workspaceSlug: string,
     @Param('user_handle') userHandle: string,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.workspaceMembersService.kickMemberFromWorkspace(workspaceSlug, userHandle);
+    return this.workspaceMembersService.kickMemberFromWorkspace(
+      workspaceSlug,
+      userHandle,
+      user.userId,
+    );
   }
 
   @Delete(':workspace_slug/members/me/leave')
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async leaveWorkspace(@Param('workspace_slug') workspaceSlug: string): Promise<void> {
-    return this.workspaceMembersService.leaveWorkspace(workspaceSlug);
+  async leaveWorkspace(
+    @Param('workspace_slug') workspaceSlug: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    return this.workspaceMembersService.leaveWorkspace(workspaceSlug, user.userId);
   }
 
   @Patch(':workspace_slug/owner-delegation')
+  @UseGuards(JwtAuthGuard)
   async delegateOwner(
     @Param('workspace_slug') workspaceSlug: string,
     @Body() dto: DelegateOwnerRequest,
+    @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.workspaceMembersService.delegateOwner(workspaceSlug, dto);
+    return this.workspaceMembersService.delegateOwner(workspaceSlug, dto, user.userId);
   }
 }
