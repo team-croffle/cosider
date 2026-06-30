@@ -24,6 +24,7 @@ import { WorkspacesService } from './workspace.service';
 export class WorkspacesController {
   constructor(private readonly workspacesService: WorkspacesService) {}
 
+  // Workspace Core Apis
   @Post()
   @HttpCode(HttpStatus.CREATED)
   async createWorkspace(
