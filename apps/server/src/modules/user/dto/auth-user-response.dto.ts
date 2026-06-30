@@ -6,7 +6,7 @@ export class AuthUserResponse implements IAuthUserResponse {
   handle!: string;
 
   @Expose()
-  nickname!: string;
+  nickname!: string | null;
 
   @Expose()
   profileImageId!: string | null;

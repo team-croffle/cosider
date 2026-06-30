@@ -31,7 +31,7 @@ export interface IUserProfile {
   id: string;
   userId: IUser['id'];
   handle: string;
-  nickname: string;
+  nickname: string | null;
   // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
   profileImageId: string | null;
   jobRole: EJobRole;

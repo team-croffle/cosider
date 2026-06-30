@@ -5,7 +5,7 @@ export class UserProfileResponse implements IUserProfileResponse {
   @Expose()
   handle!: string;
   @Expose()
-  nickname!: string;
+  nickname!: string | null;
   @Expose()
   techStacks!: string[] | null;
   @Expose()
