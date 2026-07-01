@@ -1,20 +1,20 @@
-import { EPriority, ETaskStatus } from '@cosider/shared';
+import { EPriority, ETaskStatus, ITaskResponse } from '@cosider/shared';
 
-export class TaskResponseDto {
+export class TaskResponseDto implements ITaskResponse {
   id!: string;
-  task_number!: number;
+  taskNumber!: number;
   title!: string;
   description?: string;
-  assignee_handle?: string;
-  sprint_id?: string;
-  linked_document_ids?: string[];
-  linked_requirement_ids?: string[];
+  assigneeHandle?: string;
+  sprintId?: string;
+  linkedDocumentId?: string;
+  linkedRequirementIds?: string[];
   status!: ETaskStatus;
   priority?: EPriority;
-  start_date?: string;
-  due_date?: string;
-  assignee_nickname!: string;
-  reporter_nickname!: string;
-  created_at!: string;
-  updated_at!: string;
+  startDate?: string;
+  dueDate?: string;
+  assigneeNickname!: string;
+  reporterNickname!: string;
+  createdAt!: string;
+  updatedAt!: string;
 }
