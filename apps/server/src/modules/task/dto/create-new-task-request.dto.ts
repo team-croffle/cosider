@@ -1,4 +1,4 @@
-import { EPriority, ETaskStatus } from '@cosider/shared';
+import { EPriority, ETaskStatus, ICreateNewTaskRequest } from '@cosider/shared';
 import {
   IsArray,
   IsDateString,
@@ -9,7 +9,7 @@ import {
   IsUUID,
 } from 'class-validator';
 
-export class CreateNewTaskRequestDto {
+export class CreateNewTaskRequestDto implements ICreateNewTaskRequest {
   @IsString()
   @IsNotEmpty()
   title!: string;
@@ -50,8 +50,4 @@ export class CreateNewTaskRequestDto {
   @IsDateString()
   @IsOptional()
   dueDate?: string;
-
-  @IsUUID('4')
-  @IsNotEmpty()
-  projectId!: string;
 }

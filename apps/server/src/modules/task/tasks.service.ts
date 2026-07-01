@@ -6,7 +6,7 @@ import { CreateNewTaskRequestDto, TaskResponseDto, UpdateTaskRequestDto } from '
 
 import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
-import { requirementTaskLinks, tasks } from '@/database/schema';
+import { projects, requirementTaskLinks, tasks, workspaces } from '@/database/schema';
 
 type DBTaskRowFromITask = Omit<ITask, 'startDate' | 'dueDate' | 'createdAt' | 'updatedAt'> & {
   startDate: Date | null;
@@ -40,12 +40,28 @@ export class TasksService {
     };
   }
 
-  // Task 생성
-  async create(createNewTaskDto: CreateNewTaskRequestDto): Promise<TaskResponseDto> {
-    const projectId = createNewTaskDto.projectId;
-    if (!projectId) {
-      throw new BadRequestException('projectId is required');
+  private async findProjectIdOrThrow(workspaceSlug: string, projectKey: string): Promise<string> {
+    const [project] = await this.db
+      .select({ id: projects.id })
+      .from(projects)
+      .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
+      .where(and(eq(workspaces.slug, workspaceSlug), eq(projects.key, projectKey)))
+      .limit(1);
+
+    if (!project) {
+      throw new NotFoundException('Project not found');
     }
+
+    return project.id;
+  }
+
+  // Task 생성
+  async create(
+    workspaceSlug: string,
+    projectKey: string,
+    createNewTaskDto: CreateNewTaskRequestDto,
+  ): Promise<TaskResponseDto> {
+    const projectId = await this.findProjectIdOrThrow(workspaceSlug, projectKey);
 
     const maxRetries = 3;
     let attempt = 0;
@@ -109,23 +125,25 @@ export class TasksService {
               'Failed to create task after multiple attempts due to concurrent insertions. Please try again.',
             );
           }
-          continue; // Retry the transaction
+          continue;
         }
-        throw error; // Rethrow other errors
+        throw error;
       }
     }
+
     throw new BadRequestException('Failed to create task');
   }
 
   // Task 목록 조회
-  async findAll(projectId: string): Promise<TaskResponseDto[]> {
+  async findAll(workspaceSlug: string, projectKey: string): Promise<TaskResponseDto[]> {
+    const projectId = await this.findProjectIdOrThrow(workspaceSlug, projectKey);
+
     const rows = await this.db
       .select()
       .from(tasks)
       .where(eq(tasks.projectId, projectId))
       .orderBy(desc(tasks.createdAt));
 
-    // 없으면 빈 배열 반환
     if (rows.length === 0) {
       return [];
     }
@@ -150,8 +168,15 @@ export class TasksService {
 
     return rows.map((row) => this.mapRowToDto(row as DBTaskRowFromITask, linksMap[row.id] || []));
   }
+
   // Task 상세 조회
-  async findOne(projectId: string, taskNumber: number): Promise<TaskResponseDto> {
+  async findOne(
+    workspaceSlug: string,
+    projectKey: string,
+    taskNumber: number,
+  ): Promise<TaskResponseDto> {
+    const projectId = await this.findProjectIdOrThrow(workspaceSlug, projectKey);
+
     const [row] = await this.db
       .select()
       .from(tasks)
@@ -172,95 +197,104 @@ export class TasksService {
       links.map((link) => link.requirementId),
     );
   }
+
   // Task 수정
   async update(
-    projectId: string,
+    workspaceSlug: string,
+    projectKey: string,
     taskNumber: number,
     updateTaskDto: UpdateTaskRequestDto,
   ): Promise<TaskResponseDto> {
-    const [existing] = await this.db
-      .select()
-      .from(tasks)
-      .where(and(eq(tasks.projectId, projectId), eq(tasks.taskNumber, taskNumber)))
-      .limit(1);
+    const projectId = await this.findProjectIdOrThrow(workspaceSlug, projectKey);
 
-    if (!existing) {
-      throw new NotFoundException('Task not found');
-    }
+    return await this.db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(tasks)
+        .where(and(eq(tasks.projectId, projectId), eq(tasks.taskNumber, taskNumber)))
+        .limit(1);
 
-    const patch: Partial<{
-      title: string;
-      description: string | null;
-      sprintId: string | null;
-      linkedDocumentId: string | null;
-      status: (typeof tasks.$inferInsert)['status'];
-      priority: (typeof tasks.$inferInsert)['priority'];
-      startDate: Date | null;
-      dueDate: Date | null;
-      updatedAt: Date;
-    }> = {};
-
-    if (updateTaskDto.title !== undefined) patch.title = updateTaskDto.title;
-    if (updateTaskDto.description !== undefined)
-      patch.description = updateTaskDto.description ?? null;
-    if (updateTaskDto.sprintId !== undefined) patch.sprintId = updateTaskDto.sprintId ?? null;
-    if (updateTaskDto.linkedDocumentId !== undefined)
-      patch.linkedDocumentId = updateTaskDto.linkedDocumentId ?? null;
-    if (updateTaskDto.status !== undefined) patch.status = updateTaskDto.status;
-    if (updateTaskDto.priority !== undefined) patch.priority = updateTaskDto.priority;
-    if (updateTaskDto.startDate !== undefined) {
-      patch.startDate = updateTaskDto.startDate ? new Date(updateTaskDto.startDate) : null;
-    }
-    if (updateTaskDto.dueDate !== undefined) {
-      patch.dueDate = updateTaskDto.dueDate ? new Date(updateTaskDto.dueDate) : null;
-    }
-
-    let updatedRow = existing;
-    if (Object.keys(patch).length > 0) {
-      patch.updatedAt = new Date();
-
-      const [updated] = await this.db
-        .update(tasks)
-        .set(patch)
-        .where(eq(tasks.id, existing.id))
-        .returning();
-
-      if (!updated) {
-        throw new BadRequestException('Failed to update task');
+      if (!existing) {
+        throw new NotFoundException('Task not found');
       }
 
-      updatedRow = updated;
-    }
+      const patch: Partial<{
+        title: string;
+        description: string | null;
+        sprintId: string | null;
+        linkedDocumentId: string | null;
+        status: (typeof tasks.$inferInsert)['status'];
+        priority: (typeof tasks.$inferInsert)['priority'];
+        startDate: Date | null;
+        dueDate: Date | null;
+        updatedAt: Date;
+      }> = {};
 
-    // linkedRequirementIds가 넘어오면 기존 링크 교체
-    if (updateTaskDto.linkedRequirementIds !== undefined) {
-      await this.db
-        .delete(requirementTaskLinks)
+      if (updateTaskDto.title !== undefined) patch.title = updateTaskDto.title;
+      if (updateTaskDto.description !== undefined) {
+        patch.description = updateTaskDto.description ?? null;
+      }
+      if (updateTaskDto.sprintId !== undefined) patch.sprintId = updateTaskDto.sprintId ?? null;
+      if (updateTaskDto.linkedDocumentId !== undefined) {
+        patch.linkedDocumentId = updateTaskDto.linkedDocumentId ?? null;
+      }
+      if (updateTaskDto.status !== undefined) patch.status = updateTaskDto.status;
+      if (updateTaskDto.priority !== undefined) patch.priority = updateTaskDto.priority;
+      if (updateTaskDto.startDate !== undefined) {
+        patch.startDate = updateTaskDto.startDate ? new Date(updateTaskDto.startDate) : null;
+      }
+      if (updateTaskDto.dueDate !== undefined) {
+        patch.dueDate = updateTaskDto.dueDate ? new Date(updateTaskDto.dueDate) : null;
+      }
+
+      let updatedRow = existing;
+
+      if (Object.keys(patch).length > 0) {
+        patch.updatedAt = new Date();
+
+        const [updated] = await tx
+          .update(tasks)
+          .set(patch)
+          .where(eq(tasks.id, existing.id))
+          .returning();
+
+        if (!updated) {
+          throw new BadRequestException('Failed to update task');
+        }
+
+        updatedRow = updated;
+      }
+
+      // linkedRequirementIds가 넘어오면 기존 링크 교체
+      if (updateTaskDto.linkedRequirementIds !== undefined) {
+        await tx.delete(requirementTaskLinks).where(eq(requirementTaskLinks.taskId, updatedRow.id));
+
+        if (updateTaskDto.linkedRequirementIds.length > 0) {
+          await tx.insert(requirementTaskLinks).values(
+            updateTaskDto.linkedRequirementIds.map((requirementId) => ({
+              requirementId,
+              taskId: updatedRow.id,
+            })),
+          );
+        }
+      }
+
+      const links = await tx
+        .select({ requirementId: requirementTaskLinks.requirementId })
+        .from(requirementTaskLinks)
         .where(eq(requirementTaskLinks.taskId, updatedRow.id));
 
-      if (updateTaskDto.linkedRequirementIds.length > 0) {
-        await this.db.insert(requirementTaskLinks).values(
-          updateTaskDto.linkedRequirementIds.map((requirementId) => ({
-            requirementId,
-            taskId: updatedRow.id,
-          })),
-        );
-      }
-    }
-
-    const links = await this.db
-      .select({ requirementId: requirementTaskLinks.requirementId })
-      .from(requirementTaskLinks)
-      .where(eq(requirementTaskLinks.taskId, updatedRow.id));
-
-    return this.mapRowToDto(
-      updatedRow,
-      links.map((l) => l.requirementId),
-    );
+      return this.mapRowToDto(
+        updatedRow,
+        links.map((l) => l.requirementId),
+      );
+    });
   }
 
   // Task 삭제
-  async remove(projectId: string, taskNumber: number): Promise<void> {
+  async remove(workspaceSlug: string, projectKey: string, taskNumber: number): Promise<void> {
+    const projectId = await this.findProjectIdOrThrow(workspaceSlug, projectKey);
+
     const [existing] = await this.db
       .select({ id: tasks.id })
       .from(tasks)

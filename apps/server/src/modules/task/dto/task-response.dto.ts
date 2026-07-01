@@ -1,6 +1,6 @@
-import { EPriority, ETaskStatus } from '@cosider/shared';
+import { EPriority, ETaskStatus, ITaskResponse } from '@cosider/shared';
 
-export class TaskResponseDto {
+export class TaskResponseDto implements ITaskResponse {
   id!: string;
   taskNumber!: number;
   title!: string;
