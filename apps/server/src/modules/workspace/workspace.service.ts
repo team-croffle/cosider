@@ -18,7 +18,7 @@ import {
 
 import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
-import { userProfiles, workspace_members, workspaces } from '@/database/schema';
+import { userProfiles, workspaceMembers, workspaces } from '@/database/schema';
 
 @Injectable()
 export class WorkspacesService {
@@ -48,7 +48,7 @@ export class WorkspacesService {
         throw new InternalServerErrorException('워크스페이스 생성에 실패했습니다.');
       }
 
-      await tx.insert(workspace_members).values({
+      await tx.insert(workspaceMembers).values({
         userId: '00000000-0000-0000-0000-000000000000', // TODO: 로그인 유저 ID로 교체
         workspaceId: created.id,
         role: EWorkspaceUserRole.OWNER,
@@ -77,11 +77,11 @@ export class WorkspacesService {
         description: workspaces.description,
         logoImageId: workspaces.logoImageId, // S3 Key -> URL 변환 필요
         createdAt: workspaces.createdAt,
-        role: workspace_members.role,
+        role: workspaceMembers.role,
       })
-      .from(workspace_members)
-      .innerJoin(workspaces, eq(workspace_members.workspaceId, workspaces.id))
-      .where(eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000')); // TODO: 로그인 유저 ID로 교체
+      .from(workspaceMembers)
+      .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
+      .where(eq(workspaceMembers.userId, '00000000-0000-0000-0000-000000000000')); // TODO: 로그인 유저 ID로 교체
 
     return workspaceList.map((w) => ({
       slug: w.slug,
@@ -103,7 +103,7 @@ export class WorkspacesService {
         description: workspaces.description,
         logoImageId: workspaces.logoImageId, // S3 Key -> URL 변환 필요
         createdAt: workspaces.createdAt,
-        role: workspace_members.role,
+        role: workspaceMembers.role,
         owner: {
           handle: userProfiles.handle,
           nickname: userProfiles.nickname,
@@ -111,12 +111,12 @@ export class WorkspacesService {
         },
       })
       .from(workspaces)
-      .innerJoin(workspace_members, eq(workspaces.id, workspace_members.workspaceId))
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
       .innerJoin(userProfiles, eq(workspaces.ownerId, userProfiles.userId))
       .where(
         and(
           eq(workspaces.slug, workspaceSlug),
-          eq(workspace_members.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
+          eq(workspaceMembers.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
         ),
       );
 
@@ -227,10 +227,10 @@ export class WorkspacesService {
   // 워크스페이스 멤버 조회 및 권한 체크
   private async findMemberOrThrow(workspaceSlug: string, userId: string) {
     const [member] = await this.db
-      .select({ role: workspace_members.role, workspaceId: workspaces.id })
+      .select({ role: workspaceMembers.role, workspaceId: workspaces.id })
       .from(workspaces)
-      .innerJoin(workspace_members, eq(workspaces.id, workspace_members.workspaceId))
-      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspace_members.userId, userId)));
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspaceMembers.userId, userId)));
 
     if (!member) {
       throw new NotFoundException('존재하지 않는 워크스페이스이거나 접근 권한이 없습니다.');

@@ -47,7 +47,7 @@ export const workspaceMemberRoleEnum = pgEnum(
   Object.values(EWorkspaceUserRole) as [EWorkspaceUserRole, ...EWorkspaceUserRole[]],
 );
 
-export const workspace_members = pgTable(
+export const workspaceMembers = pgTable(
   'workspace_members',
   {
     id: uuid('id')

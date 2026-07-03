@@ -9,23 +9,11 @@ import {
 import { and, eq } from 'drizzle-orm';
 
 import { DelegateOwnerRequest, UpdateMemberRoleRequest, WorkspaceMemberResponse } from './dto';
+import { canManage } from './utils/role.util';
 
 import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
-import { userProfiles, workspace_members, workspaces } from '@/database/schema';
-
-const ROLE_WEIGHT: Record<EWorkspaceUserRole, number> = {
-  // 권한별 가중치 (낮을수록 권한이 낮음)
-  // 문서에 명시된 규칙은 아니고 서비스 내부에서만 사용되는 규칙임.
-  [EWorkspaceUserRole.VIEWER]: 10,
-  [EWorkspaceUserRole.MEMBER]: 20,
-  [EWorkspaceUserRole.ADMIN]: 30,
-  [EWorkspaceUserRole.OWNER]: 40,
-};
-
-function canManage(actorRole: EWorkspaceUserRole, targetRole: EWorkspaceUserRole): boolean {
-  return ROLE_WEIGHT[actorRole] > ROLE_WEIGHT[targetRole];
-}
+import { userProfiles, workspaceMembers, workspaces } from '@/database/schema';
 
 @Injectable()
 export class WorkspaceMembersService {
@@ -42,12 +30,12 @@ export class WorkspaceMembersService {
         handle: userProfiles.handle,
         nickname: userProfiles.nickname,
         profileImageId: userProfiles.profileImageId,
-        role: workspace_members.role,
-        joinedAt: workspace_members.joinedAt,
+        role: workspaceMembers.role,
+        joinedAt: workspaceMembers.joinedAt,
       })
-      .from(workspace_members)
-      .innerJoin(userProfiles, eq(workspace_members.userId, userProfiles.userId))
-      .where(eq(workspace_members.workspaceId, member.workspaceId));
+      .from(workspaceMembers)
+      .innerJoin(userProfiles, eq(workspaceMembers.userId, userProfiles.userId))
+      .where(eq(workspaceMembers.workspaceId, member.workspaceId));
 
     return memberList.map((m) => ({
       handle: m.handle,
@@ -83,21 +71,21 @@ export class WorkspaceMembersService {
     }
 
     await this.db
-      .delete(workspace_members)
+      .delete(workspaceMembers)
       .where(
         and(
-          eq(workspace_members.workspaceId, actor.workspaceId),
-          eq(workspace_members.userId, target.userId),
+          eq(workspaceMembers.workspaceId, actor.workspaceId),
+          eq(workspaceMembers.userId, target.userId),
         ),
       );
   }
 
   private async findMemberByHandleOrThrow(workspaceId: string, handle: string) {
     const [target] = await this.db
-      .select({ userId: workspace_members.userId, role: workspace_members.role })
-      .from(workspace_members)
-      .innerJoin(userProfiles, eq(workspace_members.userId, userProfiles.userId))
-      .where(and(eq(workspace_members.workspaceId, workspaceId), eq(userProfiles.handle, handle)));
+      .select({ userId: workspaceMembers.userId, role: workspaceMembers.role })
+      .from(workspaceMembers)
+      .innerJoin(userProfiles, eq(workspaceMembers.userId, userProfiles.userId))
+      .where(and(eq(workspaceMembers.workspaceId, workspaceId), eq(userProfiles.handle, handle)));
 
     if (!target) {
       throw new NotFoundException('존재하지 않는 멤버입니다.');
@@ -119,9 +107,14 @@ export class WorkspaceMembersService {
       throw new ForbiddenException('멤버 역할을 변경할 권한이 없습니다.');
     }
 
-    // Owner 권한은 delegateOwner로만 변경 가능
-    if (dto.role === EWorkspaceUserRole.OWNER) {
-      throw new BadRequestException('Owner 권한은 소유권 위임 API를 통해서만 변경할 수 있습니다.');
+    if (!canManage(actor.role, dto.role)) {
+      // OWNER로 변경 시도한 경우 별도 안내
+      if (dto.role === EWorkspaceUserRole.OWNER) {
+        throw new BadRequestException(
+          'Owner 권한은 소유권 위임 API를 통해서만 변경할 수 있습니다.',
+        );
+      }
+      throw new BadRequestException('본인의 권한 이상으로는 역할을 변경할 수 없습니다.');
     }
 
     const target = await this.findMemberByHandleOrThrow(actor.workspaceId, targetHandle);
@@ -135,12 +128,12 @@ export class WorkspaceMembersService {
     }
 
     await this.db
-      .update(workspace_members)
+      .update(workspaceMembers)
       .set({ role: dto.role })
       .where(
         and(
-          eq(workspace_members.workspaceId, actor.workspaceId),
-          eq(workspace_members.userId, target.userId),
+          eq(workspaceMembers.workspaceId, actor.workspaceId),
+          eq(workspaceMembers.userId, target.userId),
         ),
       );
   }
@@ -154,11 +147,11 @@ export class WorkspaceMembersService {
     }
 
     await this.db
-      .delete(workspace_members)
+      .delete(workspaceMembers)
       .where(
         and(
-          eq(workspace_members.workspaceId, actor.workspaceId),
-          eq(workspace_members.userId, userId),
+          eq(workspaceMembers.workspaceId, actor.workspaceId),
+          eq(workspaceMembers.userId, userId),
         ),
       );
   }
@@ -184,22 +177,22 @@ export class WorkspaceMembersService {
     // 소유권 위임 시 기존 Owner는 Admin으로 강등
     await this.db.transaction(async (tx) => {
       await tx
-        .update(workspace_members)
+        .update(workspaceMembers)
         .set({ role: EWorkspaceUserRole.ADMIN })
         .where(
           and(
-            eq(workspace_members.workspaceId, actor.workspaceId),
-            eq(workspace_members.userId, userId),
+            eq(workspaceMembers.workspaceId, actor.workspaceId),
+            eq(workspaceMembers.userId, userId),
           ),
         );
 
       await tx
-        .update(workspace_members)
+        .update(workspaceMembers)
         .set({ role: EWorkspaceUserRole.OWNER })
         .where(
           and(
-            eq(workspace_members.workspaceId, actor.workspaceId),
-            eq(workspace_members.userId, newOwner.userId),
+            eq(workspaceMembers.workspaceId, actor.workspaceId),
+            eq(workspaceMembers.userId, newOwner.userId),
           ),
         );
     });
@@ -207,10 +200,10 @@ export class WorkspaceMembersService {
 
   private async findMemberOrThrow(workspaceSlug: string, userId: string) {
     const [member] = await this.db
-      .select({ role: workspace_members.role, workspaceId: workspaces.id })
+      .select({ role: workspaceMembers.role, workspaceId: workspaces.id })
       .from(workspaces)
-      .innerJoin(workspace_members, eq(workspaces.id, workspace_members.workspaceId))
-      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspace_members.userId, userId)));
+      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
+      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspaceMembers.userId, userId)));
 
     if (!member) {
       throw new NotFoundException('존재하지 않는 워크스페이스이거나 접근 권한이 없습니다.');
