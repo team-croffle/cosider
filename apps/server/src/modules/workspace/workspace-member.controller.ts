@@ -12,6 +12,7 @@ import {
 
 import { CurrentUser } from '../auth/decorator';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { ParseUserHandlePipe } from '../user/pipes/parse-user-handle.pipe';
 
 import { DelegateOwnerRequest, UpdateMemberRoleRequest, WorkspaceMemberResponse } from './dto';
 import { ParseWorkspaceSlugPipe } from './pipes/parse-workspace-slug.pipe';
@@ -37,11 +38,16 @@ export class WorkspaceMembersController {
   @UseGuards(JwtAuthGuard)
   async updateMemberRole(
     @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
-    @Param('user_handle') userHandle: string,
+    @Param('user_handle', ParseUserHandlePipe) targetUserId: string,
     @Body() dto: UpdateMemberRoleRequest,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.workspaceMembersService.updateMemberRole(workspaceId, userHandle, dto, user.userId);
+    return this.workspaceMembersService.updateMemberRole(
+      workspaceId,
+      targetUserId,
+      dto,
+      user.userId,
+    );
   }
 
   @Delete(':workspace_slug/members/:user_handle')
@@ -49,12 +55,12 @@ export class WorkspaceMembersController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async kickMemberFromWorkspace(
     @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
-    @Param('user_handle') userHandle: string,
+    @Param('user_handle', ParseUserHandlePipe) targetUserId: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     return this.workspaceMembersService.kickMemberFromWorkspace(
       workspaceId,
-      userHandle,
+      targetUserId,
       user.userId,
     );
   }
