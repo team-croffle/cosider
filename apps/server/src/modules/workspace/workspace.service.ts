@@ -24,13 +24,13 @@ import { userProfiles, workspaceMembers, workspaces } from '@/database/schema';
 export class WorkspacesService {
   constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
 
-  async createWorkspace(dto: CreateWorkspaceRequest): Promise<WorkspaceResponse> {
+  async createWorkspace(dto: CreateWorkspaceRequest, ownerId: string): Promise<WorkspaceResponse> {
     // 트랜잭션으로 워크스페이스와 워크스페이스 멤버 등록을 함께 생성
     const workspace = await this.db.transaction(async (tx) => {
       const [created] = await tx
         .insert(workspaces)
         .values({
-          ownerId: '00000000-0000-0000-0000-000000000000', // TODO: 로그인 유저 ID로 교체
+          ownerId: ownerId,
           slug: dto.slug,
           name: dto.name,
           description: dto.description,
@@ -49,7 +49,7 @@ export class WorkspacesService {
       }
 
       await tx.insert(workspaceMembers).values({
-        userId: '00000000-0000-0000-0000-000000000000', // TODO: 로그인 유저 ID로 교체
+        userId: ownerId,
         workspaceId: created.id,
         role: EWorkspaceUserRole.OWNER,
       });
@@ -68,7 +68,7 @@ export class WorkspacesService {
     };
   }
 
-  async getWorkspaceList(): Promise<WorkspaceResponse[]> {
+  async getWorkspaceList(userId: string): Promise<WorkspaceResponse[]> {
     const workspaceList = await this.db
       .select({
         slug: workspaces.slug,
@@ -81,7 +81,7 @@ export class WorkspacesService {
       })
       .from(workspaceMembers)
       .innerJoin(workspaces, eq(workspaceMembers.workspaceId, workspaces.id))
-      .where(eq(workspaceMembers.userId, '00000000-0000-0000-0000-000000000000')); // TODO: 로그인 유저 ID로 교체
+      .where(eq(workspaceMembers.userId, userId));
 
     return workspaceList.map((w) => ({
       slug: w.slug,
@@ -94,7 +94,10 @@ export class WorkspacesService {
     }));
   }
 
-  async getWorkspaceDetail(workspaceSlug: string): Promise<WorkspaceDetailResponse> {
+  async getWorkspaceDetail(
+    workspaceSlug: string,
+    userId: string,
+  ): Promise<WorkspaceDetailResponse> {
     const [workspace] = await this.db
       .select({
         slug: workspaces.slug,
@@ -113,12 +116,7 @@ export class WorkspacesService {
       .from(workspaces)
       .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
       .innerJoin(userProfiles, eq(workspaces.ownerId, userProfiles.userId))
-      .where(
-        and(
-          eq(workspaces.slug, workspaceSlug),
-          eq(workspaceMembers.userId, '00000000-0000-0000-0000-000000000000'), // TODO: 로그인 유저 ID로 교체
-        ),
-      );
+      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspaceMembers.userId, userId)));
 
     if (!workspace) {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
@@ -144,8 +142,8 @@ export class WorkspacesService {
   async updateWorkspace(
     workspaceSlug: string,
     dto: UpdateWorkspaceRequest,
+    userId: string,
   ): Promise<WorkspaceResponse> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
     const member = await this.findMemberOrThrow(workspaceSlug, userId);
 
     const [updatedWorkspace] = await this.db
@@ -179,8 +177,10 @@ export class WorkspacesService {
     };
   }
 
-  async deleteWorkspace(workspaceSlug: string): Promise<WorkspaceDeleteAcceptedResponse> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async deleteWorkspace(
+    workspaceSlug: string,
+    userId: string,
+  ): Promise<WorkspaceDeleteAcceptedResponse> {
     const member = await this.findMemberOrThrow(workspaceSlug, userId);
 
     const [deletedWorkspace] = await this.db
@@ -205,8 +205,7 @@ export class WorkspacesService {
     };
   }
 
-  async restoreWorkspace(workspaceSlug: string): Promise<void> {
-    const userId = '00000000-0000-0000-0000-000000000000'; // TODO: 로그인 유저 ID로 교체
+  async restoreWorkspace(workspaceSlug: string, userId: string): Promise<void> {
     const member = await this.findMemberOrThrow(workspaceSlug, userId);
 
     const [restoredWorkspace] = await this.db
