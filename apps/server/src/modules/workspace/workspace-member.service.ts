@@ -9,7 +9,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 
 import { DelegateOwnerRequest, UpdateMemberRoleRequest, WorkspaceMemberResponse } from './dto';
-import { canManage } from './utils/role.util';
+import { canManage, isOwner } from './utils/role.util';
 
 import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
@@ -128,7 +128,7 @@ export class WorkspaceMembersService {
     const actor = await this.findMemberOrThrow(workspaceId, userId);
 
     // Owner가 위임 없이 탈퇴 시도 시 차단
-    if (actor.role === EWorkspaceUserRole.OWNER) {
+    if (isOwner(actor.role)) {
       throw new BadRequestException('Owner 권한을 다른 멤버에게 위임해야 합니다.');
     }
 
@@ -149,7 +149,7 @@ export class WorkspaceMembersService {
   ): Promise<void> {
     const actor = await this.findMemberOrThrow(workspaceId, userId);
 
-    if (actor.role !== EWorkspaceUserRole.OWNER) {
+    if (!isOwner(actor.role)) {
       throw new ForbiddenException('소유권 위임은 Owner만 할 수 있습니다.');
     }
 

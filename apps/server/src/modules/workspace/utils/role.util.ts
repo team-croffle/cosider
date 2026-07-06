@@ -12,3 +12,7 @@ const ROLE_WEIGHT: Record<EWorkspaceUserRole, number> = {
 export function canManage(actorRole: EWorkspaceUserRole, targetRole: EWorkspaceUserRole): boolean {
   return ROLE_WEIGHT[actorRole] > ROLE_WEIGHT[targetRole];
 }
+
+export function isOwner(role: EWorkspaceUserRole): boolean {
+  return role === EWorkspaceUserRole.OWNER;
+}

@@ -21,6 +21,7 @@ import {
   WorkspaceDetailResponse,
   WorkspaceResponse,
 } from './dto';
+import { ParseWorkspaceSlugPipe } from './pipes/parse-workspace-slug.pipe';
 import { WorkspacesService } from './workspace.service';
 
 import type { AuthenticatedUser } from '@/types/auth/auth.type';
@@ -49,38 +50,38 @@ export class WorkspacesController {
   @Get(':workspace_slug')
   @UseGuards(JwtAuthGuard)
   async getWorkspaceDetail(
-    @Param('workspace_slug') workspaceSlug: string,
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkspaceDetailResponse> {
-    return this.workspacesService.getWorkspaceDetail(workspaceSlug, user.userId);
+    return this.workspacesService.getWorkspaceDetail(workspaceId, user.userId);
   }
 
   @Patch(':workspace_slug')
   @UseGuards(JwtAuthGuard)
   async updateWorkspace(
-    @Param('workspace_slug') workspaceSlug: string,
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
     @Body() dto: UpdateWorkspaceRequest,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkspaceResponse> {
-    return this.workspacesService.updateWorkspace(workspaceSlug, dto, user.userId);
+    return this.workspacesService.updateWorkspace(workspaceId, dto, user.userId);
   }
 
   @Delete(':workspace_slug')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.ACCEPTED)
   async deleteWorkspace(
-    @Param('workspace_slug') workspaceSlug: string,
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<WorkspaceDeleteAcceptedResponse> {
-    return this.workspacesService.deleteWorkspace(workspaceSlug, user.userId);
+    return this.workspacesService.deleteWorkspace(workspaceId, user.userId);
   }
 
   @Post(':workspace_slug/restore')
   @UseGuards(JwtAuthGuard)
   async restoreWorkspace(
-    @Param('workspace_slug') workspaceSlug: string,
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
-    return this.workspacesService.restoreWorkspace(workspaceSlug, user.userId);
+    return this.workspacesService.restoreWorkspace(workspaceId, user.userId);
   }
 }

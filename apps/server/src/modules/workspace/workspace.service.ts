@@ -1,6 +1,7 @@
 import { EWorkspaceStatus, EWorkspaceUserRole } from '@cosider/shared';
 import {
   ConflictException,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -15,6 +16,7 @@ import {
   WorkspaceDetailResponse,
   WorkspaceResponse,
 } from './dto';
+import { canManage, isOwner } from './utils/role.util';
 
 import { DB_CONNECTION } from '@/common/constants';
 import { type DrizzleDB } from '@/database/drizzle.module';
@@ -94,10 +96,7 @@ export class WorkspacesService {
     }));
   }
 
-  async getWorkspaceDetail(
-    workspaceSlug: string,
-    userId: string,
-  ): Promise<WorkspaceDetailResponse> {
+  async getWorkspaceDetail(workspaceId: string, userId: string): Promise<WorkspaceDetailResponse> {
     const [workspace] = await this.db
       .select({
         slug: workspaces.slug,
@@ -116,7 +115,7 @@ export class WorkspacesService {
       .from(workspaces)
       .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
       .innerJoin(userProfiles, eq(workspaces.ownerId, userProfiles.userId))
-      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspaceMembers.userId, userId)));
+      .where(and(eq(workspaces.id, workspaceId), eq(workspaceMembers.userId, userId)));
 
     if (!workspace) {
       throw new NotFoundException('존재하지 않는 워크스페이스입니다.');
@@ -140,11 +139,15 @@ export class WorkspacesService {
   }
 
   async updateWorkspace(
-    workspaceSlug: string,
+    workspaceId: string,
     dto: UpdateWorkspaceRequest,
     userId: string,
   ): Promise<WorkspaceResponse> {
-    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+    const member = await this.findMemberOrThrow(workspaceId, userId);
+
+    if (!canManage(member.role, EWorkspaceUserRole.MEMBER)) {
+      throw new ForbiddenException('워크스페이스를 수정할 권한이 없습니다.');
+    }
 
     const [updatedWorkspace] = await this.db
       .update(workspaces)
@@ -178,10 +181,14 @@ export class WorkspacesService {
   }
 
   async deleteWorkspace(
-    workspaceSlug: string,
+    workspaceId: string,
     userId: string,
   ): Promise<WorkspaceDeleteAcceptedResponse> {
-    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+    const member = await this.findMemberOrThrow(workspaceId, userId);
+
+    if (!isOwner(member.role)) {
+      throw new ForbiddenException('워크스페이스를 삭제할 권한이 없습니다.');
+    }
 
     const [deletedWorkspace] = await this.db
       .update(workspaces)
@@ -198,15 +205,19 @@ export class WorkspacesService {
     }
 
     return {
-      slug: workspaceSlug,
+      slug: deletedWorkspace.slug,
       status: EWorkspaceStatus.DELETE_PENDING,
       deletedAt: deletedWorkspace.deletedAt!.toISOString(),
       scheduledDeleteAt: deletedWorkspace.scheduledDeleteAt!.toISOString(),
     };
   }
 
-  async restoreWorkspace(workspaceSlug: string, userId: string): Promise<void> {
-    const member = await this.findMemberOrThrow(workspaceSlug, userId);
+  async restoreWorkspace(workspaceId: string, userId: string): Promise<void> {
+    const member = await this.findMemberOrThrow(workspaceId, userId);
+
+    if (!isOwner(member.role)) {
+      throw new ForbiddenException('워크스페이스를 복구할 권한이 없습니다.');
+    }
 
     const [restoredWorkspace] = await this.db
       .update(workspaces)
@@ -224,12 +235,13 @@ export class WorkspacesService {
   }
 
   // 워크스페이스 멤버 조회 및 권한 체크
-  private async findMemberOrThrow(workspaceSlug: string, userId: string) {
+  private async findMemberOrThrow(workspaceId: string, userId: string) {
     const [member] = await this.db
-      .select({ role: workspaceMembers.role, workspaceId: workspaces.id })
-      .from(workspaces)
-      .innerJoin(workspaceMembers, eq(workspaces.id, workspaceMembers.workspaceId))
-      .where(and(eq(workspaces.slug, workspaceSlug), eq(workspaceMembers.userId, userId)));
+      .select({ role: workspaceMembers.role, workspaceId: workspaceMembers.workspaceId })
+      .from(workspaceMembers)
+      .where(
+        and(eq(workspaceMembers.workspaceId, workspaceId), eq(workspaceMembers.userId, userId)),
+      );
 
     if (!member) {
       throw new NotFoundException('존재하지 않는 워크스페이스이거나 접근 권한이 없습니다.');
