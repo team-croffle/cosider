@@ -6,7 +6,7 @@ export const WorkspaceResponseSchema = z.object({
   name: z.string(),
   status: z.string(),
   description: z.string().nullable(),
-  logoUrl: z.string(),
+  logoImageId: z.string().uuid().nullable(),
   createdAt: z.string(),
   role: z.string(),
 });
