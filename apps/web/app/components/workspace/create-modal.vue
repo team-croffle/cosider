@@ -2,6 +2,8 @@
   import type { ICreateWorkspaceRequest } from '@cosider/shared';
   import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
+  import { useWorkspaceStore } from '~/stores/workspace';
+
   const isOpen = defineModel<boolean>({ default: false });
   const workspaceStore = useWorkspaceStore();
 
@@ -9,7 +11,8 @@
     name: '',
     slug: '',
     description: null,
-    logoUploadToken: null,
+    uploadUrl: null,
+    uploadToken: null,
   });
 
   const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
@@ -101,7 +104,8 @@
     form.name = '';
     form.slug = '';
     form.description = null;
-    form.logoUploadToken = null;
+    form.uploadUrl = null;
+    form.uploadToken = null;
     fileError.value = null;
     isSlugManuallyEdited.value = false;
 
