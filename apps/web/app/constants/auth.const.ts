@@ -1,8 +1,6 @@
-const OAuthProvider = {
+export const OAuthProvider = {
   GOOGLE: 'google',
   GITHUB: 'github',
 } as const;
 
-type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider];
-
-export { OAuthProvider };
+export type OAuthProvider = (typeof OAuthProvider)[keyof typeof OAuthProvider];

@@ -20,10 +20,10 @@ export function usePagination<T>(
     if (!hasNextPage.value || isLoading.value) return;
 
     isLoading.value = true;
-    page.value++;
+    const nextPage = page.value + 1;
 
     try {
-      const result = await fetcher({ page: page.value, limit: limit.value });
+      const result = await fetcher({ page: nextPage, limit: limit.value });
       content.value.push(...result.content);
       meta.value = result.meta;
     } finally {

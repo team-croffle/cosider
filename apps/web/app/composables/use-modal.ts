@@ -12,7 +12,7 @@ export function useModal(modalId: string) {
     if (!isOpen.value) {
       activeModals.value.push(modalId);
     }
-    if (data) {
+    if (data !== undefined) {
       modalPayloads.value[modalId] = data;
     }
   }

@@ -20,8 +20,14 @@ export function useDragAndDrop<T>(initList: T[]) {
     }
 
     const [item] = list.value.splice(draggedIndex.value, 1);
+    const from = draggedIndex.value;
+    let to = dropTargetIndex.value;
+
     if (item !== undefined) {
-      list.value.splice(dropTargetIndex.value, 0, item);
+      if (from < to) {
+        to -= 1;
+      }
+      list.value.splice(to, 0, item);
     }
 
     // TODO: Server에 변경된 리스트 저장 API를 Call.
