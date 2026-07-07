@@ -34,19 +34,18 @@ export const useWorkspaceStore = defineStore('workspace', () => {
         body: payload,
       });
       WorkspaceResponseSchema.parse(data);
-      await fetchWorkspaces();
+      workspaces.value = [...workspaces.value, data as IWorkspaceResponse];
       toast.add({
         title: '성공',
         description: '워크스페이스가 생성되었습니다.',
         color: 'success',
       });
       return true;
-    } catch {
-      toast.add({
-        title: '오류',
-        description: '워크스페이스 생성에 실패했습니다.',
-        color: 'error',
-      });
+    } catch (error: unknown) {
+      const status = (error as { statusCode?: number })?.statusCode;
+      const description =
+        status === 409 ? 'slug가 이미 사용 중입니다.' : '워크스페이스 생성에 실패했습니다.';
+      toast.add({ title: '오류', description, color: 'error' });
       return false;
     }
   }
