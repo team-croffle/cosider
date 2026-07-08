@@ -27,9 +27,9 @@ export default defineNuxtPlugin((nuxtApp) => {
 
         // 갱신 실패 또는 로그아웃 도중 401일 시 무한루프 방지
         if (url.includes('auth/refresh') || url.includes('auth/sign-out')) {
-          await nuxtApp.runWithContext(async () => {
-            const { signOut } = useAuth();
-            await signOut();
+          nuxtApp.runWithContext(() => {
+            const { clearAuth } = useAuth();
+            clearAuth();
           });
           return Promise.reject(response);
         }
@@ -69,9 +69,9 @@ export default defineNuxtPlugin((nuxtApp) => {
           isRefreshing = false;
           onRefreshed(false);
 
-          await nuxtApp.runWithContext(async () => {
-            const { signOut } = useAuth();
-            await signOut();
+          nuxtApp.runWithContext(() => {
+            const { clearAuth } = useAuth();
+            clearAuth();
           });
 
           return Promise.reject(error);

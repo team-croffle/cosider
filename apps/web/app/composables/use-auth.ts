@@ -32,11 +32,15 @@ export function useAuth() {
     window.location.href = `${config.public.apiBase}/api/v1/auth/oauth/${provider}`;
   }
 
+  function clearAuth() {
+    user.value = null;
+  }
+
   async function signOut() {
     await $api(`/api/v1/auth/sign-out`, {
       method: 'POST',
     });
-    user.value = null;
+    clearAuth();
   }
 
   return {
@@ -46,5 +50,6 @@ export function useAuth() {
     signInWithLocal,
     signInWithOAuth,
     signOut,
+    clearAuth,
   };
 }
