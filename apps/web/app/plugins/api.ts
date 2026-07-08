@@ -44,7 +44,7 @@ export default defineNuxtPlugin((nuxtApp) => {
                 // Refresh 성공 시 원래 API 재요청
                 resolve($fetch(request, options as typeof options & { method: ValidMethod }));
               } else {
-                // 실해 시 전부 Error 처리.
+                // 실패 시 전부 Error 처리.
                 reject(response);
               }
             });

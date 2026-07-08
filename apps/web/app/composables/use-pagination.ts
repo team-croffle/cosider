@@ -25,6 +25,7 @@ export function usePagination<T>(
     try {
       const result = await fetcher({ page: nextPage, limit: limit.value });
       content.value.push(...result.content);
+      page.value = nextPage;
       meta.value = result.meta;
     } finally {
       isLoading.value = false;
