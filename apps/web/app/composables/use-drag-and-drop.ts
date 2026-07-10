@@ -9,6 +9,7 @@ export function useDragAndDrop<T>(initList: T[]) {
 
   function onDragEnter(idx: number) {
     if (draggedIndex.value === idx) {
+      dropTargetIndex.value = null;
       return;
     }
     dropTargetIndex.value = idx;
