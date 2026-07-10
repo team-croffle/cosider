@@ -27,6 +27,7 @@ export function usePagination<T>(
       content.value.push(...result.content);
       page.value = nextPage;
       meta.value = result.meta;
+      page.value = nextPage;
     } finally {
       isLoading.value = false;
     }

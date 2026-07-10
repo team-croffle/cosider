@@ -15,7 +15,7 @@ export function useAuth() {
       user.value = data;
       return user.value;
     } catch {
-      user.value = null;
+      clearAuth();
       return null;
     }
   }
@@ -25,7 +25,10 @@ export function useAuth() {
       method: 'POST',
       body: credential,
     });
-    await fetchUser();
+    const userData = await fetchUser();
+    if (!userData) {
+      throw new Error('로그인 후 사용자 정보를 불러오지 못했습니다.');
+    }
   }
 
   async function signInWithOAuth(provider: OAuthProvider) {

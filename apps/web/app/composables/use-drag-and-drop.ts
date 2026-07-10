@@ -1,5 +1,5 @@
 export function useDragAndDrop<T>(initList: T[]) {
-  const list = ref<T[]>(initList);
+  const list = ref<T[]>([...initList]);
   const draggedIndex = ref<number | null>(null);
   const dropTargetIndex = ref<number | null>(null);
 
