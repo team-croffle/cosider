@@ -18,15 +18,23 @@ export default defineNuxtPlugin((nuxtApp) => {
     refreshSubscribers = [];
   }
 
-  const api = $fetch.create({
+  // api -> onResponseError -> api... 이런 순환 참조가 있어서, 직접 type을 지정해줌.
+  const api: typeof $fetch = $fetch.create({
     baseURL: useRuntimeConfig().public.apiBase,
+    // cookies를 사용하기 위해 설정
+    // access token 등 인증 정보를 HttpOnly Cookie에 저장하기 때문
+    credentials: 'include',
 
     async onResponseError({ request, response, options }) {
       if (response.status === 401) {
         const url = request.toString();
 
         // 갱신 실패 또는 로그아웃 도중 401일 시 무한루프 방지
-        if (url.includes('auth/refresh') || url.includes('auth/sign-out')) {
+        if (
+          url.includes('auth/refresh') ||
+          url.includes('auth/sign-out') ||
+          url.includes('auth/sign-in')
+        ) {
           nuxtApp.runWithContext(() => {
             const { clearAuth } = useAuth();
             clearAuth();
@@ -42,7 +50,7 @@ export default defineNuxtPlugin((nuxtApp) => {
             refreshSubscribers.push((isSuccess) => {
               if (isSuccess) {
                 // Refresh 성공 시 원래 API 재요청
-                resolve($fetch(request, options as typeof options & { method: ValidMethod }));
+                resolve(api(request, options as typeof options & { method: ValidMethod }));
               } else {
                 // 실패 시 전부 Error 처리.
                 reject(response);
@@ -55,15 +63,19 @@ export default defineNuxtPlugin((nuxtApp) => {
         isRefreshing = true;
 
         try {
+          // $fetch 사용이유: refresh 요청을 api로 바꾸면, onResponseError안에서 다시 api를 호출함
+          // 이는 refresh가 401 반환시, 무한루프 발생.
           await $fetch(`${config.public.apiBase}/api/v1/auth/refresh`, {
             method: 'POST',
+            // 위와 동일한 이유로 설정
+            credentials: 'include',
           });
 
           isRefreshing = false;
           onRefreshed(true);
 
           // 현재(최초 401에 대응한) API도 다시 실행
-          return $fetch(request, options as typeof options & { method: ValidMethod });
+          return api(request, options as typeof options & { method: ValidMethod });
         } catch (error) {
           // 갱신 실패 시큐리티
           isRefreshing = false;
