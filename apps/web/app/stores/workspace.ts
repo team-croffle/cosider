@@ -1,9 +1,10 @@
 import type { ICreateWorkspaceRequest, IWorkspaceResponse } from '@cosider/shared';
 import { defineStore } from 'pinia';
 
-import { WorkspaceListSchema, WorkspaceResponseSchema } from '~/composables/workspace/useWorkspace';
+import { WorkspaceListSchema, WorkspaceResponseSchema } from '~/composables/use-workspace';
 
 export const useWorkspaceStore = defineStore('workspace', () => {
+  const { $api } = useNuxtApp();
   const toast = useToast();
 
   const workspaces = ref<IWorkspaceResponse[]>([]);
@@ -13,7 +14,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   async function fetchWorkspaces() {
     isLoading.value = true;
     try {
-      const data = await $fetch('/api/v1/workspaces');
+      const data = await $api<IWorkspaceResponse[]>('/api/v1/workspaces');
       workspaces.value = WorkspaceListSchema.parse(data) as IWorkspaceResponse[];
     } catch {
       toast.add({
@@ -29,7 +30,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   // 워크스페이스 생성
   async function createWorkspace(payload: ICreateWorkspaceRequest): Promise<boolean> {
     try {
-      const data = await $fetch('/api/v1/workspaces', {
+      const data = await $api<IWorkspaceResponse>('/api/v1/workspaces', {
         method: 'POST',
         body: payload,
       });
