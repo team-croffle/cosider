@@ -15,11 +15,13 @@ export const WorkspaceResponseSchema = z.object({
 export const WorkspaceListSchema = z.array(WorkspaceResponseSchema);
 
 export function useWorkspace() {
+  const { $api } = useNuxtApp();
+
   // slug 실시간 중복 확인
   // TODO: debounce 처리 필요 - 컴포넌트에서 호출 시 적용
   async function checkSlugAvailability(slug: string): Promise<boolean> {
     try {
-      const data = await $fetch<{ isAvailable: boolean }>('/api/v1/workspaces/exists/slug', {
+      const data = await $api<{ isAvailable: boolean }>('/api/v1/workspaces/exists/slug', {
         query: { slug },
       });
       return data.isAvailable;
