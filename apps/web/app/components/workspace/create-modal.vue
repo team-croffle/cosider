@@ -2,10 +2,12 @@
   import type { ICreateWorkspaceRequest } from '@cosider/shared';
   import type { FormError, FormSubmitEvent } from '@nuxt/ui';
 
+  import { useDebounce } from '~/composables/use-debounce';
   import { useWorkspaceStore } from '~/stores/workspace';
 
   const isOpen = defineModel<boolean>({ default: false });
   const workspaceStore = useWorkspaceStore();
+  const { checkSlugAvailability } = useWorkspace();
 
   const form = reactive<ICreateWorkspaceRequest>({
     name: '',
@@ -16,6 +18,7 @@
   });
 
   const isSlugManuallyEdited = ref(false); // 사용자가 slug를 직접 수정했는지
+  const slugStatus = ref<'idle' | 'checking' | 'available' | 'unavailable'>('idle');
 
   // name → slug 자동 변환
   watch(
@@ -45,7 +48,20 @@
       .replace(/[^a-z0-9\s-]/g, '')
       .replace(/\s+/g, '-')
       .replace(/-+/g, '-');
+    debouncedCheckSlug(form.slug);
   }
+
+  // slug 실시간 중복 체크 (debounce 적용)
+  // useDebounce 타입 제약으로 인해 unknown 사용
+  const debouncedCheckSlug = useDebounce(async (slug: unknown) => {
+    if (!slug) {
+      slugStatus.value = 'idle';
+      return;
+    }
+    slugStatus.value = 'checking';
+    const isAvailable = await checkSlugAvailability(slug as string);
+    slugStatus.value = isAvailable ? 'available' : 'unavailable';
+  }, 500);
 
   // image upload
   // TODO: presigned URL → S3 업로드 연결 필요 (백엔드 완성 후)
@@ -89,6 +105,8 @@
     if (!state.name.trim())
       errors.push({ name: 'name', message: '워크스페이스 이름을 입력해주세요.' });
     if (!state.slug.trim()) errors.push({ name: 'slug', message: 'Slug를 입력해주세요.' });
+    if (slugStatus.value === 'unavailable')
+      errors.push({ name: 'slug', message: 'slug가 이미 사용 중입니다.' });
     return errors;
   }
 
@@ -115,6 +133,7 @@
     }
 
     logoFile.value = null;
+    slugStatus.value = 'idle';
   }
 </script>
 
@@ -164,10 +183,18 @@
             class="w-full"
             @update:model-value="onSlugInput"
           />
+          <!-- TODO: 디자인 시스템 색상 토큰으로 교체 필요 -->
           <template #hint>
-            <span class="text-xs text-gray-400"
-              >URL: cosider.com/workspace/{{ form.slug || 'your-slug' }}
-            </span>
+            <span v-if="slugStatus === 'checking'" class="text-xs text-gray-400">확인 중...</span>
+            <span v-else-if="slugStatus === 'available'" class="text-xs text-green-400"
+              >✓ 사용 가능</span
+            >
+            <span v-else-if="slugStatus === 'unavailable'" class="text-xs text-red-400"
+              >✗ 이미 사용 중</span
+            >
+            <span v-else class="text-xs text-gray-400"
+              >URL: cosider.com/workspace/{{ form.slug || 'your-slug' }}</span
+            >
           </template>
         </UFormField>
 
@@ -185,7 +212,15 @@
 
     <template #footer>
       <div class="flex justify-end gap-2">
-        <UButton variant="outline" @click="isOpen = false">Cancel</UButton>
+        <UButton
+          variant="outline"
+          @click="
+            () => {
+              isOpen = false;
+            }
+          "
+          >Cancel</UButton
+        >
         <UButton type="submit" form="workspace-form">Create Workspace</UButton>
       </div>
     </template>
