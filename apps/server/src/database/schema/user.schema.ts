@@ -19,6 +19,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import type { AssertSchema } from '../type-utils';
+
 import { mediaFiles } from './common.schema';
 
 // ############### USERS ###############
@@ -46,6 +48,10 @@ export const users = pgTable('users', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }),
 } satisfies UserSchemaKeys);
 
+type _AssertUsers = AssertSchema<typeof users.$inferSelect, IUser>;
+const _assertUsers: _AssertUsers = true;
+void _assertUsers;
+
 // ############### USER CREDENTIALS ###############
 type UserCredentialSchema = Record<keyof IUserCredential, unknown>;
 
@@ -65,6 +71,10 @@ export const userCredentials = pgTable('user_credentials', {
   lastLogin: timestamp('last_login', { withTimezone: true }).defaultNow(),
 } satisfies UserCredentialSchema);
 
+type _AssertUserCredentials = AssertSchema<typeof userCredentials.$inferSelect, IUserCredential>;
+const _assertUserCredentials: _AssertUserCredentials = true;
+void _assertUserCredentials;
+
 // ############### USER BACKUP CODE ###############
 type UserBackupCodeSchema = Record<keyof IUserBackupCode, unknown>;
 
@@ -76,6 +86,10 @@ export const userBackupCodes = pgTable('user_backup_codes', {
   codeHash: text('code_hash').notNull(),
   usedAt: timestamp('used_at', { withTimezone: true }),
 } satisfies UserBackupCodeSchema);
+
+type _AssertUserBackupCodes = AssertSchema<typeof userBackupCodes.$inferSelect, IUserBackupCode>;
+const _assertUserBackupCodes: _AssertUserBackupCodes = true;
+void _assertUserBackupCodes;
 
 // ############### USER PROFILES ###############
 type UserProfileSchema = Record<keyof IUserProfile, unknown>;
@@ -101,3 +115,7 @@ export const userProfiles = pgTable('user_profiles', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
   handleUpdatedAt: timestamp('handle_updated_at', { withTimezone: true }).defaultNow(),
 } satisfies UserProfileSchema);
+
+type _AssertUserProfiles = AssertSchema<typeof userProfiles.$inferSelect, IUserProfile>;
+const _assertUserProfiles: _AssertUserProfiles = true;
+void _assertUserProfiles;

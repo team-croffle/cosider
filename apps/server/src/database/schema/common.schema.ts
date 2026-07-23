@@ -2,6 +2,8 @@ import { EFileVisibility, EPriority, IMediaFile } from '@cosider/shared';
 import { bigint, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import type { AssertSchema } from '../type-utils';
+
 import { users } from './user.schema';
 
 export const priorityEnum = pgEnum(
@@ -29,5 +31,9 @@ export const mediaFiles = pgTable('media_files', {
   fileSize: bigint('file_size', { mode: 'number' }).notNull(),
   visibility: fileVisibilityEnum('visibility').notNull(),
   ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies MediaFileSchema);
+
+type _AssertMediaFiles = AssertSchema<typeof mediaFiles.$inferSelect, IMediaFile>;
+const _assertMediaFiles: _AssertMediaFiles = true;
+void _assertMediaFiles;

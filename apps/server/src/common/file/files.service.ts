@@ -261,7 +261,7 @@ export class FilesService {
       mimeType: file.mimeType,
       fileSize: file.fileSize,
       visibility: file.visibility,
-      createdAt: file.createdAt?.toISOString() ?? 'unknown',
+      createdAt: file.createdAt.toISOString(),
     };
   }
 
