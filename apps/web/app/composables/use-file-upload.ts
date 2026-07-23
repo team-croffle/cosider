@@ -1,6 +1,13 @@
 import type { EFileVisibility, IFileUploadRequest, IFileUploadUrlResponse } from '@cosider/shared';
+import { z } from 'zod';
 
 import type { UploadOptions } from '~/types/storage.type';
+
+const FileUploadUrlResponseSchema = z.object({
+  uploadUrl: z.string().min(1),
+  uploadToken: z.string().min(1),
+  expiresIn: z.number().int().positive(),
+}) satisfies z.ZodType<IFileUploadUrlResponse>;
 
 export function useFileUpload() {
   const { $api } = useNuxtApp();
@@ -23,12 +30,12 @@ export function useFileUpload() {
       visibility,
     };
 
-    const resp = await $api<IFileUploadUrlResponse>(endpoint, {
+    const resp = await $api(endpoint, {
       method: 'POST',
       body,
     });
 
-    return resp;
+    return FileUploadUrlResponseSchema.parse(resp);
   }
 
   function putToStorage(

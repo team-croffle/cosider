@@ -1,4 +1,12 @@
 import type { IPageMetaData } from '@cosider/shared';
+import { z } from 'zod';
+
+const PageMetaDataSchema = z.object({
+  currentPage: z.number().int().positive(),
+  limit: z.number().int().positive(),
+  totalCount: z.number().int().nonnegative(),
+  hasMore: z.boolean(),
+}) satisfies z.ZodType<IPageMetaData>;
 
 type FetcherParams = { page: number; limit: number };
 type PaginationResult<T> = { content: T[]; meta: IPageMetaData };
@@ -10,10 +18,10 @@ export function usePagination<T>(
   const content = ref<T[]>([]) as Ref<T[]>;
   const page = ref(1);
   const limit = ref(initialLimit);
-  const meta = ref<IPageMetaData>({} as IPageMetaData);
+  const meta = ref<IPageMetaData | null>(null);
   const isLoading = ref(false);
 
-  const hasNextPage = computed(() => meta.value.hasMore);
+  const hasNextPage = computed(() => meta.value?.hasMore ?? false);
 
   // 무한 스크롤용 (데이터 이어붙이기)
   async function loadMore() {
@@ -26,8 +34,7 @@ export function usePagination<T>(
       const result = await fetcher({ page: nextPage, limit: limit.value });
       content.value.push(...result.content);
       page.value = nextPage;
-      meta.value = result.meta;
-      page.value = nextPage;
+      meta.value = PageMetaDataSchema.parse(result.meta);
     } finally {
       isLoading.value = false;
     }
@@ -41,7 +48,7 @@ export function usePagination<T>(
     try {
       const result = await fetcher({ page: page.value, limit: limit.value });
       content.value = result.content;
-      meta.value = result.meta;
+      meta.value = PageMetaDataSchema.parse(result.meta);
     } finally {
       isLoading.value = false;
     }
