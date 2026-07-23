@@ -13,25 +13,24 @@ export type IUserProfileUpdateRequest = Partial<
 >;
 
 export type IUserProfileDetailResponse = Pick<IUser, 'email'> &
-  Pick<
-    IUserProfile,
-    | 'handle'
-    | 'nickname'
-    | 'profileImageId'
-    | 'techStacks'
-    | 'jobRole'
-    | 'updatedAt'
-    | 'handleUpdatedAt'
-  >;
+  Pick<IUserProfile, 'handle' | 'nickname' | 'profileImageId' | 'techStacks' | 'jobRole'> & {
+    updatedAt: string | null;
+    handleUpdatedAt: string | null;
+  };
 
 // User Accounts
 export type IUserAccountResponse = Pick<IUser, 'email'> &
-  Pick<IUserProfile, 'handle' | 'profileImageId' | 'updatedAt' | 'handleUpdatedAt'>;
+  Pick<IUserProfile, 'handle' | 'profileImageId'> & {
+    updatedAt: string | null;
+    handleUpdatedAt: string | null;
+  };
 
 export type IUserHandleUpdateRequest = Partial<Pick<IUserProfile, 'handle'>>;
 
-export interface IAccountDeleteAcceptedResponse extends Pick<IUser, 'status' | 'deletedAt'> {
+export interface IAccountDeleteAcceptedResponse {
   userId: string;
+  status: IUser['status'];
+  deletedAt: string | null;
   recoveryDeadline: string;
   permanentDeletionAt: string;
 }

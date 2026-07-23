@@ -11,10 +11,13 @@ export interface IFileUploadUrlResponse {
   expiresIn: number;
 }
 
+/** API 응답용. createdAt은 ISO string. */
 export type IFileMetadata = Pick<
   IMediaFile,
-  'id' | 'fileName' | 'mimeType' | 'fileSize' | 'visibility' | 'createdAt'
->;
+  'id' | 'fileName' | 'mimeType' | 'fileSize' | 'visibility'
+> & {
+  createdAt: string;
+};
 
 export interface IFileUploadCompletionRequest {
   // 프론트가 s3에 업로드 할 수 있는 presignedUrl

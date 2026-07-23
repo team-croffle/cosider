@@ -1,10 +1,10 @@
 export interface IRefreshToken {
   id: string; //uuid
-  userId: string; // uuid
+  userId: string | null; // uuid
   tokenValue: string; // uuid, cookieOnly
-  expiresAt: string; // timestamptz
-  createdAt: string; // timestamptz
-  revokedAt: string; // timestamptz
+  expiresAt: Date; // timestamptz
+  createdAt: Date | null; // timestamptz
+  revokedAt: Date | null; // timestamptz
 }
 
 export interface ITokenPair {
