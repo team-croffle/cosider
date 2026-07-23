@@ -1,12 +1,25 @@
-import { Controller, Get, HttpStatus, Param, Query, Res } from '@nestjs/common';
+import type { IFileUploadUrlResponse } from '@cosider/shared';
+import { Body, Controller, Get, HttpStatus, Param, Post, Query, Res } from '@nestjs/common';
 import type { Response } from 'express';
 
+import { FileUploadRequest } from './dto';
 import { FileMetadata } from './dto/file-metadata.dto';
 import { FilesService } from './files.service';
+
+import { CurrentUser } from '@/modules/auth/decorator';
+import type { AuthenticatedUser } from '@/types/auth';
 
 @Controller('/api/v1/files')
 export class FileController {
   constructor(private readonly fileService: FilesService) {}
+
+  @Post('upload-url')
+  async getPresignedUrl(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: FileUploadRequest,
+  ): Promise<IFileUploadUrlResponse> {
+    return await this.fileService.issueUploadToken(user.userId, dto);
+  }
 
   @Get(':id')
   // TODO: 여기서 파일 접근 권한 검증 필요
