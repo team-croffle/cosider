@@ -1,4 +1,4 @@
-import { EFileRefType, EFileVisibility, EPriority, IMediaFile } from '@cosider/shared';
+import { EFileVisibility, EPriority, IMediaFile } from '@cosider/shared';
 import { bigint, pgEnum, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
@@ -18,11 +18,6 @@ export const fileVisibilityEnum = pgEnum(
   Object.values(EFileVisibility) as [EFileVisibility, ...EFileVisibility[]],
 );
 
-export const fileRefTypeEnum = pgEnum(
-  'file_ref_type_enum',
-  Object.values(EFileRefType) as [EFileRefType, ...EFileRefType[]],
-);
-
 export const mediaFiles = pgTable('media_files', {
   id: uuid('id')
     .primaryKey()
@@ -33,8 +28,6 @@ export const mediaFiles = pgTable('media_files', {
   mimeType: text('mime_type').notNull(),
   fileSize: bigint('file_size', { mode: 'number' }).notNull(),
   visibility: fileVisibilityEnum('visibility').notNull(),
-  refType: fileRefTypeEnum('ref_type').notNull(),
-  refId: uuid('ref_id'),
   ownerId: uuid('owner_id').references(() => users.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
 } satisfies MediaFileSchema);

@@ -8,6 +8,7 @@ import * as schema from './schema';
 import { DB_CONNECTION, PG_POOL } from '@/common/constants';
 
 export type DrizzleDB = NodePgDatabase<typeof schema>;
+export type DrizzleTx = Parameters<Parameters<DrizzleDB['transaction']>[0]>[0];
 
 @Global()
 @Module({
