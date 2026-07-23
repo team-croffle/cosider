@@ -32,6 +32,19 @@ export class RedisService {
     await this.set(key, JSON.stringify(value), ttlSeconds);
   }
 
+  /**
+   * 기존 TTL을 유지한 채 JSON 값을 갱신한다.
+   * TTL이 없거나 만료된 키면 ttlSecondsFallback을 사용한다.
+   */
+  async setJsonPreservingTtl<T>(key: string, value: T, ttlSecondsFallback?: number): Promise<void> {
+    const ttl = await this.client.ttl(key);
+    if (ttl > 0) {
+      await this.set(key, JSON.stringify(value), ttl);
+      return;
+    }
+    await this.set(key, JSON.stringify(value), ttlSecondsFallback);
+  }
+
   async exists(key: string): Promise<boolean> {
     return (await this.client.exists(key)) === 1;
   }
