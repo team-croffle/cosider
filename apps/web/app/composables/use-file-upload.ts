@@ -1,9 +1,4 @@
-import type {
-  EFileRefType,
-  EFileVisibility,
-  IFileUploadRequest,
-  IFileUploadUrlResponse,
-} from '@cosider/shared';
+import type { EFileVisibility, IFileUploadRequest, IFileUploadUrlResponse } from '@cosider/shared';
 
 import type { UploadOptions } from '~/types/storage.type';
 
@@ -20,16 +15,12 @@ export function useFileUpload() {
     file: File,
     endpoint: string,
     visibility: EFileVisibility,
-    refType: EFileRefType,
-    refId?: string,
   ): Promise<IFileUploadUrlResponse> {
     const body: IFileUploadRequest = {
       fileName: file.name,
       mimeType: file.type,
       fileSize: file.size,
       visibility,
-      refType,
-      refId,
     };
 
     const resp = await $api<IFileUploadUrlResponse>(endpoint, {
@@ -86,7 +77,7 @@ export function useFileUpload() {
     }
   }
 
-  async function upload({ file, endpoint, visibility, refType, refId, onProgress }: UploadOptions) {
+  async function upload({ file, endpoint, visibility, onProgress }: UploadOptions) {
     if (uploading.value) {
       throw new Error('Upload is already in progress.');
     }
@@ -96,13 +87,7 @@ export function useFileUpload() {
     error.value = null;
 
     try {
-      const { uploadUrl, uploadToken } = await getUploadUrl(
-        file,
-        endpoint,
-        visibility,
-        refType,
-        refId,
-      );
+      const { uploadUrl, uploadToken } = await getUploadUrl(file, endpoint, visibility);
       await putToStorage(file, uploadUrl, onProgress);
       return { uploadToken };
     } catch (err: unknown) {
