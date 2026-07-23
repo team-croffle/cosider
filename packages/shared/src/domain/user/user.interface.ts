@@ -17,7 +17,7 @@ export interface IUserCredential {
   userId: IUser['id'] | null;
   provider: EUserCredentialProvider;
   providerId: string;
-  credential: string;
+  credential: string | null;
   lastLogin: Date | null;
 }
 

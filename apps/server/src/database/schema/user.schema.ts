@@ -65,7 +65,7 @@ export const userCredentials = pgTable('user_credentials', {
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
   provider: userCredentialProviderEnum('provider').notNull(),
   providerId: varchar('provider_id', { length: 255 }).unique().notNull(),
-  credential: text('credential').notNull(),
+  credential: text('credential'),
   lastLogin: timestamp('last_login', { withTimezone: true }).defaultNow(),
 } satisfies UserCredentialSchema);
 
