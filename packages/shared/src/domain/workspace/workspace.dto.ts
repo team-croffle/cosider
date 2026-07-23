@@ -8,17 +8,24 @@ import { IWorkspace, IWorkspaceMember } from './workspace.interface';
 export type ICreateWorkspaceRequest = Pick<IWorkspace, 'name' | 'slug' | 'description'> &
   IFileUploadCompletionRequest;
 export type IUpdateWorkspaceRequest = Pick<IWorkspace, 'name' | 'description' | 'slug'>;
-export type IWorkspaceDeleteAcceptedResponse = Pick<
-  IWorkspace,
-  'slug' | 'status' | 'deletedAt' | 'scheduledDeleteAt'
->;
 
-export interface IWorkspaceResponse extends Omit<
-  IWorkspace,
-  'id' | 'ownerId' | 'scheduledDeleteAt' | 'deletedAt'
-> {
+export interface IWorkspaceDeleteAcceptedResponse {
+  slug: IWorkspace['slug'];
+  status: IWorkspace['status'];
+  deletedAt: string | null;
+  scheduledDeleteAt: string | null;
+}
+
+export interface IWorkspaceResponse {
+  slug: string;
+  name: string;
+  status: IWorkspace['status'];
+  description: string | null;
+  logoImageId: string | null;
+  createdAt: string;
   role: EWorkspaceUserRole;
 }
+
 export interface IWorkspaceDetailResponse extends IWorkspaceResponse {
   owner: Pick<IUserProfileResponse, 'handle' | 'nickname' | 'profileImageId'>;
   // TODO: 추후 dto 추가에 따라 구체적인 타입으로 변경
@@ -30,7 +37,9 @@ export type IWorkspaceMemberResponse = Pick<
   IUserProfileResponse,
   'handle' | 'nickname' | 'profileImageId'
 > &
-  Pick<IWorkspaceMember, 'role' | 'joinedAt'>;
+  Pick<IWorkspaceMember, 'role'> & {
+    joinedAt: string;
+  };
 
 export type IUpdateMemberRoleRequest = Pick<IWorkspaceMember, 'role'>;
 

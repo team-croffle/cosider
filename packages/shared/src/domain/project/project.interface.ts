@@ -15,6 +15,7 @@ import {
   ETestStatus,
 } from './project.enum';
 
+/** DB 테이블 계약. timestamptz 컬럼은 Date. */
 export interface IProject {
   id: string;
   workspaceId: IWorkspace['id'];
@@ -25,21 +26,21 @@ export interface IProject {
   key: string;
   // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
   logoImageId: string | null;
-  techStacks: string[];
+  techStacks: string[] | null;
   sdlcType: ESdlcType;
   gitRepoUrl: string | null;
   gitProvider: string | null;
   gitDefaultBranch: string | null;
-  createdAt: string;
-  deletedAt: string;
+  createdAt: Date;
+  deletedAt: Date | null;
 }
 
 export interface IProjectMember {
   id: string;
-  projectId: IProject['id'];
-  userId: IUser['id'];
+  projectId: IProject['id'] | null;
+  userId: IUser['id'] | null;
   role: EProjectMemberRole;
-  joinedAt: string;
+  joinedAt: Date | null;
 }
 
 export interface IProjectTaskCounter {
@@ -49,63 +50,63 @@ export interface IProjectTaskCounter {
 
 export interface IProjectStage {
   id: string;
-  projectId: IProject['id'];
+  projectId: IProject['id'] | null;
   name: string;
   orderIndex: number;
   isRequired: boolean;
   status: EStageStatus;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date | null;
 }
 
 export interface IProjectStageHistory {
   id: string;
-  stageId: IProjectStage['id'];
+  stageId: IProjectStage['id'] | null;
   action: EStageEditAction;
   status: EStageStatus;
   actorId: IUser['id'] | null;
-  actorNickname: IUserProfile['nickname'];
+  actorNickname: IUserProfile['nickname'] | null;
   isBypassed: boolean;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface ISprint {
   id: string;
-  projectId: IProject['id'];
+  projectId: IProject['id'] | null;
   name: string;
   description: string | null;
   assigneeId: IUser['id'] | null;
   assigneeNickname: IUserProfile['nickname'] | null;
   status: ESprintStatus;
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-  updatedAt: string;
+  startDate: Date;
+  endDate: Date;
+  createdAt: Date;
+  updatedAt: Date | null;
 }
 
 export interface ITestCase {
   id: string;
   requirementId: IRequirement['id'] | null;
-  projectId: IProject['id'];
+  projectId: IProject['id'] | null;
   title: string;
   description: string | null;
   priority: EPriority;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface ITestRun {
   id: string;
-  testCaseId: ITestCase['id'];
+  testCaseId: ITestCase['id'] | null;
   status: ETestStatus;
   testerId: IUser['id'] | null;
-  testerNickname: IUserProfile['nickname'];
-  resultDetail: string;
-  testedAt: string;
+  testerNickname: IUserProfile['nickname'] | null;
+  resultDetail: string | null;
+  testedAt: Date;
 }
 
 export interface IProjectDeployment {
   id: string;
-  projectId: IProject['id'];
+  projectId: IProject['id'] | null;
   version: string;
   platform: EDeploymentPlatform;
   status: EDeployStatus;
@@ -113,16 +114,16 @@ export interface IProjectDeployment {
   deployerNickname: IUserProfile['nickname'] | null;
   deploymentUrl: string | null;
   releaseNoteId: string | null;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface IProjectChecklist {
   id: string;
-  projectId: IProject['id'];
-  stageId: IProjectStage['id'];
+  projectId: IProject['id'] | null;
+  stageId: IProjectStage['id'] | null;
   taskName: string;
   isRequired: boolean;
   isCompleted: boolean;
   linkedDocumentId: IDocument['id'] | null;
-  completedAt: string | null;
+  completedAt: Date | null;
 }

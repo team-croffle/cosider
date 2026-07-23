@@ -17,3 +17,8 @@ export type AssertSchema<TInfer, TEntity> =
         infer: TInfer;
         entity: TEntity;
       };
+
+/** `assertSchemaMatch<AssertSchema<typeof table.$inferSelect, IEntity>>()` */
+export function assertSchemaMatch<T extends true>(force?: T): void {
+  void force;
+}

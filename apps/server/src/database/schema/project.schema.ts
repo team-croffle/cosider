@@ -32,6 +32,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { mediaFiles, priorityEnum } from './common.schema';
 import { users } from './user.schema';
 import { workspaces } from './workspace.schema';
@@ -73,6 +75,8 @@ export const projects = pgTable(
   (t) => [uniqueIndex('workspace_project_key_uidx').on(t.workspaceId, t.key)],
 );
 
+assertSchemaMatch<AssertSchema<typeof projects.$inferSelect, IProject>>();
+
 // ############### PROJECT MEMBERS ###############
 type ProjectMemberSchema = Record<keyof IProjectMember, unknown>;
 
@@ -95,6 +99,8 @@ export const projectMembers = pgTable(
   (t) => [uniqueIndex('user_project_uidx').on(t.userId, t.projectId)],
 );
 
+assertSchemaMatch<AssertSchema<typeof projectMembers.$inferSelect, IProjectMember>>();
+
 // ############### PROJECT TASK COUNTERS ###############
 type ProjectTaskCounterSchema = Record<keyof IProjectTaskCounter, unknown>;
 
@@ -105,6 +111,8 @@ export const projectTaskCounters = pgTable('project_task_counters', {
     .primaryKey(),
   lastTaskNumber: integer('last_task_number').notNull().default(0),
 } satisfies ProjectTaskCounterSchema);
+
+assertSchemaMatch<AssertSchema<typeof projectTaskCounters.$inferSelect, IProjectTaskCounter>>();
 
 // ############### PROJECT Stages ###############
 type ProjectStageSchema = Record<keyof IProjectStage, unknown>;
@@ -127,6 +135,8 @@ export const projectStages = pgTable('project_stages', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 } satisfies ProjectStageSchema);
 
+assertSchemaMatch<AssertSchema<typeof projectStages.$inferSelect, IProjectStage>>();
+
 // ############### PROJECT Stages Histories ###############
 type ProjectStageHistorySchema = Record<keyof IProjectStageHistory, unknown>;
 
@@ -147,6 +157,8 @@ export const projectStageHistories = pgTable('stage_histories', {
   isBypassed: boolean('is_bypassed').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 } satisfies ProjectStageHistorySchema);
+
+assertSchemaMatch<AssertSchema<typeof projectStageHistories.$inferSelect, IProjectStageHistory>>();
 
 // ############### PROJECT SPRINTS ###############
 type SprintSchema = Record<keyof ISprint, unknown>;
@@ -172,6 +184,8 @@ export const sprints = pgTable('sprints', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 } satisfies SprintSchema);
 
+assertSchemaMatch<AssertSchema<typeof sprints.$inferSelect, ISprint>>();
+
 // ############### PROJECT TEST CASES ###############
 // TODO: Requirement schema가 생성되고 나면 'requirementId'를 FK로 추가하기
 type TestCaseSchema = Record<keyof Omit<ITestCase, 'requirementId'>, unknown>;
@@ -187,6 +201,8 @@ export const testCases = pgTable('test_cases', {
   priority: priorityEnum('priority').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 } satisfies TestCaseSchema);
+
+assertSchemaMatch<AssertSchema<typeof testCases.$inferSelect, Omit<ITestCase, 'requirementId'>>>();
 
 // ############### PROJECT TEST RUNS ###############
 type TestRunSchema = Record<keyof ITestRun, unknown>;
@@ -207,6 +223,8 @@ export const testRuns = pgTable('test_runs', {
   resultDetail: text('result_detail'),
   testedAt: timestamp('tested_at', { withTimezone: true }).notNull().defaultNow(),
 } satisfies TestRunSchema);
+
+assertSchemaMatch<AssertSchema<typeof testRuns.$inferSelect, ITestRun>>();
 
 // ############### PROJECT DEPLOYMENTS ###############
 type DeploymentSchema = Record<keyof IProjectDeployment, unknown>;
@@ -236,6 +254,8 @@ export const projectDeployments = pgTable('project_deployments', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 } satisfies DeploymentSchema);
 
+assertSchemaMatch<AssertSchema<typeof projectDeployments.$inferSelect, IProjectDeployment>>();
+
 // ############### PROJECT CHECKLISTS ###############
 type ProjectChecklistSchema = Record<keyof IProjectChecklist, unknown>;
 
@@ -251,3 +271,5 @@ export const projectChecklists = pgTable('project_checklists', {
   linkedDocumentId: uuid('linked_document_id'),
   completedAt: timestamp('completed_at', { withTimezone: true }),
 } satisfies ProjectChecklistSchema);
+
+assertSchemaMatch<AssertSchema<typeof projectChecklists.$inferSelect, IProjectChecklist>>();

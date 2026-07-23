@@ -2,6 +2,8 @@ import { ISdlcTemplate } from '@cosider/shared';
 import { boolean, jsonb, pgTable, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 // ############### SDLC TEMPLATES ###############
 type SdlcTemplateSchema = Record<keyof ISdlcTemplate, unknown>;
 
@@ -10,8 +12,10 @@ export const sdlcTemplates = pgTable('sdlc_templates', {
     .$defaultFn(() => uuidv7())
     .primaryKey(),
   sdlcType: varchar('sdlc_type', { length: 20 }).notNull().unique(),
-  phases: jsonb('phases').notNull(),
+  phases: jsonb('phases').$type<Record<string, string>>().notNull(),
 } satisfies SdlcTemplateSchema);
+
+assertSchemaMatch<AssertSchema<typeof sdlcTemplates.$inferSelect, ISdlcTemplate>>();
 
 // ############### CHECKLIST TEMPLATES ###############
 export const checklistTemplates = pgTable('checklist_templates', {

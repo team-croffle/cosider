@@ -11,7 +11,7 @@ export interface IRequirement {
   type: ERequirementBlockType;
   requirementCode: string;
   contentText: string | null;
-  contentHash: string | null;
+  contentHash: string;
   status: ERequirementStatus;
 }
 

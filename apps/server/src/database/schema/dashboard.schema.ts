@@ -2,6 +2,8 @@ import { IUserDashboardLayout } from '@cosider/shared';
 import { jsonb, pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { users } from './user.schema';
 import { workspaces } from './workspace.schema';
 
@@ -16,6 +18,8 @@ export const userDashboardLayouts = pgTable('user_dashboard_layouts', {
     .references(() => users.id, { onDelete: 'cascade' })
     .notNull(),
   workspaceId: uuid('workspace_id').references(() => workspaces.id, { onDelete: 'cascade' }),
-  layoutData: jsonb('layout_data').notNull(),
+  layoutData: jsonb('layout_data').$type<Record<string, unknown>>().notNull(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies UserDashboardLayoutSchema);
+
+assertSchemaMatch<AssertSchema<typeof userDashboardLayouts.$inferSelect, IUserDashboardLayout>>();

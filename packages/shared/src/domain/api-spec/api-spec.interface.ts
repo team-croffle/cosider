@@ -43,13 +43,13 @@ export interface IApiSpecification {
   method: string;
   endpointPath: string;
   summary: string | null;
-  requestSchema: IApiRequestSchema;
+  requestSchema: IApiRequestSchema | null;
   responseSchema: Record<string, IApiResponseSchema> | null;
 }
 
 export interface IApiRequirementLink {
   apiId: IApiSpecification['id'];
   requirementId: IRequirement['id'];
-  syncStatus: EApiReqSyncStatus;
-  lastSyncedAt: string;
+  syncStatus: EApiReqSyncStatus | null;
+  lastSyncedAt: Date | null;
 }

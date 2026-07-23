@@ -8,6 +8,8 @@ import {
 import { pgEnum, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { mediaFiles } from './common.schema';
 import { users } from './user.schema';
 
@@ -39,6 +41,8 @@ export const workspaces = pgTable('workspaces', {
   deletedAt: timestamp('deleted_at', { withTimezone: true }), // Soft Delete
 } satisfies WorkspaceSchemaKeys);
 
+assertSchemaMatch<AssertSchema<typeof workspaces.$inferSelect, IWorkspace>>();
+
 // ############### WORKSPACE MEMBERS ###############
 type WorkspaceMemberSchema = Record<keyof IWorkspaceMember, unknown>;
 
@@ -68,6 +72,8 @@ export const workspaceMembers = pgTable(
   (table) => [uniqueIndex('workspace_member_uidx').on(table.workspaceId, table.userId)],
 );
 
+assertSchemaMatch<AssertSchema<typeof workspaceMembers.$inferSelect, IWorkspaceMember>>();
+
 // ############### WORKSPACE INVITATIONS ###############
 type WorkspaceInvitationSchema = Record<keyof IWorkspaceInvitation, unknown>;
 
@@ -84,3 +90,5 @@ export const workspaceInvitations = pgTable('workspace_invitations', {
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   acceptedAt: timestamp('accepted_at', { withTimezone: true }),
 } satisfies WorkspaceInvitationSchema);
+
+assertSchemaMatch<AssertSchema<typeof workspaceInvitations.$inferSelect, IWorkspaceInvitation>>();

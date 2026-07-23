@@ -2,6 +2,8 @@ import { ERequirementBlockType, ERequirementStatus, IRequirement } from '@coside
 import { pgEnum, pgTable, text, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { documents } from './document.schema';
 import { projects } from './project.schema';
 
@@ -38,3 +40,5 @@ export const requirements = pgTable(
   } satisfies RequirementSchema,
   (t) => [uniqueIndex('project_requirement_code_uidx').on(t.projectId, t.requirementCode)],
 );
+
+assertSchemaMatch<AssertSchema<typeof requirements.$inferSelect, IRequirement>>();

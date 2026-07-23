@@ -18,6 +18,8 @@ import {
 } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { mediaFiles, priorityEnum } from './common.schema';
 import { documents } from './document.schema';
 import { projects, sprints } from './project.schema';
@@ -62,8 +64,9 @@ export const tasks = pgTable(
   (t) => [uniqueIndex('project_task_number_uidx').on(t.projectId, t.taskNumber)],
 );
 
+assertSchemaMatch<AssertSchema<typeof tasks.$inferSelect, ITask>>();
+
 // ############### REQUIREMENT TASK LINKS ###############
-// ER: 18. REQUIREMENT_TASK_LINKS
 type RequirementTaskLinkSchema = Record<keyof IRequirementTaskLink, unknown>;
 
 export const requirementTaskLinks = pgTable(
@@ -78,6 +81,8 @@ export const requirementTaskLinks = pgTable(
   } satisfies RequirementTaskLinkSchema,
   (t) => [primaryKey({ columns: [t.requirementId, t.taskId] })],
 );
+
+assertSchemaMatch<AssertSchema<typeof requirementTaskLinks.$inferSelect, IRequirementTaskLink>>();
 
 // ############### TASK DEPENDENCIES ###############
 type TaskDependencySchema = Record<keyof ITaskDependency, unknown>;
@@ -98,6 +103,8 @@ export const taskDependencies = pgTable(
   (t) => [uniqueIndex('task_dependency_uidx').on(t.taskId, t.predecessorTaskId)],
 );
 
+assertSchemaMatch<AssertSchema<typeof taskDependencies.$inferSelect, ITaskDependency>>();
+
 // ############### TASK ATTACHMENTS ###############
 type TaskAttachmentSchema = Record<keyof ITaskAttachment, unknown>;
 
@@ -112,3 +119,5 @@ export const taskAttachments = pgTable('task_attachments', {
   fileId: uuid('file_id').references(() => mediaFiles.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies TaskAttachmentSchema);
+
+assertSchemaMatch<AssertSchema<typeof taskAttachments.$inferSelect, ITaskAttachment>>();

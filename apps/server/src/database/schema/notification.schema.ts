@@ -2,6 +2,8 @@ import { ENotificationType, INotification } from '@cosider/shared';
 import { boolean, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { users } from './user.schema';
 
 // ############### NOTIFICATIONS ###############
@@ -25,3 +27,5 @@ export const notifications = pgTable('notifications', {
   isRead: boolean('is_read').default(false).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies NotificationSchema);
+
+assertSchemaMatch<AssertSchema<typeof notifications.$inferSelect, INotification>>();

@@ -5,6 +5,7 @@ import { IUser, IUserProfile } from '../user';
 
 import { ETaskStatus } from './task.enum';
 
+/** DB 테이블 계약. timestamptz 컬럼은 Date. */
 export interface ITask {
   id: string;
   projectId: IProject['id'];
@@ -19,10 +20,10 @@ export interface ITask {
   description: string | null;
   status: ETaskStatus;
   priority: EPriority;
-  startDate: string | null;
-  dueDate: string | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  startDate: Date | null;
+  dueDate: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 export interface ITaskDependency {
@@ -35,6 +36,6 @@ export interface ITaskAttachment {
   id: string;
   taskId: ITask['id'];
   // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
-  fileId: string;
-  createdAt: string;
+  fileId: string | null;
+  createdAt: Date;
 }

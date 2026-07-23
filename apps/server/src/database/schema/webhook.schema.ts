@@ -2,6 +2,8 @@ import { IGitCommit } from '@cosider/shared';
 import { pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { tasks } from './task.schema';
 
 // ############### GIT COMMITS ###############
@@ -20,3 +22,5 @@ export const gitCommits = pgTable('git_commits', {
   url: text('url').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies GitCommitSchema);
+
+assertSchemaMatch<AssertSchema<typeof gitCommits.$inferSelect, IGitCommit>>();

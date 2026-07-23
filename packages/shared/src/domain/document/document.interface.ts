@@ -3,6 +3,7 @@ import { IUser, IUserProfile } from '../user';
 
 import { EContentType, EDocumentType, EMappedEntityType, ESourceType } from './document.enum';
 
+/** DB 테이블 계약. timestamptz 컬럼은 Date. */
 export interface IDocument {
   id: string;
   projectId: IProject['id'];
@@ -14,8 +15,8 @@ export interface IDocument {
   sourceType: ESourceType;
   content: Buffer | null;
   contentVector: Buffer | null;
-  createdAt: string | null;
-  updatedAt: string | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 }
 
 export interface IDocumentHistory {
@@ -23,13 +24,13 @@ export interface IDocumentHistory {
   documentId: IDocument['id'];
   content: Buffer;
   versionTag: string | null;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface IWhiteboardObject {
   id: string;
   whiteboardDocId: IDocument['id'];
   objectId: string;
-  mappedEntityType: EMappedEntityType;
-  mappedEntityId: string;
+  mappedEntityType: EMappedEntityType | null;
+  mappedEntityId: string | null;
 }

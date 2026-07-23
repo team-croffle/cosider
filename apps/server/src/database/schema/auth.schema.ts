@@ -2,7 +2,7 @@ import { IRefreshToken } from '@cosider/shared';
 import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
-import type { AssertSchema } from '../type-utils';
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
 
 import { users } from './user.schema';
 
@@ -19,6 +19,4 @@ export const refreshTokens = pgTable('refresh_tokens', {
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
 } satisfies RefreshTokenSchema);
 
-type _AssertRefreshTokens = AssertSchema<typeof refreshTokens.$inferSelect, IRefreshToken>;
-const _assertRefreshTokens: _AssertRefreshTokens = true;
-void _assertRefreshTokens;
+assertSchemaMatch<AssertSchema<typeof refreshTokens.$inferSelect, IRefreshToken>>();

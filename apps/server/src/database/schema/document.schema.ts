@@ -11,6 +11,8 @@ import { sql } from 'drizzle-orm';
 import { customType, pgEnum, pgTable, timestamp, uuid, varchar } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
+import { assertSchemaMatch, type AssertSchema } from '../type-utils';
+
 import { projects } from './project.schema';
 import { users } from './user.schema';
 
@@ -58,6 +60,8 @@ export const documents = pgTable('documents', {
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow(),
 } satisfies DocumentSchema);
 
+assertSchemaMatch<AssertSchema<typeof documents.$inferSelect, IDocument>>();
+
 // ############### DOCUMENT HISTORIES ###############
 type DocumentHistorySchema = Record<keyof IDocumentHistory, unknown>;
 
@@ -72,6 +76,8 @@ export const documentHistories = pgTable('document_histories', {
   versionTag: varchar('version_tag', { length: 50 }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 } satisfies DocumentHistorySchema);
+
+assertSchemaMatch<AssertSchema<typeof documentHistories.$inferSelect, IDocumentHistory>>();
 
 // ############### WHITEBOARD OBJECTS ###############
 type WhiteboardObjectSchema = Record<keyof IWhiteboardObject, unknown>;
@@ -92,3 +98,5 @@ export const whiteboardObjects = pgTable('whiteboard_objects', {
   mappedEntityType: mappedEntityTypeEnum('mapped_entity_type'),
   mappedEntityId: uuid('mapped_entity_id'),
 } satisfies WhiteboardObjectSchema);
+
+assertSchemaMatch<AssertSchema<typeof whiteboardObjects.$inferSelect, IWhiteboardObject>>();
