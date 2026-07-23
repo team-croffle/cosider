@@ -2,10 +2,8 @@ import { IMediaFile } from './common.interface';
 
 export type IFileUploadRequest = Pick<
   IMediaFile,
-  'fileName' | 'mimeType' | 'fileSize' | 'visibility' | 'refType'
-> & {
-  refId?: string;
-};
+  'fileName' | 'mimeType' | 'fileSize' | 'visibility'
+>;
 
 export interface IFileUploadUrlResponse {
   uploadUrl: string;
