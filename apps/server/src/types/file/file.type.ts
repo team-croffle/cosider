@@ -38,3 +38,11 @@ export type UploadInfo = {
   uploadToken: string;
   expiresAt: Date;
 };
+
+export type FileContext = {
+  id: string;
+  workspaceId?: string;
+  projectId?: string;
+  visibility?: EFileVisibility;
+  ownerId?: string;
+};

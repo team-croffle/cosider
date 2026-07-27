@@ -1,3 +1,4 @@
+import { EFileVisibility } from '@cosider/shared';
 import {
   BadRequestException,
   ConflictException,
@@ -8,7 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { DatabaseError } from 'pg';
 import { uuidv7 } from 'uuidv7';
 
@@ -18,8 +19,8 @@ import { DB_CONNECTION } from '@/common/constants';
 import { MinioService } from '@/common/minio/minio.service';
 import { RedisService } from '@/common/redis/redis.service';
 import type { DrizzleDB, DrizzleTx } from '@/database/drizzle.module';
-import { mediaFiles } from '@/database/schema';
-import type { FileUploadPolicy, PendingUpload, PreparedUpload } from '@/types/file';
+import { mediaFiles, projectMembers, workspaceMembers } from '@/database/schema';
+import type { FileContext, FileUploadPolicy, PendingUpload, PreparedUpload } from '@/types/file';
 
 @Injectable()
 export class FilesService {
@@ -150,7 +151,11 @@ export class FilesService {
    * 도메인 트랜잭션 안에서 media_files 레코드를 생성한다.
    * fileId는 issue 시점에 미리 생성된 값을 사용한다.
    */
-  async insertPreparedFile(tx: DrizzleTx, prepared: PreparedUpload): Promise<string> {
+  async insertPreparedFile(
+    tx: DrizzleTx,
+    prepared: PreparedUpload,
+    context: FileContext,
+  ): Promise<string> {
     const [existing] = await tx
       .select({ id: mediaFiles.id })
       .from(mediaFiles)
@@ -169,6 +174,10 @@ export class FilesService {
         fileName: prepared.fileName,
         mimeType: prepared.mimeType,
         fileSize: prepared.fileSize,
+        // 파일 컨텍스트 첨부
+        contextId: context.id,
+        workspaceId: context.workspaceId,
+        projectId: context.projectId,
         visibility: prepared.visibility,
         ownerId: prepared.ownerId,
       });
@@ -207,10 +216,67 @@ export class FilesService {
 
     const key = this.pendingKey(prepared.uploadToken);
     const pending = await this.redis.getJson<PendingUpload>(key);
-    if (!pending) return;
+    if (!pending) {
+      return;
+    }
 
     pending.status = 'PENDING';
     await this.redis.setJsonPreservingTtl(key, pending, this.uploadTtl);
+  }
+
+  async assertReadable(file: FileContext, userId: string): Promise<void> {
+    switch (file.visibility) {
+      case EFileVisibility.PUBLIC:
+        return;
+
+      case EFileVisibility.PRIVATE:
+        if (file.ownerId === userId) {
+          return;
+        }
+        break;
+
+      case EFileVisibility.WORKSPACE: {
+        // 컨텍스트 누락 방어
+        if (!file.workspaceId) {
+          break;
+        }
+
+        const [member] = await this.db
+          .select({ userId: workspaceMembers.userId })
+          .from(workspaceMembers)
+          .where(
+            and(
+              eq(workspaceMembers.workspaceId, file.workspaceId),
+              eq(workspaceMembers.userId, userId),
+            ),
+          )
+          .limit(1);
+        if (member) {
+          return;
+        }
+        break;
+      }
+
+      case EFileVisibility.PROJECT: {
+        // 컨텍스트 누락 방어
+        if (!file.projectId) {
+          break;
+        }
+        const [member] = await this.db
+          .select({ userId: projectMembers.userId })
+          .from(projectMembers)
+          .where(
+            and(eq(projectMembers.projectId, file.projectId), eq(projectMembers.userId, userId)),
+          )
+          .limit(1);
+        if (member) {
+          return;
+        }
+        break;
+      }
+    }
+
+    throw new ForbiddenException('FILE_NOT_READABLE');
   }
 
   /**
@@ -231,21 +297,7 @@ export class FilesService {
   /**
    * object_id → presigned GET URL 변환
    */
-  async toPresignedUrl(objectId: string | null): Promise<string | null> {
-    if (!objectId) return null;
-    const [file] = await this.db
-      .select({ objectKey: mediaFiles.objectKey })
-      .from(mediaFiles)
-      .where(eq(mediaFiles.id, objectId))
-      .limit(1);
-
-    if (!file) return null;
-
-    const { downloadUrl } = await this.minio.getPresignedDownloadUrl(this.bucket, file.objectKey);
-    return downloadUrl;
-  }
-
-  async getMediaInfo(objectId: string | null): Promise<FileMetadata | null> {
+  async toPresignedUrl(objectId: string | null, userId: string): Promise<string | null> {
     if (!objectId) return null;
     const [file] = await this.db
       .select()
@@ -254,6 +306,42 @@ export class FilesService {
       .limit(1);
 
     if (!file) return null;
+
+    const context: FileContext = {
+      id: file.contextId,
+      workspaceId: file.workspaceId ?? undefined,
+      projectId: file.projectId ?? undefined,
+      visibility: file.visibility,
+      ownerId: file.ownerId ?? undefined,
+    };
+    await this.assertReadable(context, userId);
+
+    const { downloadUrl } = await this.minio.getPresignedDownloadUrl(this.bucket, file.objectKey);
+    return downloadUrl;
+  }
+
+  async getMediaInfo(objectId: string | null, userId: string): Promise<FileMetadata | null> {
+    if (!objectId) {
+      return null;
+    }
+    const [file] = await this.db
+      .select()
+      .from(mediaFiles)
+      .where(eq(mediaFiles.id, objectId))
+      .limit(1);
+
+    if (!file) {
+      return null;
+    }
+
+    const context: FileContext = {
+      id: file.contextId,
+      workspaceId: file.workspaceId ?? undefined,
+      projectId: file.projectId ?? undefined,
+      visibility: file.visibility,
+      ownerId: file.ownerId ?? undefined,
+    };
+    await this.assertReadable(context, userId);
 
     return {
       id: file.id,
@@ -271,7 +359,9 @@ export class FilesService {
   }
 
   private assertPolicy(pending: PendingUpload, policy?: FileUploadPolicy): void {
-    if (!policy) return;
+    if (!policy) {
+      return;
+    }
 
     if (policy.maxFileSize !== undefined && pending.fileSize > policy.maxFileSize) {
       throw new BadRequestException('FILE_SIZE_EXCEEDS_LIMIT');
