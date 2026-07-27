@@ -32,6 +32,12 @@
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-');
+
+      if (!form.slug) {
+        slugStatus.value = 'idle';
+        return;
+      }
+      debouncedCheckSlug(form.slug);
     },
   );
 
@@ -105,8 +111,11 @@
     if (!state.name.trim())
       errors.push({ name: 'name', message: '워크스페이스 이름을 입력해주세요.' });
     if (!state.slug.trim()) errors.push({ name: 'slug', message: 'Slug를 입력해주세요.' });
-    if (slugStatus.value === 'unavailable')
+    if (slugStatus.value === 'unavailable') {
       errors.push({ name: 'slug', message: 'slug가 이미 사용 중입니다.' });
+    } else if (slugStatus.value !== 'available') {
+      errors.push({ name: 'slug', message: 'slug 사용 가능 여부를 확인해 주세요.' });
+    }
     return errors;
   }
 
