@@ -1,4 +1,4 @@
-import { EPriority, IFileMetadata, ITaskParticipantResponse } from '@cosider/shared';
+import { EPriority, ETaskStatus, IFileMetadata, ITaskParticipantResponse } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { and, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 
@@ -197,7 +197,7 @@ export class TasksService {
           reporterNickname: reporter.nickname,
           linkedDocumentId: createNewTaskDto.linkedDocumentId ?? null,
           sprintId: createNewTaskDto.sprintId ?? null,
-          status: createNewTaskDto.status,
+          status: createNewTaskDto.status ?? ETaskStatus.TODO,
           priority: createNewTaskDto.priority ?? EPriority.MID,
           startDate: createNewTaskDto.startDate ? new Date(createNewTaskDto.startDate) : null,
           dueDate: createNewTaskDto.dueDate ? new Date(createNewTaskDto.dueDate) : null,
@@ -221,7 +221,7 @@ export class TasksService {
         createNewTaskDto.linkedRequirementIds,
         nextAssignee,
         reporter,
-        [],
+        null,
       );
     });
     await this.invalidateTaskListCache(projectId);
@@ -261,13 +261,12 @@ export class TasksService {
       ),
     );
 
-    const [links, participantsMap, attachmentsMap] = await Promise.all([
+    const [links, participantsMap] = await Promise.all([
       this.db
         .select()
         .from(requirementTaskLinks)
         .where(inArray(requirementTaskLinks.taskId, taskIds)),
       this.findParticipantsByUserIdsOrThrow(participantIds),
-      this.findAttachmentsByTaskIds(taskIds),
     ]);
 
     const linksMap = links.reduce(
@@ -290,19 +289,12 @@ export class TasksService {
 
       const taskAssignee = participantsMap.get(taskRow.assigneeId);
       const taskReporter = participantsMap.get(taskRow.reporterId);
-      const attachments = attachmentsMap.get(taskRow.id) ?? [];
 
       if (!taskAssignee || !taskReporter) {
         throw new NotFoundException('Task participant not found');
       }
 
-      return mapTaskRowToDto(
-        taskRow,
-        linksMap[row.id] || [],
-        taskAssignee,
-        taskReporter,
-        attachments,
-      );
+      return mapTaskRowToDto(taskRow, linksMap[row.id] || [], taskAssignee, taskReporter, null);
     });
 
     await this.redisService.setJson(cacheKey, result, TasksService.TASK_CACHE_TTL_SECONDS);
@@ -361,10 +353,9 @@ export class TasksService {
     updateTaskDto: UpdateTaskRequestDto,
   ): Promise<TaskResponseDto> {
     const projectId = await this.findProjectIdOrThrow(userId, workspaceId, projectKey);
-    const nextAssignee =
-      updateTaskDto.assigneeHandle !== undefined
-        ? await this.findParticipantByHandleOrThrow(updateTaskDto.assigneeHandle)
-        : null;
+    const nextAssignee = updateTaskDto.assigneeHandle
+      ? await this.findParticipantByHandleOrThrow(updateTaskDto.assigneeHandle)
+      : null;
 
     const result = await this.db.transaction(async (tx) => {
       const [existing] = await tx
@@ -395,7 +386,10 @@ export class TasksService {
       if (updateTaskDto.description !== undefined) {
         patch.description = updateTaskDto.description ?? null;
       }
-      if (nextAssignee) {
+      if (updateTaskDto.assigneeHandle === null) {
+        patch.assigneeId = null;
+        patch.assigneeNickname = null;
+      } else if (nextAssignee) {
         patch.assigneeId = nextAssignee.id;
         patch.assigneeNickname = nextAssignee.nickname;
       }
@@ -403,8 +397,10 @@ export class TasksService {
       if (updateTaskDto.linkedDocumentId !== undefined) {
         patch.linkedDocumentId = updateTaskDto.linkedDocumentId ?? null;
       }
-      if (updateTaskDto.status !== undefined) patch.status = updateTaskDto.status;
-      if (updateTaskDto.priority !== undefined) patch.priority = updateTaskDto.priority;
+      if (updateTaskDto.status !== undefined)
+        patch.status = updateTaskDto.status ?? ETaskStatus.TODO;
+      if (updateTaskDto.priority !== undefined)
+        patch.priority = updateTaskDto.priority ?? EPriority.MID;
       if (updateTaskDto.startDate !== undefined) {
         patch.startDate = updateTaskDto.startDate ? new Date(updateTaskDto.startDate) : null;
       }
@@ -434,7 +430,7 @@ export class TasksService {
       if (updateTaskDto.linkedRequirementIds !== undefined) {
         await tx.delete(requirementTaskLinks).where(eq(requirementTaskLinks.taskId, updatedRow.id));
 
-        if (updateTaskDto.linkedRequirementIds.length > 0) {
+        if (updateTaskDto.linkedRequirementIds && updateTaskDto.linkedRequirementIds.length > 0) {
           await tx.insert(requirementTaskLinks).values(
             updateTaskDto.linkedRequirementIds.map((requirementId) => ({
               requirementId,

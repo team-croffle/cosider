@@ -16,38 +16,38 @@ export class CreateNewTaskRequestDto implements ICreateNewTaskRequest {
 
   @IsString()
   @IsOptional()
-  description?: string;
+  description?: string | null;
 
   @IsString()
   @IsOptional()
-  assigneeHandle?: string;
+  assigneeHandle?: string | null;
 
   @IsUUID('all')
   @IsOptional()
-  sprintId?: string;
+  sprintId?: string | null;
 
   @IsUUID('all')
   @IsOptional()
-  linkedDocumentId?: string;
+  linkedDocumentId?: string | null;
 
   @IsArray()
   @IsUUID('all', { each: true })
   @IsOptional()
-  linkedRequirementIds?: string[];
+  linkedRequirementIds?: string[] | null;
 
   @IsEnum(ETaskStatus)
-  @IsNotEmpty()
-  status!: ETaskStatus;
+  @IsOptional()
+  status?: ETaskStatus | null;
 
   @IsEnum(EPriority)
   @IsOptional()
-  priority?: EPriority;
+  priority?: EPriority | null;
 
   @IsDateString()
   @IsOptional()
-  startDate?: string;
+  startDate?: string | null;
 
   @IsDateString()
   @IsOptional()
-  dueDate?: string;
+  dueDate?: string | null;
 }

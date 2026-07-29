@@ -17,25 +17,27 @@ export interface ITaskResponse {
   sprintId: string | null;
   linkedDocumentIds: string[] | null;
   linkedRequirementIds: string[] | null;
-  status: ITask['status'];
+  status: ITask['status'] | null;
   priority: EPriority | null;
   startDate: string | null;
   dueDate: string | null;
   attachments: IFileMetadata[] | null;
   assignee: ITaskParticipantResponse | null;
-  reporter: ITaskParticipantResponse | null;
+  reporter: ITaskParticipantResponse;
   createdAt: string;
   updatedAt: string;
 }
 
 export interface ICreateNewTaskRequest
   extends
-    Pick<ITask, 'title' | 'status'>,
-    Partial<Pick<ITask, 'description' | 'sprintId' | 'linkedDocumentId' | 'priority'>> {
-  assigneeHandle?: string;
-  linkedRequirementIds?: string[];
-  startDate?: string;
-  dueDate?: string;
+    Pick<ITask, 'title'>,
+    Partial<Pick<ITask, 'description' | 'sprintId' | 'linkedDocumentId'>> {
+  assigneeHandle?: string | null;
+  linkedRequirementIds?: string[] | null;
+  status?: ITask['status'] | null;
+  priority?: EPriority | null;
+  startDate?: string | null;
+  dueDate?: string | null;
 }
 
 export type IUpdateTaskRequest = Partial<ICreateNewTaskRequest>;

@@ -40,10 +40,10 @@ export function mapAttachmentRow(row: TaskAttachmentRow): IFileMetadata {
 
 export function mapTaskRowToDto(
   row: DBTaskRowFromITask,
-  linkedRequirementIds: string[] | undefined,
+  linkedRequirementIds: string[] | null | undefined,
   assignee: ITaskParticipantResponse,
   reporter: ITaskParticipantResponse,
-  attachments: IFileMetadata[],
+  attachments: IFileMetadata[] | null,
 ): TaskResponseDto {
   if (!row.createdAt) {
     throw new NotFoundException('Task createdAt not found');
@@ -57,14 +57,14 @@ export function mapTaskRowToDto(
     id: row.id,
     taskNumber: row.taskNumber,
     title: row.title,
-    description: row.description ?? undefined,
-    sprintId: row.sprintId ?? undefined,
-    linkedDocumentIds: row.linkedDocumentId ? [row.linkedDocumentId] : [],
-    linkedRequirementIds: linkedRequirementIds ?? [],
+    description: row.description,
+    sprintId: row.sprintId,
+    linkedDocumentIds: row.linkedDocumentId ? [row.linkedDocumentId] : null,
+    linkedRequirementIds: linkedRequirementIds ?? null,
     status: row.status,
-    priority: row.priority ?? undefined,
-    startDate: row.startDate ? row.startDate.toISOString() : undefined,
-    dueDate: row.dueDate ? row.dueDate.toISOString() : undefined,
+    priority: row.priority,
+    startDate: row.startDate ? row.startDate.toISOString() : null,
+    dueDate: row.dueDate ? row.dueDate.toISOString() : null,
     attachments,
     assignee,
     reporter,

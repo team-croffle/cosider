@@ -12,37 +12,37 @@ export class TaskResponseDto implements ITaskResponse {
   title!: string;
 
   @Expose()
-  description: string | null = null;
+  description!: string | null;
 
   @Expose()
-  sprintId: string | null = null;
+  sprintId!: string | null;
 
   @Expose()
-  linkedDocumentIds: string[] | null = null;
+  linkedDocumentIds!: string[] | null;
 
   @Expose()
-  linkedRequirementIds: string[] | null = null;
+  linkedRequirementIds!: string[] | null;
 
   @Expose()
-  status!: ETaskStatus;
+  status!: ETaskStatus | null;
 
   @Expose()
-  priority: EPriority | null = null;
+  priority!: EPriority | null;
 
   @Expose()
-  startDate: string | null = null;
+  startDate!: string | null;
 
   @Expose()
-  dueDate: string | null = null;
+  dueDate!: string | null;
 
   @Expose()
-  attachments: ITaskResponse['attachments'] | null = null;
+  attachments!: ITaskResponse['attachments'] | null;
 
   @Expose()
-  assignee: ITaskResponse['assignee'] | null = null;
+  assignee!: ITaskResponse['assignee'] | null;
 
   @Expose()
-  reporter: ITaskResponse['reporter'] | null = null;
+  reporter!: ITaskResponse['reporter'];
 
   @Expose()
   createdAt!: string;
