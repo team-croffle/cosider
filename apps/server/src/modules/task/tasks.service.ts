@@ -7,6 +7,7 @@ import { mapAttachmentRow, mapParticipantRow, mapTaskRowToDto } from './tasks.ma
 import type { DBTaskRowFromITask } from './tasks.types';
 
 import { DB_CONNECTION } from '@/common/constants';
+import { RedisService } from '@/common/redis/redis.service';
 import { type DrizzleDB } from '@/database/drizzle.module';
 import {
   mediaFiles,
@@ -23,7 +24,19 @@ import {
 
 @Injectable()
 export class TasksService {
-  constructor(@Inject(DB_CONNECTION) private readonly db: DrizzleDB) {}
+  private static readonly TASK_CACHE_TTL_SECONDS = 60 * 5;
+  constructor(
+    @Inject(DB_CONNECTION) private readonly db: DrizzleDB,
+    private readonly redisService: RedisService,
+  ) {}
+
+  private getTaskListCacheKey(projectId: string): string {
+    return `task:list:${projectId}`;
+  }
+
+  private async invalidateTaskListCache(projectId: string): Promise<void> {
+    await this.redisService.del(this.getTaskListCacheKey(projectId));
+  }
 
   private getParticipantSelectFields() {
     return {
@@ -96,7 +109,7 @@ export class TasksService {
     const rows = await this.db
       .select({
         taskId: taskAttachments.taskId,
-        id: taskAttachments.id,
+        id: mediaFiles.id,
         fileName: mediaFiles.fileName,
         mimeType: mediaFiles.mimeType,
         fileSize: mediaFiles.fileSize,
@@ -158,7 +171,7 @@ export class TasksService {
       ? await this.findParticipantByHandleOrThrow(createNewTaskDto.assigneeHandle)
       : reporter;
 
-    return await this.db.transaction(async (tx) => {
+    const result = await this.db.transaction(async (tx) => {
       const [{ nextTaskNumber }] = await tx
         .insert(projectTaskCounters)
         .values({
@@ -211,6 +224,8 @@ export class TasksService {
         [],
       );
     });
+    await this.invalidateTaskListCache(projectId);
+    return result;
   }
 
   // Task 목록 조회
@@ -221,6 +236,10 @@ export class TasksService {
   ): Promise<TaskResponseDto[]> {
     const projectId = await this.findProjectIdOrThrow(userId, workspaceId, projectKey);
 
+    const cacheKey = this.getTaskListCacheKey(projectId);
+    const cached = await this.redisService.getJson<TaskResponseDto[]>(cacheKey);
+    if (cached) return cached;
+
     const rows = await this.db
       .select()
       .from(tasks)
@@ -228,7 +247,9 @@ export class TasksService {
       .orderBy(desc(tasks.createdAt));
 
     if (rows.length === 0) {
-      return [];
+      const empty: TaskResponseDto[] = [];
+      await this.redisService.setJson(cacheKey, empty, TasksService.TASK_CACHE_TTL_SECONDS);
+      return empty;
     }
 
     const taskIds = rows.map((row) => row.id);
@@ -260,7 +281,7 @@ export class TasksService {
       {} as Record<string, string[]>,
     );
 
-    return rows.map((row) => {
+    const result = rows.map((row) => {
       const taskRow = row as DBTaskRowFromITask;
 
       if (!taskRow.assigneeId || !taskRow.reporterId) {
@@ -283,6 +304,9 @@ export class TasksService {
         attachments,
       );
     });
+
+    await this.redisService.setJson(cacheKey, result, TasksService.TASK_CACHE_TTL_SECONDS);
+    return result;
   }
 
   // Task 상세 조회
@@ -342,7 +366,7 @@ export class TasksService {
         ? await this.findParticipantByHandleOrThrow(updateTaskDto.assigneeHandle)
         : null;
 
-    return await this.db.transaction(async (tx) => {
+    const result = await this.db.transaction(async (tx) => {
       const [existing] = await tx
         .select()
         .from(tasks)
@@ -443,6 +467,9 @@ export class TasksService {
         attachments,
       );
     });
+
+    await this.invalidateTaskListCache(projectId);
+    return result;
   }
 
   // Task 삭제
@@ -465,5 +492,6 @@ export class TasksService {
     }
 
     await this.db.delete(tasks).where(eq(tasks.id, existing.id));
+    await this.invalidateTaskListCache(projectId);
   }
 }

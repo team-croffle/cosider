@@ -12,5 +12,6 @@ import { WorkspacesService } from './workspace.service';
   imports: [UserModule],
   controllers: [WorkspacesController, WorkspaceMembersController],
   providers: [WorkspacesService, WorkspaceMembersService, ParseWorkspaceSlugPipe],
+  exports: [ParseWorkspaceSlugPipe],
 })
 export class WorkspacesModule {}
