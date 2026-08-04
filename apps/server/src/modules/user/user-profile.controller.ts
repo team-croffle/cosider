@@ -3,7 +3,7 @@ import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { CurrentUser } from '../auth/decorator';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 
-import { UserProfileDetailResponse } from './dto';
+import { UserProfileDetailResponse, UserProfileUpdateRequest } from './dto';
 import { UsersService } from './users.service';
 
 import { FileUploadCompletionRequest } from '@/common/file/dto';
@@ -19,6 +19,16 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UserProfileDetailResponse> {
     const profile = await this.usersService.getProfileDetail(user.userId);
+    return new UserProfileDetailResponse(profile);
+  }
+
+  @Patch('me/profile')
+  @UseGuards(JwtAuthGuard)
+  async updateMyProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: UserProfileUpdateRequest,
+  ): Promise<UserProfileDetailResponse> {
+    const profile = await this.usersService.updateProfile(user.userId, dto);
     return new UserProfileDetailResponse(profile);
   }
 

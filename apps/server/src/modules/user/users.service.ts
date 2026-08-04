@@ -2,7 +2,7 @@ import { IUserProfile } from '@cosider/shared';
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
 
-import { UserProfileDetailResponse, UserProfileResponse } from './dto';
+import { UserProfileDetailResponse, UserProfileResponse, UserProfileUpdateRequest } from './dto';
 
 import { DB_CONNECTION } from '@/common/constants';
 import { UNAVAILABLE_HANDLES } from '@/common/constants/user.const';
@@ -52,6 +52,49 @@ export class UsersService {
     if (!profile) {
       throw new NotFoundException('USER_NOT_FOUND');
     }
+
+    return this.mapProfileDetail(profile);
+  }
+
+  async updateProfile(
+    userId: string,
+    dto: UserProfileUpdateRequest,
+  ): Promise<UserProfileDetailResponse> {
+    if (!dto.nickname && !dto.techStacks && !dto.jobRole) {
+      throw new BadRequestException('NO_CHANGES_MADE');
+    }
+
+    const profile = await this.db.transaction(async (tx) => {
+      const [exists] = await tx
+        .select({ id: userProfiles.id })
+        .from(userProfiles)
+        .where(eq(userProfiles.userId, userId))
+        .limit(1);
+      if (!exists) {
+        throw new NotFoundException('USER_PROFILE_NOT_FOUND');
+      }
+
+      const [updatedProfile] = await tx
+        .update(userProfiles)
+        .set({
+          nickname: dto.nickname,
+          techStacks: dto.techStacks,
+          jobRole: dto.jobRole,
+          updatedAt: new Date(),
+        })
+        .where(eq(userProfiles.userId, userId))
+        .returning({ userId: userProfiles.userId });
+      if (!updatedProfile) {
+        throw new NotFoundException('USER_PROFILE_NOT_FOUND');
+      }
+
+      const [profile] = await this.profileDetailTransaction(tx, userId);
+      if (!profile) {
+        throw new NotFoundException('USER_PROFILE_NOT_FOUND');
+      }
+
+      return profile;
+    });
 
     return this.mapProfileDetail(profile);
   }
