@@ -1,4 +1,7 @@
+import { config } from 'dotenv';
 import { defineConfig } from 'drizzle-kit';
+
+config({ path: `.env.${process.env.NODE_ENV || 'development'}.local` });
 
 export default defineConfig({
   // 1. 이전에 작성하신 schema.ts 파일의 경로를 지정합니다.

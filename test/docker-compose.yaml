@@ -1,4 +1,30 @@
 services:
+  postgres:
+    image: dhi.io/pgvector:0.8.6-pg16
+    container_name: cosider-test-postgres
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: cosider
+      POSTGRES_PASSWORD: cosider123
+      POSTGRES_DB: cosider
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  pgadmin:
+    image: dpage/pgadmin4:9.17
+    container_name: cosider-test-pgadmin
+    ports:
+      - '5433:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@cosider.com
+      PGADMIN_DEFAULT_PASSWORD: cosider123
+      PGADMIN_CONFIG_ENHANCED_COOKIE_PROTECTION: 'False'
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    restart: always
+
   valkey:
     image: valkey/valkey:latest
     container_name: cosider-test-valkey
@@ -15,6 +41,8 @@ services:
       - '9000:9000'
       - '9001:9001'
     environment:
+      MINIO_VOLUMES: /data
+      MINIO_BROWSER_REDIRECT: true
       MINIO_ROOT_USER: admin
       MINIO_ROOT_PASSWORD: minioadminpassword
     volumes:
@@ -39,5 +67,7 @@ services:
       "
 
 volumes:
+  postgres_data:
+  pgadmin_data:
   valkey_data:
   minio_data:
