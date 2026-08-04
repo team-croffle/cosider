@@ -3,10 +3,18 @@
   "version": "1.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "lint": "eslint \"src/**/*.ts\""
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "lint": "eslint \"src/**/*.ts\"",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",
@@ -15,6 +23,7 @@
   "devDependencies": {
     "@cosider/eslint-config": "workspace:^",
     "@cosider/typescript-config": "workspace:^",
+    "tsup": "^8.5.1",
     "typescript": "^6.0.3"
   }
 }

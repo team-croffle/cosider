@@ -12,6 +12,10 @@
       day: 'numeric',
     });
   }
+
+  function handleCreateWorkspace() {
+    isCreateModalOpen.value = true;
+  }
 </script>
 
 <template>
@@ -22,7 +26,7 @@
         <h1 class="text-2xl font-bold">Workspaces</h1>
         <p class="mt-1 text-sm text-gray-400">Manage your workspaces</p>
       </div>
-      <UButton @click="isCreateModalOpen = true"> + New Workspace </UButton>
+      <UButton @click="handleCreateWorkspace"> + New Workspace </UButton>
     </div>
 
     <!-- 카드 그리드 -->

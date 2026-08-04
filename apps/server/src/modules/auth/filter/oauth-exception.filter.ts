@@ -20,7 +20,7 @@ export class OAuthExceptionFilter implements ExceptionFilter {
   catch(exception: OAuthException, host: ArgumentsHost): void {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
-    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
+    const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
 
     let errorCode = 'AUTH_FAILED';
     let providers = '';
@@ -39,7 +39,7 @@ export class OAuthExceptionFilter implements ExceptionFilter {
       errorCode = responseBody;
     }
 
-    const redirectUrl = new URL(`${frontendUrl}/login`);
+    const redirectUrl = new URL(`${clientUrl}/login`);
     redirectUrl.searchParams.set('error', errorCode);
     if (providers) {
       redirectUrl.searchParams.set('providers', providers);

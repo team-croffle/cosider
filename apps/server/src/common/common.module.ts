@@ -14,7 +14,7 @@ import { RedisModule } from './redis/redis.module';
     // global modules
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [`../../.env.${process.env.NODE_ENV || 'development'}.local`, '../../.env'],
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}.local`, '.env'],
     }),
     LoggerModule.forRoot(loggerConfig),
 

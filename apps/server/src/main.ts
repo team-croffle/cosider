@@ -16,7 +16,7 @@ async function bootstrap() {
   app.useLogger(logger);
 
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL', 'http://localhost:3000'),
+    origin: configService.get<string>('CLIENT_URL', 'http://localhost:3000'),
     credentials: true,
   });
 

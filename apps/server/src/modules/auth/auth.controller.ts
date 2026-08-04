@@ -17,7 +17,7 @@ import type { Request, Response } from 'express';
 
 import { AuthService } from './auth.service';
 import { CurrentUser, ExtractRefreshToken } from './decorator';
-import { EmailVerifyRequest } from './dto';
+import { AuthorizeDto, EmailVerifyRequest } from './dto';
 import { SignupRequest } from './dto/signup-request.dto';
 import { OAuthException } from './exception/oauth.exception';
 import { OAuthExceptionFilter } from './filter/oauth-exception.filter';
@@ -54,6 +54,7 @@ export class AuthController {
   async localSignIn(
     // 주입된 user 객체를 매개변수로 받음.
     @CurrentUser() user: AuthenticatedUser,
+    @Body() _dto: AuthorizeDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     // generateAUthTokens에서 userId를 알아서 뽑아씀
@@ -120,8 +121,8 @@ export class AuthController {
     const tokens = await this.authService.loginOrRegisterOAuth(user);
     this.setNewAuthTokens(tokens, res);
 
-    const frontendUrl = this.configService.getOrThrow<string>('FRONTEND_URL');
-    return { url: frontendUrl };
+    const clientUrl = this.configService.getOrThrow<string>('CLIENT_URL');
+    return { url: clientUrl };
   }
 
   @Post('refresh')

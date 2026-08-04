@@ -2,6 +2,8 @@
 export default defineNuxtConfig({
   modules: ['@nuxt/eslint', '@nuxt/ui', '@pinia/nuxt'],
 
+  ssr: false,
+
   devtools: {
     enabled: true,
   },
@@ -22,11 +24,15 @@ export default defineNuxtConfig({
     '/': { prerender: true },
   },
 
+  devServer: {
+    port: 5173,
+  },
+
   compatibilityDate: '2025-01-15',
 
   vite: {
     optimizeDeps: {
-      include: ['@vue/devtools-core', '@vue/devtools-kit'],
+      include: ['@vue/devtools-core', '@vue/devtools-kit', 'zod'],
     },
   },
 
