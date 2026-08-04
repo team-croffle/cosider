@@ -4,12 +4,16 @@ import { Expose } from 'class-transformer';
 export class UserProfileResponse implements IUserProfileResponse {
   @Expose()
   handle!: string;
+
   @Expose()
   nickname!: string | null;
+
   @Expose()
   techStacks!: string[] | null;
+
   @Expose()
   jobRole!: EJobRole;
+
   @Expose()
   profileImageId!: string | null;
 

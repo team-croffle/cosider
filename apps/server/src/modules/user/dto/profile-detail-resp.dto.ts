@@ -9,7 +9,7 @@ export class UserProfileDetailResponse implements IUserProfileDetailResponse {
   handle!: string;
 
   @Expose()
-  nickname!: string;
+  nickname!: string | null;
 
   @Expose()
   profileImageId!: string | null;
