@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, SerializeOptions, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 
 import { CurrentUser } from '../auth/decorator';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
@@ -12,7 +12,6 @@ import { CheckExistsResponse } from '@/common/model';
 import type { AuthenticatedUser } from '@/types/auth';
 
 @Controller('api/v1/users')
-@SerializeOptions({ excludeExtraneousValues: true })
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
