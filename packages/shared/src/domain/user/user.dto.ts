@@ -1,3 +1,5 @@
+import { IFileUploadCompletionRequest } from '../../common';
+
 import { IUser, IUserProfile } from './user.interface';
 
 // 설계에 맞춰 변경함.
@@ -7,6 +9,12 @@ export type IUserProfileResponse = Pick<
   IUserProfile,
   'handle' | 'nickname' | 'techStacks' | 'jobRole' | 'profileImageId'
 >;
+
+export type ICreateUserProfileRequest = Omit<
+  IUserProfile,
+  'id' | 'userId' | 'profileImageId' | 'createdAt' | 'updatedAt' | 'handleUpdatedAt'
+> &
+  Pick<IFileUploadCompletionRequest, 'uploadToken'>;
 
 export type IUserProfileUpdateRequest = Partial<
   Pick<IUserProfile, 'nickname' | 'techStacks' | 'jobRole'>

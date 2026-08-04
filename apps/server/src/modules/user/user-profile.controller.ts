@@ -1,9 +1,10 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 
 import { CurrentUser } from '../auth/decorator';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 
 import { UserProfileDetailResponse, UserProfileUpdateRequest } from './dto';
+import { CreateProfileRequest } from './dto/create-profile-req.dto';
 import { UsersService } from './users.service';
 
 import { FileUploadCompletionRequest } from '@/common/file/dto';
@@ -19,6 +20,16 @@ export class UsersController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<UserProfileDetailResponse> {
     const profile = await this.usersService.getProfileDetail(user.userId);
+    return new UserProfileDetailResponse(profile);
+  }
+
+  @Post('me/profile')
+  @UseGuards(JwtAuthGuard)
+  async createMyProfile(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: CreateProfileRequest,
+  ): Promise<UserProfileDetailResponse> {
+    const profile = await this.usersService.createProfile(user.userId, dto);
     return new UserProfileDetailResponse(profile);
   }
 
