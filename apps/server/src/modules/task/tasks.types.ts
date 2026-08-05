@@ -6,8 +6,8 @@ export type DBTaskRowFromITask = Omit<
 > & {
   startDate: Date | null;
   dueDate: Date | null;
-  createdAt?: Date | null;
-  updatedAt?: Date | null;
+  createdAt: Date | null;
+  updatedAt: Date | null;
 };
 
 export type TaskParticipantRow = {

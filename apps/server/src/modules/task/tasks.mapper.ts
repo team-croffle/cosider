@@ -40,8 +40,8 @@ export function mapAttachmentRow(row: TaskAttachmentRow): IFileMetadata {
 
 export function mapTaskRowToDto(
   row: DBTaskRowFromITask,
-  linkedRequirementIds: string[] | null | undefined,
-  assignee: ITaskParticipantResponse,
+  linkedRequirementIds: string[] | null,
+  assignee: ITaskParticipantResponse | null,
   reporter: ITaskParticipantResponse,
   attachments: IFileMetadata[] | null,
 ): TaskResponseDto {
@@ -60,7 +60,7 @@ export function mapTaskRowToDto(
     description: row.description,
     sprintId: row.sprintId,
     linkedDocumentIds: row.linkedDocumentId ? [row.linkedDocumentId] : null,
-    linkedRequirementIds: linkedRequirementIds ?? null,
+    linkedRequirementIds: linkedRequirementIds,
     status: row.status,
     priority: row.priority,
     startDate: row.startDate ? row.startDate.toISOString() : null,

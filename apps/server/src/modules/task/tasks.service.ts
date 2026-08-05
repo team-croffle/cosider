@@ -20,6 +20,7 @@ import {
   userProfiles,
   users,
   workspaceMembers,
+  workspaces,
 } from '@/database/schema';
 
 @Injectable()
@@ -65,16 +66,28 @@ export class TasksService {
     return mapParticipantRow(participant);
   }
 
-  private async findParticipantByHandleOrThrow(handle: string): Promise<ITaskParticipantResponse> {
+  private async findParticipantByHandleOrThrow(
+    handle: string,
+    workspaceId: string,
+    projectId: string,
+  ): Promise<ITaskParticipantResponse> {
     const [participant] = await this.db
       .select(this.getParticipantSelectFields())
       .from(users)
       .innerJoin(userProfiles, eq(users.id, userProfiles.userId))
-      .where(eq(userProfiles.handle, handle))
+      .innerJoin(projectMembers, eq(projectMembers.userId, users.id))
+      .innerJoin(workspaceMembers, eq(workspaceMembers.userId, users.id))
+      .where(
+        and(
+          eq(userProfiles.handle, handle),
+          eq(projectMembers.projectId, projectId),
+          eq(workspaceMembers.workspaceId, workspaceId),
+        ),
+      )
       .limit(1);
 
     if (!participant) {
-      throw new NotFoundException('USER_NOT_FOUND');
+      throw new NotFoundException('USER_NOT_FOUND_IN_PROJECT');
     }
 
     return mapParticipantRow(participant);
@@ -93,7 +106,14 @@ export class TasksService {
       .innerJoin(userProfiles, eq(users.id, userProfiles.userId))
       .where(inArray(users.id, userIds));
 
-    return new Map(rows.map((row) => [row.id, mapParticipantRow(row)]));
+    const participantMap = new Map(rows.map((row) => [row.id, mapParticipantRow(row)]));
+
+    const missingIds = userIds.filter((id) => !participantMap.has(id));
+    if (missingIds.length > 0) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
+
+    return participantMap;
   }
 
   private async findAttachmentsByTaskId(taskId: string): Promise<IFileMetadata[]> {
@@ -138,6 +158,7 @@ export class TasksService {
     const [project] = await this.db
       .select({ id: projects.id })
       .from(projects)
+      .innerJoin(workspaces, eq(projects.workspaceId, workspaces.id))
       .innerJoin(workspaceMembers, eq(projects.workspaceId, workspaceMembers.workspaceId))
       .innerJoin(projectMembers, eq(projects.id, projectMembers.projectId))
       .where(
@@ -147,6 +168,7 @@ export class TasksService {
           eq(workspaceMembers.userId, userId),
           eq(projectMembers.userId, userId),
           isNull(projects.deletedAt),
+          isNull(workspaces.deletedAt),
         ),
       )
       .limit(1);
@@ -168,8 +190,12 @@ export class TasksService {
     const projectId = await this.findProjectIdOrThrow(userId, workspaceId, projectKey);
     const reporter = await this.findParticipantByUserIdOrThrow(userId);
     const nextAssignee = createNewTaskDto.assigneeHandle
-      ? await this.findParticipantByHandleOrThrow(createNewTaskDto.assigneeHandle)
-      : reporter;
+      ? await this.findParticipantByHandleOrThrow(
+          createNewTaskDto.assigneeHandle,
+          workspaceId,
+          projectId,
+        )
+      : null;
 
     const result = await this.db.transaction(async (tx) => {
       const [{ nextTaskNumber }] = await tx
@@ -191,8 +217,8 @@ export class TasksService {
           taskNumber: nextTaskNumber,
           title: createNewTaskDto.title,
           description: createNewTaskDto.description ?? null,
-          assigneeId: nextAssignee.id,
-          assigneeNickname: nextAssignee.nickname,
+          assigneeId: nextAssignee?.id ?? null,
+          assigneeNickname: nextAssignee?.nickname ?? null,
           reporterId: reporter.id,
           reporterNickname: reporter.nickname,
           linkedDocumentId: createNewTaskDto.linkedDocumentId ?? null,
@@ -218,7 +244,7 @@ export class TasksService {
 
       return mapTaskRowToDto(
         inserted,
-        createNewTaskDto.linkedRequirementIds,
+        createNewTaskDto.linkedRequirementIds ?? null,
         nextAssignee,
         reporter,
         null,
@@ -283,14 +309,14 @@ export class TasksService {
     const result = rows.map((row) => {
       const taskRow = row as DBTaskRowFromITask;
 
-      if (!taskRow.assigneeId || !taskRow.reporterId) {
+      if (!taskRow.reporterId) {
         throw new NotFoundException('Task participant not found');
       }
 
-      const taskAssignee = participantsMap.get(taskRow.assigneeId);
+      const taskAssignee = taskRow.assigneeId ? participantsMap.get(taskRow.assigneeId)! : null;
       const taskReporter = participantsMap.get(taskRow.reporterId);
 
-      if (!taskAssignee || !taskReporter) {
+      if (!taskReporter) {
         throw new NotFoundException('Task participant not found');
       }
 
@@ -325,15 +351,19 @@ export class TasksService {
       .from(requirementTaskLinks)
       .where(eq(requirementTaskLinks.taskId, row.id));
 
-    if (!row.assigneeId || !row.reporterId) {
+    if (!row.reporterId) {
       throw new NotFoundException('Task participant not found');
     }
 
-    const [assignee, reporter, attachments] = await Promise.all([
-      this.findParticipantByUserIdOrThrow(row.assigneeId),
-      this.findParticipantByUserIdOrThrow(row.reporterId),
+    const participantIds = row.assigneeId ? [row.assigneeId, row.reporterId] : [row.reporterId];
+
+    const [participantsMap, attachments] = await Promise.all([
+      this.findParticipantsByUserIdsOrThrow(participantIds),
       this.findAttachmentsByTaskId(row.id),
     ]);
+
+    const assignee = row.assigneeId ? participantsMap.get(row.assigneeId)! : null;
+    const reporter = participantsMap.get(row.reporterId)!;
 
     return mapTaskRowToDto(
       row,
@@ -354,7 +384,11 @@ export class TasksService {
   ): Promise<TaskResponseDto> {
     const projectId = await this.findProjectIdOrThrow(userId, workspaceId, projectKey);
     const nextAssignee = updateTaskDto.assigneeHandle
-      ? await this.findParticipantByHandleOrThrow(updateTaskDto.assigneeHandle)
+      ? await this.findParticipantByHandleOrThrow(
+          updateTaskDto.assigneeHandle,
+          workspaceId,
+          projectId,
+        )
       : null;
 
     const result = await this.db.transaction(async (tx) => {
@@ -445,15 +479,23 @@ export class TasksService {
         .from(requirementTaskLinks)
         .where(eq(requirementTaskLinks.taskId, updatedRow.id));
 
-      if (!updatedRow.assigneeId || !updatedRow.reporterId) {
+      if (!updatedRow.reporterId) {
         throw new NotFoundException('Task participant not found');
       }
 
-      const [taskAssignee, taskReporter, attachments] = await Promise.all([
-        this.findParticipantByUserIdOrThrow(updatedRow.assigneeId),
-        this.findParticipantByUserIdOrThrow(updatedRow.reporterId),
+      const participantIds = updatedRow.assigneeId
+        ? [updatedRow.assigneeId, updatedRow.reporterId]
+        : [updatedRow.reporterId];
+
+      const [participantsMap, attachments] = await Promise.all([
+        this.findParticipantsByUserIdsOrThrow(participantIds),
         this.findAttachmentsByTaskId(updatedRow.id),
       ]);
+
+      const taskAssignee = updatedRow.assigneeId
+        ? participantsMap.get(updatedRow.assigneeId)!
+        : null;
+      const taskReporter = participantsMap.get(updatedRow.reporterId)!;
 
       return mapTaskRowToDto(
         updatedRow,
