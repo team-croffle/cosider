@@ -1,159 +1,59 @@
-# Turborepo starter
+# Cosider
 
-This Turborepo starter is maintained by the Turborepo core team.
+기획 → 설계 → 구현 → 테스트 → 배포 → 유지보수까지 프로젝트 전 과정을 추적하는 관리/협업 툴입니다.
 
-## Using this example
+- **팀:** Croffle Dev.
+- **저장소:** https://github.com/team-croffle/cosider
 
-Run the following command:
+## 구조
 
-```sh
-npx create-turbo@latest
+| 경로              | 설명                        |
+| ----------------- | --------------------------- |
+| `apps/web`        | Nuxt 4 + Nuxt UI 프론트엔드 |
+| `apps/server`     | NestJS API 서버             |
+| `packages/shared` | 공유 타입/DTO               |
+
+Yarn workspaces + Turborepo 모노레포입니다.
+
+## 로컬 인프라 (`test/docker-compose.yaml`)
+
+로컬 개발용 Postgres(pgvector), pgAdmin, Valkey, MinIO를 띄웁니다.
+
+```bash
+docker compose -f test/docker-compose.yaml up -d
 ```
 
-## What's inside?
+| 서비스        | 포트   | 비고                                                   |
+| ------------- | ------ | ------------------------------------------------------ |
+| Postgres      | `5432` | user/password/db: `cosider` / `cosider123` / `cosider` |
+| pgAdmin       | `5433` | `admin@cosider.com` / `cosider123`                     |
+| Valkey        | `6379` | Redis 호환 캐시                                        |
+| MinIO API     | `9000` | root: `admin` / `minioadminpassword`                   |
+| MinIO Console | `9001` | 브라우저 콘솔                                          |
 
-This Turborepo includes the following packages/apps:
+`minio-init`이 기동 시 `cosider` 사용자·`cosider` 버킷을 준비합니다.
 
-### Apps and Packages
+중지:
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+docker compose -f test/docker-compose.yaml down
 ```
 
-Without global `turbo`, use your package manager:
+## 시작하기
 
-```sh
-cd my-turborepo
-npx turbo build
-yarn dlx turbo build
-yarn exec turbo build
+```bash
+yarn install
+yarn build:shared
+yarn dev
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+- Web: `http://localhost:5173`
+- Server: 환경에 맞게 `.env` 설정 후 `yarn dev:server` (위 compose와 포트를 맞춤)
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+## 스크립트
 
-```sh
-turbo build --filter=docs
+```bash
+yarn build        # 전체 빌드
+yarn typecheck    # 타입 검사
+yarn lint         # 린트
 ```
-
-Without global `turbo`:
-
-```sh
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-yarn exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-yarn exec turbo dev
-yarn exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-yarn exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-yarn exec turbo login
-yarn exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-yarn exec turbo link
-yarn exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
