@@ -8,8 +8,9 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
+  /* Nuxt UI primary(blue)와 충돌 방지: 브랜드 블루로 맞춤 (구 shadcn #030213 남색 제거) */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.95 0.0058 264.53);
   --secondary-foreground: #030213;
   --muted: #ececf0;
@@ -33,7 +34,7 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -48,8 +49,8 @@
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -178,4 +179,11 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
+}
+
+/* App shell dimensions (aligned with cosider-design) */
+:root {
+  --cosider-gnb-height: 3.5rem; /* h-14 */
+  --cosider-lnb-width: 16rem; /* w-64 */
+  --cosider-project-sidebar-width: 14rem; /* w-56 */
 }
