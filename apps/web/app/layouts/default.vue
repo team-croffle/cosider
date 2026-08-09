@@ -7,10 +7,6 @@
         <slot />
       </UMain>
     </div>
-
-    <OverlayConfirm />
-    <OverlayTaskCreateDrawer />
-    <WorkspaceCreateModalHost />
   </div>
 </template>
 

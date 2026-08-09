@@ -25,5 +25,10 @@
     <NuxtLayout>
       <NuxtPage />
     </NuxtLayout>
+
+    <!-- App-shell overlays: layout-agnostic hosts -->
+    <OverlayConfirm />
+    <OverlayTaskCreateDrawer />
+    <WorkspaceCreateModalHost />
   </UApp>
 </template>
