@@ -4,7 +4,7 @@
   const workspaceStore = useWorkspaceStore();
   const { open: openWorkspaceCreate } = useModal(MODAL_IDS.WORKSPACE_CREATE);
 
-  const current = computed(() => workspaceStore.workspaces[0] ?? null);
+  const current = computed(() => workspaceStore.currentWorkspace);
   const initial = computed(() => (current.value?.name?.[0] ?? 'W').toUpperCase());
 
   onMounted(() => {
@@ -19,7 +19,7 @@
         ? workspaceStore.workspaces.map((ws) => ({
             label: ws.name,
             onSelect: () => {
-              // TODO: navigate to workspace home when routes exist
+              workspaceStore.setCurrent(ws.slug);
             },
           }))
         : [{ label: 'No workspaces', disabled: true }];
