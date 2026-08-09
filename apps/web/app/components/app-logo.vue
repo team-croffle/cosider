@@ -9,9 +9,9 @@
 </script>
 
 <template>
-  <span class="inline-flex items-center gap-2 text-blue-600 dark:text-blue-500">
+  <span class="text-primary inline-flex items-center gap-2">
     <span
-      class="flex size-7 shrink-0 items-center justify-center rounded-md bg-blue-600 text-sm font-bold text-white dark:bg-blue-500"
+      class="bg-primary flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-bold text-white"
       aria-hidden="true"
     >
       C
