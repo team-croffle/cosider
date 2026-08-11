@@ -97,7 +97,10 @@ export const userProfiles = pgTable('user_profiles', {
   id: uuid('id')
     .$defaultFn(() => uuidv7())
     .primaryKey(),
-  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
+  userId: uuid('user_id')
+    .references(() => users.id, { onDelete: 'cascade' })
+    .unique()
+    .notNull(),
   handle: varchar('handle', { length: 30 }).unique().notNull(),
   nickname: varchar('nickname', { length: 100 }),
   // S3에서 Key로 접근해서 NestJS가 PresignedURL로 변환해서 제공

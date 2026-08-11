@@ -30,7 +30,7 @@ export interface IUserBackupCode {
 
 export interface IUserProfile {
   id: string;
-  userId: IUser['id'] | null;
+  userId: IUser['id'];
   handle: string;
   nickname: string | null;
   // ID를 통해 NestJS가 PresignedURL로 Redirect해서 제공
