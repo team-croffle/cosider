@@ -1,5 +1,5 @@
 import { IRefreshToken } from '@cosider/shared';
-import { pgTable, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, timestamp, uuid, text } from 'drizzle-orm/pg-core';
 import { uuidv7 } from 'uuidv7';
 
 import { assertSchemaMatch, type AssertSchema } from '../type-utils';
@@ -13,7 +13,7 @@ export const refreshTokens = pgTable('refresh_tokens', {
     .$defaultFn(() => uuidv7())
     .primaryKey(),
   userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }),
-  tokenValue: uuid('token_value').notNull().unique(),
+  tokenValue: text('token_value').notNull().unique(),
   expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow(),
   revokedAt: timestamp('revoked_at', { withTimezone: true }),
