@@ -10,16 +10,16 @@
     "./nuxt": "./nuxt.mjs"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "eslint": "^10.5.0",
-    "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import-x": "^4.16.2",
-    "eslint-plugin-prettier": "^5.5.6",
-    "eslint-plugin-promise": "^7.3.0",
-    "eslint-plugin-unicorn": "^68.0.0",
-    "globals": "^17.6.0",
-    "prettier": "^3.8.4",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.61.1"
+    "@eslint/js": "catalog:",
+    "eslint": "catalog:",
+    "eslint-config-prettier": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
+    "eslint-plugin-prettier": "catalog:",
+    "eslint-plugin-promise": "catalog:",
+    "eslint-plugin-unicorn": "catalog:",
+    "globals": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "typescript-eslint": "catalog:"
   }
 }

@@ -13,12 +13,12 @@
   },
   "devDependencies": {
     "@cosider/eslint-config": "workspace:^",
-    "eslint": "^10.5.0",
+    "eslint": "catalog:",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.7",
-    "prettier": "^3.8.4",
+    "prettier": "catalog:",
     "turbo": "^2.9.18",
-    "typescript": "^6.0.3"
+    "typescript": "catalog:"
   },
   "engines": {
     "node": ">=24"
@@ -36,5 +36,11 @@
     "*.{json,yaml,md,vue,html}": [
       "prettier --write"
     ]
+  },
+  "resolutions": {
+    "nanoid": "6.0.1",
+    "brace-expansion": "5.0.9",
+    "js-yaml": "5.2.3",
+    "postcss": "8.5.26"
   }
 }
