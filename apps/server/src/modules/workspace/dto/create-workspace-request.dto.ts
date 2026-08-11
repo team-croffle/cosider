@@ -11,8 +11,8 @@ export class CreateWorkspaceRequest implements ICreateWorkspaceRequest {
   slug!: string;
 
   @IsString()
-  @IsNotEmpty()
-  description!: string;
+  @IsOptional()
+  description!: string | null;
 
   @IsString()
   @IsOptional()
