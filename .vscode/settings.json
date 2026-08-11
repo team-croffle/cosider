@@ -5,6 +5,7 @@
     "source.fixAll.eslint": "explicit"
   },
   "editor.tabSize": 2,
+  "eslint.enable": true,
   "js/ts.tsdk.path": "node_modules\\typescript\\lib",
   "material-icon-theme.activeIconPack": "vue",
   "material-icon-theme.files.associations": {
@@ -14,5 +15,8 @@
     "*.guard.ts": "nest-guard",
     "*.decorator.ts": "nest-decorator",
     "*.schema.ts": "database"
-  }
+  },
+  "eslint.format.enable": false,
+  "oxc.enable.oxlint": false,
+  "oxc.enable": false
 }
