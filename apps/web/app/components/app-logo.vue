@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  import logoMark from '~/assets/logo/mark.svg?raw';
+
   withDefaults(
     defineProps<{
       /** Show wordmark text next to mark */
@@ -9,13 +11,16 @@
 </script>
 
 <template>
-  <span class="text-primary inline-flex items-center gap-2">
+  <span
+    class="text-primary inline-flex items-center gap-2"
+    :aria-label="showText ? undefined : 'Cosider'"
+    :role="showText ? undefined : 'img'"
+  >
     <span
-      class="bg-primary flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-bold text-white"
+      class="inline-flex size-7 shrink-0 [&>svg]:size-full"
       aria-hidden="true"
-    >
-      C
-    </span>
-    <span v-if="showText" class="text-xl font-bold tracking-tight"> CoSider </span>
+      v-html="logoMark"
+    />
+    <span v-if="showText" class="text-xl font-bold tracking-tight">Cosider</span>
   </span>
 </template>
