@@ -17,6 +17,7 @@
     "@iconify-json/lucide": "^1.2.123",
     "@iconify-json/simple-icons": "^1.2.93",
     "@nuxt/ui": "^4.10.0",
+    "@nuxtjs/i18n": "^10.6.0",
     "@pinia/nuxt": "^1.0.1",
     "@tiptap/core": "^3.30.0",
     "@tiptap/extension-collaboration-caret": "^3.30.0",
