@@ -1,4 +1,6 @@
 <script setup>
+  const { locale, t } = useI18n();
+
   useHead({
     meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
     link: [
@@ -7,12 +9,12 @@
       { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     ],
     htmlAttrs: {
-      lang: 'en',
+      lang: locale,
     },
   });
 
-  const title = 'Cosider';
-  const description = '기획부터 유지보수까지, 프로젝트 전 과정을 추적하는 협업 툴';
+  const title = computed(() => t('seo.title'));
+  const description = computed(() => t('seo.description'));
 
   useSeoMeta({
     title,
