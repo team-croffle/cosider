@@ -88,11 +88,4 @@
       variant: 'outline' as const,
     },
   ]);
-
-  useSeoMeta({
-    title: () => t('seo.title'),
-    description: () => t('seo.description'),
-    ogTitle: () => t('seo.title'),
-    ogDescription: () => t('seo.description'),
-  });
 </script>

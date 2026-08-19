@@ -3,6 +3,88 @@
     "title": "Cosider",
     "description": "기획부터 유지보수까지, 프로젝트 전 과정을 추적하는 협업 툴"
   },
+  "common": {
+    "language": "언어",
+    "cancel": "취소",
+    "confirm": "확인",
+    "login": "로그인",
+    "loading": "로딩 중...",
+    "optional": "선택"
+  },
+  "shell": {
+    "nav": {
+      "workspace": "워크스페이스",
+      "dashboard": "대시보드",
+      "projects": "프로젝트",
+      "documents": "문서",
+      "settings": "설정",
+      "favorites": "즐겨찾기",
+      "newTask": "새 태스크"
+    },
+    "user": {
+      "profile": "내 프로필",
+      "settings": "설정",
+      "logout": "로그아웃",
+      "fallbackName": "사용자"
+    },
+    "search": {
+      "placeholder": "프로젝트, 이슈, 문서 검색…",
+      "title": "검색",
+      "comingSoon": "검색 준비 중"
+    },
+    "notifications": {
+      "label": "알림",
+      "title": "알림",
+      "markAllRead": "모두 읽음"
+    }
+  },
+  "workspace": {
+    "switcher": {
+      "empty": "워크스페이스 없음",
+      "new": "새 워크스페이스",
+      "fallback": "워크스페이스"
+    },
+    "list": {
+      "title": "워크스페이스",
+      "description": "워크스페이스를 관리합니다",
+      "new": "새 워크스페이스"
+    },
+    "create": {
+      "title": "새 워크스페이스 만들기",
+      "logo": "워크스페이스 로고",
+      "logoHint": "클릭하여 로고 업로드",
+      "name": "워크스페이스 이름",
+      "namePlaceholder": "워크스페이스 이름을 입력하세요",
+      "slug": "Slug",
+      "slugPlaceholder": "workspace-slug",
+      "slugChecking": "확인 중...",
+      "slugAvailable": "사용 가능",
+      "slugUnavailable": "이미 사용 중",
+      "slugUrl": "URL: cosider.com/workspace/{slug}",
+      "slugFallback": "your-slug",
+      "description": "설명",
+      "descriptionPlaceholder": "워크스페이스를 설명하세요...",
+      "submit": "워크스페이스 만들기",
+      "fileTypeError": "지원하지 않는 파일 형식입니다. (jpg, png, webp)",
+      "fileSizeError": "이미지 크기는 5MB 이하여야 합니다.",
+      "nameRequired": "워크스페이스 이름을 입력해주세요.",
+      "slugRequired": "Slug를 입력해주세요.",
+      "slugTaken": "slug가 이미 사용 중입니다.",
+      "slugNotChecked": "slug 사용 가능 여부를 확인해 주세요."
+    }
+  },
+  "task": {
+    "create": {
+      "title": "새 태스크",
+      "description": "현재 워크스페이스에 태스크를 만듭니다",
+      "fieldTitle": "제목",
+      "titlePlaceholder": "태스크 제목",
+      "fieldDescription": "설명",
+      "descriptionPlaceholder": "태스크를 설명하세요…",
+      "placeholderNote": "아직 저장이 연결되지 않은 플레이스홀더 폼입니다.",
+      "submit": "만들기"
+    }
+  },
   "landing": {
     "nav": {
       "features": "기능",
@@ -14,8 +96,7 @@
       "pricing": "요금",
       "signin": "로그인",
       "getStarted": "시작하기",
-      "github": "GitHub",
-      "language": "언어"
+      "github": "GitHub"
     },
     "hero": {
       "title": "기획부터 유지보수까지, 한 프로젝트에서",

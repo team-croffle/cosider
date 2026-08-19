@@ -1,6 +1,7 @@
 <script setup lang="ts">
   // TODO: wire to search API when /search endpoint exists
   const open = ref(false);
+  const { t } = useI18n();
 </script>
 
 <template>
@@ -12,14 +13,22 @@
       class="w-full justify-start font-normal"
       @click="open = true"
     >
-      <span class="text-muted truncate">Search projects, issues, docs…</span>
+      <span class="text-muted truncate">{{ t('shell.search.placeholder') }}</span>
       <span class="text-muted ml-auto hidden text-xs sm:inline">⌘K</span>
     </UButton>
 
-    <UModal v-model:open="open" title="Search">
+    <UModal v-model:open="open" :title="t('shell.search.title')">
       <template #body>
-        <UInput icon="i-lucide-search" placeholder="Search…" autofocus class="w-full" disabled />
-        <div class="text-muted mt-6 py-8 text-center text-sm">검색 준비 중</div>
+        <UInput
+          icon="i-lucide-search"
+          :placeholder="t('shell.search.placeholder')"
+          autofocus
+          class="w-full"
+          disabled
+        />
+        <div class="text-muted mt-6 py-8 text-center text-sm">
+          {{ t('shell.search.comingSoon') }}
+        </div>
       </template>
     </UModal>
   </div>

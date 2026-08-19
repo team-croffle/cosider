@@ -57,7 +57,7 @@
     </template>
 
     <template #right>
-      <LandingLocaleSwitcher />
+      <LocaleSwitcher />
       <UColorModeButton />
 
       <UButton

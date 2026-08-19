@@ -21,7 +21,7 @@
     description,
     ogTitle: title,
     ogDescription: description,
-    twitterCard: 'summary_large_image',
+    twitterCard: 'summary',
   });
 </script>
 

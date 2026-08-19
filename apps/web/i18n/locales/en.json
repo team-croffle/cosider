@@ -3,6 +3,88 @@
     "title": "Cosider",
     "description": "Track the full project lifecycle, from planning to maintenance."
   },
+  "common": {
+    "language": "Language",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "login": "Login",
+    "loading": "Loading...",
+    "optional": "optional"
+  },
+  "shell": {
+    "nav": {
+      "workspace": "Workspace",
+      "dashboard": "Dashboard",
+      "projects": "Projects",
+      "documents": "Documents",
+      "settings": "Settings",
+      "favorites": "Favorites",
+      "newTask": "New Task"
+    },
+    "user": {
+      "profile": "My profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "fallbackName": "User"
+    },
+    "search": {
+      "placeholder": "Search projects, issues, docs…",
+      "title": "Search",
+      "comingSoon": "Search is not ready yet"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "title": "Notifications",
+      "markAllRead": "Mark all read"
+    }
+  },
+  "workspace": {
+    "switcher": {
+      "empty": "No workspaces",
+      "new": "New Workspace",
+      "fallback": "Workspace"
+    },
+    "list": {
+      "title": "Workspaces",
+      "description": "Manage your workspaces",
+      "new": "New Workspace"
+    },
+    "create": {
+      "title": "Create New Workspace",
+      "logo": "Workspace Logo",
+      "logoHint": "Click to upload workspace logo",
+      "name": "Workspace Name",
+      "namePlaceholder": "Enter workspace name",
+      "slug": "Slug",
+      "slugPlaceholder": "workspace-slug",
+      "slugChecking": "Checking...",
+      "slugAvailable": "Available",
+      "slugUnavailable": "Already taken",
+      "slugUrl": "URL: cosider.com/workspace/{slug}",
+      "slugFallback": "your-slug",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your workspace...",
+      "submit": "Create Workspace",
+      "fileTypeError": "Unsupported file type. (jpg, png, webp)",
+      "fileSizeError": "Image must be 5MB or smaller.",
+      "nameRequired": "Please enter a workspace name.",
+      "slugRequired": "Please enter a slug.",
+      "slugTaken": "This slug is already taken.",
+      "slugNotChecked": "Please wait until the slug is checked."
+    }
+  },
+  "task": {
+    "create": {
+      "title": "New Task",
+      "description": "Create a task in the current workspace",
+      "fieldTitle": "Title",
+      "titlePlaceholder": "Task title",
+      "fieldDescription": "Description",
+      "descriptionPlaceholder": "Describe the task…",
+      "placeholderNote": "Form is a placeholder shell. Saving is not connected yet.",
+      "submit": "Create"
+    }
+  },
   "landing": {
     "nav": {
       "features": "Features",
@@ -14,8 +96,7 @@
       "pricing": "Pricing",
       "signin": "Sign in",
       "getStarted": "Get started",
-      "github": "GitHub",
-      "language": "Language"
+      "github": "GitHub"
     },
     "hero": {
       "title": "From planning to maintenance, in one project",
