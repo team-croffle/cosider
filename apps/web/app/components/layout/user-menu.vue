@@ -1,7 +1,8 @@
 <script setup lang="ts">
   const { user, isAuthenticated, signOut } = useAuth();
+  const { t } = useI18n();
 
-  const displayName = computed(() => user.value?.nickname ?? 'User');
+  const displayName = computed(() => user.value?.nickname ?? t('shell.user.fallbackName'));
   const initial = computed(() => displayName.value.charAt(0).toUpperCase());
 
   async function onLogout() {
@@ -16,19 +17,19 @@
   const items = computed(() => [
     [
       {
-        label: 'My profile',
+        label: t('shell.user.profile'),
         icon: 'i-lucide-user',
         to: '/settings/profile',
       },
       {
-        label: 'Settings',
+        label: t('shell.user.settings'),
         icon: 'i-lucide-settings',
         to: '/settings',
       },
     ],
     [
       {
-        label: 'Logout',
+        label: t('shell.user.logout'),
         icon: 'i-lucide-log-out',
         color: 'error' as const,
         onSelect: onLogout,
@@ -49,5 +50,7 @@
       <UAvatar :alt="displayName" size="sm" :text="initial" />
     </UButton>
   </UDropdownMenu>
-  <UButton v-else to="/auth/login" color="neutral" variant="ghost" size="sm"> Login </UButton>
+  <UButton v-else to="/auth/login" color="neutral" variant="ghost" size="sm">
+    {{ t('common.login') }}
+  </UButton>
 </template>

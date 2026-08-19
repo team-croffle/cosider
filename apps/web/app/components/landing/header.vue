@@ -1,33 +1,38 @@
 <script setup lang="ts">
   import type { NavigationMenuItem } from '@nuxt/ui';
 
-  const items = [
-    {
-      label: 'Features',
-      to: '/#features',
-    },
-    {
-      label: 'Resources',
-      children: [
+  const { t } = useI18n();
+
+  const items = computed(
+    () =>
+      [
         {
-          label: 'Docs',
-          description: 'API reference and product documentation for Cosider.',
-          icon: 'i-lucide-book-open',
-          to: '/docs',
+          label: t('landing.nav.features'),
+          to: '/#features',
         },
         {
-          label: 'Guide',
-          description: 'Step-by-step guides to set up workspaces and projects.',
-          icon: 'i-lucide-compass',
-          to: '/guide',
+          label: t('landing.nav.resources'),
+          children: [
+            {
+              label: t('landing.nav.docs'),
+              description: t('landing.nav.docsDescription'),
+              icon: 'i-lucide-book-open',
+              to: '/docs',
+            },
+            {
+              label: t('landing.nav.guide'),
+              description: t('landing.nav.guideDescription'),
+              icon: 'i-lucide-compass',
+              to: '/guide',
+            },
+          ],
         },
-      ],
-    },
-    {
-      label: 'Pricing',
-      to: '/pricing',
-    },
-  ] satisfies NavigationMenuItem[];
+        {
+          label: t('landing.nav.pricing'),
+          to: '/pricing',
+        },
+      ] satisfies NavigationMenuItem[],
+  );
 </script>
 
 <template>
@@ -52,21 +57,22 @@
     </template>
 
     <template #right>
+      <LocaleSwitcher />
       <UColorModeButton />
 
       <UButton
         to="https://github.com/team-croffle/cosider"
         target="_blank"
         icon="i-simple-icons-github"
-        aria-label="GitHub"
+        :aria-label="t('landing.nav.github')"
         color="neutral"
         variant="ghost"
       />
 
       <UButton to="/auth/login" color="neutral" variant="ghost" class="hidden sm:inline-flex">
-        Login
+        {{ t('landing.nav.login') }}
       </UButton>
-      <UButton to="/auth/signup" color="primary"> Get started </UButton>
+      <UButton to="/auth/signup" color="primary">{{ t('landing.nav.getStarted') }}</UButton>
     </template>
 
     <template #body>
@@ -81,8 +87,12 @@
       />
       <USeparator class="my-4" />
       <div class="flex flex-col gap-2">
-        <UButton to="/auth/login" color="neutral" variant="ghost" block> Login </UButton>
-        <UButton to="/auth/signup" color="primary" block> Get started </UButton>
+        <UButton to="/auth/login" color="neutral" variant="ghost" block>
+          {{ t('landing.nav.login') }}
+        </UButton>
+        <UButton to="/auth/signup" color="primary" block>
+          {{ t('landing.nav.getStarted') }}
+        </UButton>
       </div>
     </template>
   </UHeader>

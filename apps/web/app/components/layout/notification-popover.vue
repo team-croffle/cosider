@@ -1,4 +1,6 @@
 <script setup lang="ts">
+  const { t } = useI18n();
+
   type StubNoti = {
     id: string;
     title: string;
@@ -52,7 +54,7 @@
       variant="ghost"
       icon="i-lucide-bell"
       square
-      aria-label="Notifications"
+      :aria-label="t('shell.notifications.label')"
       class="relative"
     >
       <span
@@ -64,7 +66,7 @@
     <template #content>
       <div class="w-80">
         <div class="border-default flex items-center justify-between border-b px-4 py-3">
-          <span class="text-sm font-bold">Notifications</span>
+          <span class="text-sm font-bold">{{ t('shell.notifications.title') }}</span>
           <UButton
             size="xs"
             color="primary"
@@ -72,7 +74,7 @@
             class="tracking-tighter uppercase"
             @click="markAllRead"
           >
-            Mark all read
+            {{ t('shell.notifications.markAllRead') }}
           </UButton>
         </div>
         <div class="max-h-96 overflow-y-auto">

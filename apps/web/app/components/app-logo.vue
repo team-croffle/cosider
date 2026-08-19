@@ -9,13 +9,56 @@
 </script>
 
 <template>
-  <span class="text-primary inline-flex items-center gap-2">
-    <span
-      class="bg-primary flex size-7 shrink-0 items-center justify-center rounded-md text-sm font-bold text-white"
-      aria-hidden="true"
-    >
-      C
+  <span
+    class="text-primary inline-flex items-center gap-2"
+    :aria-label="showText ? undefined : 'Cosider'"
+    :role="showText ? undefined : 'img'"
+  >
+    <span class="inline-flex size-7 shrink-0 [&>svg]:size-full" aria-hidden="true">
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect width="32" height="32" rx="8" fill="currentColor" />
+        <path d="M10 8.5v15" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" />
+        <path
+          d="M10 8.5h5M10 16h5M10 23.5h5"
+          fill="none"
+          stroke="white"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+        <circle cx="10" cy="8.5" r="2" fill="white" />
+        <circle cx="10" cy="16" r="2" fill="white" />
+        <circle cx="10" cy="23.5" r="2" fill="white" />
+        <rect x="15" y="6.1" width="11.2" height="4.8" rx="1.3" fill="white" />
+        <path
+          d="M17.4 7.8h6.4M17.4 9.3h4.2"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.15"
+          stroke-linecap="round"
+        />
+        <rect x="15" y="13.6" width="11.2" height="4.8" rx="1.3" fill="white" />
+        <rect x="17.3" y="15" width="2.4" height="2.1" rx="0.45" fill="currentColor" />
+        <rect x="20.5" y="15" width="2.4" height="2.1" rx="0.45" fill="currentColor" />
+        <rect
+          x="23.7"
+          y="15"
+          width="1.4"
+          height="2.1"
+          rx="0.45"
+          fill="currentColor"
+          opacity="0.45"
+        />
+        <rect x="15" y="21.1" width="11.2" height="4.8" rx="1.3" fill="white" />
+        <path
+          d="M17.7 23.6 19.4 25.2 24.1 22"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
     </span>
-    <span v-if="showText" class="text-xl font-bold tracking-tight"> CoSider </span>
+    <span v-if="showText" class="text-xl font-bold tracking-tight">Cosider</span>
   </span>
 </template>

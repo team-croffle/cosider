@@ -1,0 +1,135 @@
+{
+  "seo": {
+    "title": "Cosider",
+    "description": "기획부터 유지보수까지, 프로젝트 전 과정을 추적하는 협업 툴"
+  },
+  "common": {
+    "language": "언어",
+    "cancel": "취소",
+    "confirm": "확인",
+    "login": "로그인",
+    "loading": "로딩 중...",
+    "optional": "선택"
+  },
+  "shell": {
+    "nav": {
+      "workspace": "워크스페이스",
+      "dashboard": "대시보드",
+      "projects": "프로젝트",
+      "documents": "문서",
+      "settings": "설정",
+      "favorites": "즐겨찾기",
+      "newTask": "새 태스크"
+    },
+    "user": {
+      "profile": "내 프로필",
+      "settings": "설정",
+      "logout": "로그아웃",
+      "fallbackName": "사용자"
+    },
+    "search": {
+      "placeholder": "프로젝트, 이슈, 문서 검색…",
+      "title": "검색",
+      "comingSoon": "검색 준비 중"
+    },
+    "notifications": {
+      "label": "알림",
+      "title": "알림",
+      "markAllRead": "모두 읽음"
+    }
+  },
+  "workspace": {
+    "switcher": {
+      "empty": "워크스페이스 없음",
+      "new": "새 워크스페이스",
+      "fallback": "워크스페이스"
+    },
+    "list": {
+      "title": "워크스페이스",
+      "description": "워크스페이스를 관리합니다",
+      "new": "새 워크스페이스"
+    },
+    "create": {
+      "title": "새 워크스페이스 만들기",
+      "logo": "워크스페이스 로고",
+      "logoHint": "클릭하여 로고 업로드",
+      "name": "워크스페이스 이름",
+      "namePlaceholder": "워크스페이스 이름을 입력하세요",
+      "slug": "Slug",
+      "slugPlaceholder": "workspace-slug",
+      "slugChecking": "확인 중...",
+      "slugAvailable": "사용 가능",
+      "slugUnavailable": "이미 사용 중",
+      "slugUrl": "URL: cosider.com/workspace/{slug}",
+      "slugFallback": "your-slug",
+      "description": "설명",
+      "descriptionPlaceholder": "워크스페이스를 설명하세요...",
+      "submit": "워크스페이스 만들기",
+      "fileTypeError": "지원하지 않는 파일 형식입니다. (jpg, png, webp)",
+      "fileSizeError": "이미지 크기는 5MB 이하여야 합니다.",
+      "nameRequired": "워크스페이스 이름을 입력해주세요.",
+      "slugRequired": "Slug를 입력해주세요.",
+      "slugTaken": "slug가 이미 사용 중입니다.",
+      "slugNotChecked": "slug 사용 가능 여부를 확인해 주세요."
+    }
+  },
+  "task": {
+    "create": {
+      "title": "새 태스크",
+      "description": "현재 워크스페이스에 태스크를 만듭니다",
+      "fieldTitle": "제목",
+      "titlePlaceholder": "태스크 제목",
+      "fieldDescription": "설명",
+      "descriptionPlaceholder": "태스크를 설명하세요…",
+      "placeholderNote": "아직 저장이 연결되지 않은 플레이스홀더 폼입니다.",
+      "submit": "만들기"
+    }
+  },
+  "landing": {
+    "nav": {
+      "features": "기능",
+      "resources": "리소스",
+      "docs": "문서",
+      "docsDescription": "Cosider API 레퍼런스와 제품 문서",
+      "guide": "가이드",
+      "guideDescription": "워크스페이스와 프로젝트를 설정하는 단계별 안내",
+      "pricing": "요금",
+      "login": "로그인",
+      "getStarted": "시작하기",
+      "github": "GitHub"
+    },
+    "hero": {
+      "title": "기획부터 유지보수까지, 한 프로젝트에서",
+      "description": "Cosider는 요구사항, 태스크, API, 테스트를 서로 잇는 소프트웨어 전주기 협업 툴입니다. 기획 → 설계 → 구현 → 테스트 → 배포를 한 워크스페이스에서 추적하세요."
+    },
+    "features": {
+      "title": "흩어진 산출물을 한 줄로",
+      "description": "문서와 보드와 스펙이 다른 도구에 있을 필요 없습니다. Cosider는 같은 프로젝트 안에서 서로를 가리키게 합니다.",
+      "traceability": {
+        "title": "추적성",
+        "description": "요구사항, 태스크, API 스펙, 테스트가 링크로 연결됩니다. 이 작업이 어디서 왔고 무엇으로 검증되는지 한 화면에서 봅니다."
+      },
+      "gate": {
+        "title": "SDLC 스테이지 게이트",
+        "description": "Waterfall부터 Scrum, Kanban까지 프로젝트 유형에 맞는 단계와 필수 산출물을 둡니다. 게이트를 통과해야 다음으로 갑니다."
+      },
+      "docs": {
+        "title": "문서와 화이트보드",
+        "description": "요구사항 문서와 화이트보드를 같은 프로젝트에서 작성합니다. 객체는 요구사항·태스크에 바로 매핑됩니다."
+      },
+      "workspace": {
+        "title": "워크스페이스와 역할",
+        "description": "팀 공간을 slug로 나누고 Owner부터 Viewer까지 역할을 부여합니다. 프로젝트는 그 안에서 키로 식별됩니다."
+      }
+    },
+    "cta": {
+      "title": "프로젝트의 전 과정을 한곳에",
+      "description": "워크스페이스를 만들고, 요구사항부터 배포까지 추적하세요."
+    },
+    "footer": {
+      "tagline": "기획부터 유지보수까지 프로젝트를 추적합니다.",
+      "terms": "이용약관",
+      "privacy": "개인정보 처리방침"
+    }
+  }
+}

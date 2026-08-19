@@ -2,6 +2,7 @@
   import { MODAL_IDS } from '~/constants/modal.const';
 
   const workspaceStore = useWorkspaceStore();
+  const { t } = useI18n();
   const { open: openWorkspaceCreate } = useModal(MODAL_IDS.WORKSPACE_CREATE);
 
   const current = computed(() => workspaceStore.currentWorkspace);
@@ -22,13 +23,13 @@
               workspaceStore.setCurrent(ws.slug);
             },
           }))
-        : [{ label: 'No workspaces', disabled: true }];
+        : [{ label: t('workspace.switcher.empty'), disabled: true }];
 
     return [
       list,
       [
         {
-          label: 'New Workspace',
+          label: t('workspace.switcher.new'),
           icon: 'i-lucide-plus',
           onSelect: () => openWorkspaceCreate(),
         },
@@ -46,7 +47,7 @@
         {{ initial }}
       </span>
       <span class="hidden max-w-40 truncate text-sm font-medium sm:inline">
-        {{ current?.name ?? 'Workspace' }}
+        {{ current?.name ?? t('workspace.switcher.fallback') }}
       </span>
       <UIcon name="i-lucide-chevron-down" class="text-muted size-4" />
     </UButton>

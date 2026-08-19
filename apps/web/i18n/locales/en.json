@@ -1,0 +1,135 @@
+{
+  "seo": {
+    "title": "Cosider",
+    "description": "Track the full project lifecycle, from planning to maintenance."
+  },
+  "common": {
+    "language": "Language",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "login": "Login",
+    "loading": "Loading...",
+    "optional": "optional"
+  },
+  "shell": {
+    "nav": {
+      "workspace": "Workspace",
+      "dashboard": "Dashboard",
+      "projects": "Projects",
+      "documents": "Documents",
+      "settings": "Settings",
+      "favorites": "Favorites",
+      "newTask": "New Task"
+    },
+    "user": {
+      "profile": "My profile",
+      "settings": "Settings",
+      "logout": "Logout",
+      "fallbackName": "User"
+    },
+    "search": {
+      "placeholder": "Search projects, issues, docs…",
+      "title": "Search",
+      "comingSoon": "Search is not ready yet"
+    },
+    "notifications": {
+      "label": "Notifications",
+      "title": "Notifications",
+      "markAllRead": "Mark all read"
+    }
+  },
+  "workspace": {
+    "switcher": {
+      "empty": "No workspaces",
+      "new": "New Workspace",
+      "fallback": "Workspace"
+    },
+    "list": {
+      "title": "Workspaces",
+      "description": "Manage your workspaces",
+      "new": "New Workspace"
+    },
+    "create": {
+      "title": "Create New Workspace",
+      "logo": "Workspace Logo",
+      "logoHint": "Click to upload workspace logo",
+      "name": "Workspace Name",
+      "namePlaceholder": "Enter workspace name",
+      "slug": "Slug",
+      "slugPlaceholder": "workspace-slug",
+      "slugChecking": "Checking...",
+      "slugAvailable": "Available",
+      "slugUnavailable": "Already taken",
+      "slugUrl": "URL: cosider.com/workspace/{slug}",
+      "slugFallback": "your-slug",
+      "description": "Description",
+      "descriptionPlaceholder": "Describe your workspace...",
+      "submit": "Create Workspace",
+      "fileTypeError": "Unsupported file type. (jpg, png, webp)",
+      "fileSizeError": "Image must be 5MB or smaller.",
+      "nameRequired": "Please enter a workspace name.",
+      "slugRequired": "Please enter a slug.",
+      "slugTaken": "This slug is already taken.",
+      "slugNotChecked": "Please wait until the slug is checked."
+    }
+  },
+  "task": {
+    "create": {
+      "title": "New Task",
+      "description": "Create a task in the current workspace",
+      "fieldTitle": "Title",
+      "titlePlaceholder": "Task title",
+      "fieldDescription": "Description",
+      "descriptionPlaceholder": "Describe the task…",
+      "placeholderNote": "Form is a placeholder shell. Saving is not connected yet.",
+      "submit": "Create"
+    }
+  },
+  "landing": {
+    "nav": {
+      "features": "Features",
+      "resources": "Resources",
+      "docs": "Docs",
+      "docsDescription": "API reference and product documentation for Cosider.",
+      "guide": "Guide",
+      "guideDescription": "Step-by-step guides to set up workspaces and projects.",
+      "pricing": "Pricing",
+      "login": "Login",
+      "getStarted": "Get started",
+      "github": "GitHub"
+    },
+    "hero": {
+      "title": "From planning to maintenance, in one project",
+      "description": "Cosider links requirements, tasks, APIs, and tests across the software lifecycle. Follow planning → design → implementation → testing → deployment in a single workspace."
+    },
+    "features": {
+      "title": "Scattered artifacts, one thread",
+      "description": "Docs, boards, and specs don't need to live in different tools. Cosider makes them point at each other inside the same project.",
+      "traceability": {
+        "title": "Traceability",
+        "description": "Requirements, tasks, API specs, and tests stay linked. See where work came from and how it is verified, on one screen."
+      },
+      "gate": {
+        "title": "SDLC stage gates",
+        "description": "From Waterfall to Scrum and Kanban, each project type gets matching stages and required artifacts. You pass the gate before moving on."
+      },
+      "docs": {
+        "title": "Documents and whiteboards",
+        "description": "Write requirement docs and whiteboards in the same project. Objects map straight to requirements and tasks."
+      },
+      "workspace": {
+        "title": "Workspaces and roles",
+        "description": "Split team spaces by slug and assign roles from Owner to Viewer. Projects are identified by key inside each workspace."
+      }
+    },
+    "cta": {
+      "title": "The whole project lifecycle in one place",
+      "description": "Create a workspace and trace work from requirements to release."
+    },
+    "footer": {
+      "tagline": "Track projects from planning to maintenance.",
+      "terms": "Terms",
+      "privacy": "Privacy"
+    }
+  }
+}

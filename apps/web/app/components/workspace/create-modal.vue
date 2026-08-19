@@ -6,6 +6,7 @@
   import { useWorkspaceStore } from '~/stores/workspace';
 
   const isOpen = defineModel<boolean>({ default: false });
+  const { t } = useI18n();
   const workspaceStore = useWorkspaceStore();
   const { checkSlugAvailability } = useWorkspace();
 
@@ -83,7 +84,7 @@
     if (!file) return;
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-      fileError.value = '지원하지 않는 파일 형식입니다. (jpg, png, webp)';
+      fileError.value = t('workspace.create.fileTypeError');
       if (previewUrl.value) {
         URL.revokeObjectURL(previewUrl.value);
         previewUrl.value = null;
@@ -92,7 +93,7 @@
     }
 
     if (file.size > MAX_SIZE) {
-      fileError.value = '이미지 크기는 5MB 이하여야 합니다.';
+      fileError.value = t('workspace.create.fileSizeError');
       if (previewUrl.value) {
         URL.revokeObjectURL(previewUrl.value);
         previewUrl.value = null;
@@ -109,12 +110,13 @@
   function validate(state: typeof form): FormError[] {
     const errors: FormError[] = [];
     if (!state.name.trim())
-      errors.push({ name: 'name', message: '워크스페이스 이름을 입력해주세요.' });
-    if (!state.slug.trim()) errors.push({ name: 'slug', message: 'Slug를 입력해주세요.' });
+      errors.push({ name: 'name', message: t('workspace.create.nameRequired') });
+    if (!state.slug.trim())
+      errors.push({ name: 'slug', message: t('workspace.create.slugRequired') });
     if (slugStatus.value === 'unavailable') {
-      errors.push({ name: 'slug', message: 'slug가 이미 사용 중입니다.' });
+      errors.push({ name: 'slug', message: t('workspace.create.slugTaken') });
     } else if (slugStatus.value !== 'available') {
-      errors.push({ name: 'slug', message: 'slug 사용 가능 여부를 확인해 주세요.' });
+      errors.push({ name: 'slug', message: t('workspace.create.slugNotChecked') });
     }
     return errors;
   }
@@ -147,7 +149,7 @@
 </script>
 
 <template>
-  <UModal v-model:open="isOpen" title="Create New Workspace">
+  <UModal v-model:open="isOpen" :title="t('workspace.create.title')">
     <template #body>
       <UForm
         id="workspace-form"
@@ -158,7 +160,7 @@
         @submit="onSubmit"
       >
         <!-- 로고 업로드 -->
-        <UFormField label="Workspace Logo">
+        <UFormField :label="t('workspace.create.logo')">
           <UFileUpload
             v-slot="{ open }"
             v-model="logoFile"
@@ -173,45 +175,57 @@
                 <img v-if="previewUrl" :src="previewUrl" class="h-full w-full object-cover" />
                 <UIcon v-else name="i-lucide-upload" class="text-gray-400" />
               </div>
-              <span class="text-xs text-gray-400">Click to upload workspace logo</span>
+              <span class="text-xs text-gray-400">{{ t('workspace.create.logoHint') }}</span>
               <span v-if="fileError" class="text-xs text-red-400">{{ fileError }}</span>
             </div>
           </UFileUpload>
         </UFormField>
 
         <!-- Workspace Name -->
-        <UFormField label="Workspace Name" name="name" required>
-          <UInput v-model="form.name" placeholder="Enter workspace name" class="w-full" />
+        <UFormField :label="t('workspace.create.name')" name="name" required>
+          <UInput
+            v-model="form.name"
+            :placeholder="t('workspace.create.namePlaceholder')"
+            class="w-full"
+          />
         </UFormField>
 
         <!-- Slug -->
-        <UFormField label="Slug" name="slug" required>
+        <UFormField :label="t('workspace.create.slug')" name="slug" required>
           <UInput
             :model-value="form.slug"
-            placeholder="workspace-slug"
+            :placeholder="t('workspace.create.slugPlaceholder')"
             class="w-full"
             @update:model-value="onSlugInput"
           />
           <!-- TODO: 디자인 시스템 색상 토큰으로 교체 필요 -->
           <template #hint>
-            <span v-if="slugStatus === 'checking'" class="text-xs text-gray-400">확인 중...</span>
+            <span v-if="slugStatus === 'checking'" class="text-xs text-gray-400">{{
+              t('workspace.create.slugChecking')
+            }}</span>
             <span v-else-if="slugStatus === 'available'" class="text-xs text-green-400"
-              >✓ 사용 가능</span
+              >✓ {{ t('workspace.create.slugAvailable') }}</span
             >
             <span v-else-if="slugStatus === 'unavailable'" class="text-xs text-red-400"
-              >✗ 이미 사용 중</span
+              >✗ {{ t('workspace.create.slugUnavailable') }}</span
             >
-            <span v-else class="text-xs text-gray-400"
-              >URL: cosider.com/workspace/{{ form.slug || 'your-slug' }}</span
-            >
+            <span v-else class="text-xs text-gray-400">{{
+              t('workspace.create.slugUrl', {
+                slug: form.slug || t('workspace.create.slugFallback'),
+              })
+            }}</span>
           </template>
         </UFormField>
 
         <!-- Description -->
-        <UFormField label="Description" name="description" hint="optional">
+        <UFormField
+          :label="t('workspace.create.description')"
+          name="description"
+          :hint="t('common.optional')"
+        >
           <UTextarea
             :model-value="form.description ?? ''"
-            placeholder="Describe your workspace..."
+            :placeholder="t('workspace.create.descriptionPlaceholder')"
             class="w-full"
             @update:model-value="form.description = $event || null"
           />
@@ -228,9 +242,9 @@
               isOpen = false;
             }
           "
-          >Cancel</UButton
+          >{{ t('common.cancel') }}</UButton
         >
-        <UButton type="submit" form="workspace-form">Create Workspace</UButton>
+        <UButton type="submit" form="workspace-form">{{ t('workspace.create.submit') }}</UButton>
       </div>
     </template>
   </UModal>

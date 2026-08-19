@@ -2,19 +2,35 @@
   import { MODAL_IDS } from '~/constants/modal.const';
 
   const route = useRoute();
+  const { t } = useI18n();
   const { open: openTaskCreate } = useModal(MODAL_IDS.TASK_CREATE);
 
-  const workspaceLinks = [
+  const workspaceLinks = computed(() => [
     {
       to: '/dashboard',
       icon: 'i-lucide-layout-dashboard',
-      label: 'Dashboard',
+      label: t('shell.nav.dashboard'),
       match: '/dashboard',
     },
-    { to: '/projects', icon: 'i-lucide-folder-git-2', label: 'Projects', match: '/projects' },
-    { to: '/documents', icon: 'i-lucide-archive', label: 'Documents', match: '/documents' },
-    { to: '/settings', icon: 'i-lucide-settings', label: 'Settings', match: '/settings' },
-  ];
+    {
+      to: '/projects',
+      icon: 'i-lucide-folder-git-2',
+      label: t('shell.nav.projects'),
+      match: '/projects',
+    },
+    {
+      to: '/documents',
+      icon: 'i-lucide-archive',
+      label: t('shell.nav.documents'),
+      match: '/documents',
+    },
+    {
+      to: '/settings',
+      icon: 'i-lucide-settings',
+      label: t('shell.nav.settings'),
+      match: '/settings',
+    },
+  ]);
 
   // Stub favorites — no favorites API yet
   const favorites = [
@@ -37,7 +53,7 @@
     <nav class="flex-1 space-y-1 overflow-y-auto px-3 py-4">
       <div class="mb-6">
         <div class="text-muted mb-2 px-3 text-xs font-semibold tracking-wider uppercase">
-          Workspace
+          {{ t('shell.nav.workspace') }}
         </div>
         <LayoutSidebarNavItem
           v-for="link in workspaceLinks"
@@ -51,7 +67,9 @@
 
       <div class="mb-6">
         <div class="mb-2 flex items-center justify-between px-3">
-          <span class="text-muted text-xs font-semibold tracking-wider uppercase">Favorites</span>
+          <span class="text-muted text-xs font-semibold tracking-wider uppercase">{{
+            t('shell.nav.favorites')
+          }}</span>
           <UButton color="neutral" variant="ghost" icon="i-lucide-plus" size="xs" square />
         </div>
         <LayoutSidebarNavItem
@@ -76,7 +94,7 @@
         class="w-full justify-start"
         @click="openTaskCreate()"
       >
-        New Task
+        {{ t('shell.nav.newTask') }}
       </UButton>
     </div>
   </aside>
