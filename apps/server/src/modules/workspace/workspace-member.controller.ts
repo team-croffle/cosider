@@ -6,7 +6,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 
@@ -14,7 +16,13 @@ import { CurrentUser } from '../auth/decorator';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { ParseUserHandlePipe } from '../user/pipes/parse-user-handle.pipe';
 
-import { DelegateOwnerRequest, UpdateMemberRoleRequest, WorkspaceMemberResponse } from './dto';
+import {
+  DelegateOwnerRequest,
+  MemberInvitationResponse,
+  MemberInviteRequest,
+  UpdateMemberRoleRequest,
+  WorkspaceMemberResponse,
+} from './dto';
 import { ParseWorkspaceSlugPipe } from './pipes/parse-workspace-slug.pipe';
 import { WorkspaceMembersService } from './workspace-member.service';
 
@@ -83,5 +91,41 @@ export class WorkspaceMembersController {
     @CurrentUser() user: AuthenticatedUser,
   ): Promise<void> {
     return this.workspaceMembersService.delegateOwner(workspaceId, dto, user.userId);
+  }
+
+  // Workspace Invitation Apis
+  @Post(':workspace_slug/invitations')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  async inviteMember(
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
+    @Body() dto: MemberInviteRequest,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<MemberInvitationResponse> {
+    return this.workspaceMembersService.inviteMember(workspaceId, dto, user.userId);
+  }
+
+  @Get(':workspace_slug/invitations')
+  @UseGuards(JwtAuthGuard)
+  async getInvitationList(
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<MemberInvitationResponse[]> {
+    return this.workspaceMembersService.getInvitationList(workspaceId, user.userId);
+  }
+
+  @Delete(':workspace_slug/invitations/:invitation_id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async cancelMemberInvitation(
+    @Param('workspace_slug', ParseWorkspaceSlugPipe) workspaceId: string,
+    @Param('invitation_id', ParseUUIDPipe) invitationId: string,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<void> {
+    return this.workspaceMembersService.cancelMemberInvitation(
+      workspaceId,
+      invitationId,
+      user.userId,
+    );
   }
 }

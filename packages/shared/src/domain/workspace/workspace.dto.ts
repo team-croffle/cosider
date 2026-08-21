@@ -1,8 +1,8 @@
 import { IFileUploadCompletionRequest } from '../../common';
-import { IUserProfileResponse } from '../user';
+import { IUserProfileDetailResponse, IUserProfileResponse } from '../user';
 
 import { EWorkspaceUserRole } from './workspace.enum';
-import { IWorkspace, IWorkspaceMember } from './workspace.interface';
+import { IWorkspace, IWorkspaceInvitation, IWorkspaceMember } from './workspace.interface';
 
 // Workspace Core DTOs
 export type ICreateWorkspaceRequest = Pick<IWorkspace, 'name' | 'slug' | 'description'> &
@@ -45,4 +45,17 @@ export type IUpdateMemberRoleRequest = Pick<IWorkspaceMember, 'role'>;
 
 export interface IDelegateOwnerRequest {
   newOwnerHandle: string;
+}
+
+// Workspace Invitation DTOs
+export type IMemberInviteRequest = Pick<IWorkspaceInvitation, 'target' | 'role'>;
+
+export interface IMemberInvitationResponse extends IMemberInviteRequest {
+  id: string;
+  inviter: Omit<IUserProfileDetailResponse, 'email' | 'techStacks' | 'jobRole'> & {
+    userId: string;
+  };
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt: string | null;
 }

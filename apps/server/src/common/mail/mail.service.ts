@@ -38,4 +38,26 @@ export class MailService {
       throw new InternalServerErrorException('Failed to send verification email');
     }
   }
+
+  // Invitation Mail을 전송
+  public async sendInvitationMail(email: string, token: string): Promise<void> {
+    const frontUrl = this.configService.get<string>('CLIENT_URL', 'http://localhost:3000');
+    const invitationUrl = new URL(`/invitations/${token}`, frontUrl).toString();
+
+    try {
+      await this.mailerService.sendMail({
+        to: email,
+        subject: '[CoSider] You have been invited to a workspace',
+        template: './invitation',
+        context: {
+          url: invitationUrl,
+        },
+      });
+
+      this.logger.log(`Invitation email sent to ${email}`);
+    } catch (error) {
+      this.logger.error(`Failed to send invitation email to ${email}`, error);
+      throw new InternalServerErrorException('Failed to send invitation email');
+    }
+  }
 }

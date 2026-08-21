@@ -5,3 +5,5 @@ export * from './update-workspace-member-role-request.dto';
 export * from './update-workspace-request.dto';
 export * from './workspace-member-response.dto';
 export * from './workspace-response.dto';
+export * from './member-invite-request.dto';
+export * from './member-invitation-response.dto';
